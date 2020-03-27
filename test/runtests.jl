@@ -1,8 +1,8 @@
+using DataAugmentation
 using Test
 using TestSetExtensions
-using MLTransforms
 
 
-@testset ExtendedTestSet "MLTransforms.jl tests" begin
+@testset ExtendedTestSet "DataAugmentation.jl tests" begin
     @includetests ARGS
 end
