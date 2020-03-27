@@ -1,0 +1,3 @@
+[deps]
+DataAugmentation = "1fecdf9a-ddad-45f3-8adf-cd9ef52cfe79"
+Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"

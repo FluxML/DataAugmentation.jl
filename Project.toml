@@ -1,0 +1,7 @@
+name = "DataAugmentation"
+uuid = "1fecdf9a-ddad-45f3-8adf-cd9ef52cfe79"
+authors = ["lorenzoh <lorenz.ohly@gmail.com>"]
+version = "0.1.0"
+
+[compat]
+julia = "1"
