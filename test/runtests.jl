@@ -3,6 +3,6 @@ using Test
 using TestSetExtensions
 
 
-@testset ExtendedTestSet "DataAugmentation.jl tests" begin
+@testset ExtendedTestSet "DataAugmentation.jl" begin
     @includetests ARGS
 end

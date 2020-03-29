@@ -1,7 +1,8 @@
 using Test
 using TestSetExtensions
-using MLTransforms
-using MLTransforms: AbstractSampleTransform, SampleTransformApplyAll, SampleTransformCombine, SampleTransformLambda
+using DataAugmentation
+using DataAugmentation: AbstractSampleTransform, SampleTransformApplyAll, SampleTransformCombine, SampleTransformLambda
+import DataAugmentation: getparam
 using Images
 
 @testset ExtendedTestSet "Item" begin
@@ -27,7 +28,7 @@ end
 
 @testset ExtendedTestSet "AbstractTransform" begin
     struct MyTransform <: AbstractTransform end
-    MLTransforms.getparam(::MyTransform) = rand()
+    DataAugmentation.getparam(::MyTransform) = rand()
     (::MyTransform)(_, param) = param
 
     @testset ExtendedTestSet "AbstractTransform interface" begin
