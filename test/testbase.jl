@@ -1,7 +1,7 @@
 using Test
 using TestSetExtensions
 using DataAugmentation
-using DataAugmentation: AbstractSampleTransform, SampleTransformApplyAll, SampleTransformCombine, SampleTransformLambda
+using DataAugmentation: AbstractDictTransform, DictTransformApplyAll, DictTransformCombine, SampleTransformLambda
 import DataAugmentation: getparam
 using Images
 
@@ -61,15 +61,21 @@ end
 
 
 
-@testset ExtendedTestSet "SampleTransform" begin
-    @test AbstractSampleTransform((:a, :b), identity) isa SampleTransformApplyAll
-    @test AbstractSampleTransform(:a, identity) isa SampleTransformApplyAll
-    @test AbstractSampleTransform((:a, :b), :c, identity) isa SampleTransformCombine
-    @test AbstractSampleTransform(identity) isa SampleTransformLambda
+@testset ExtendedTestSet "DictTransform" begin
+    @test AbstractDictTransform((:a, :b), identity) isa DictTransformApplyAll
+    @test AbstractDictTransform(:a, identity) isa DictTransformApplyAll
+    @test AbstractDictTransform((:a, :b), :c, identity) isa DictTransformCombine
+    @test AbstractDictTransform(identity) isa SampleTransformLambda
 
-    spipe = SamplePipeline([
+    spipe = DictPipeline([
         ((:a, :b), :c, +),
         (:c, xs -> abs.(xs))
         ])
     @test spipe(Dict(:a => -1, :b => -1))[:c] == 2
+end
+
+@testset ExtendedTestSet "XYPipeline" begin
+    pipe = XYPipeline(Image, Label)
+
+
 end
