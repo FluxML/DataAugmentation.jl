@@ -22,6 +22,21 @@ struct ToTensor <: AbstractTransform end
 (::ToTensor)(item::Keypoints) = Tensor(parent(itemdata(item)))
 
 
+struct OneHot <: AbstractTransform
+    nclasses::Int
+end
+
+(t::OneHot)(item::Label) = Tensor(onehot(itemdata(item), 1:t.nclasses))
+
+
+function onehot(T, x::Int, labels::AbstractVector)
+    v = fill(zero(T), length(labels))
+    v[x] = one(T)
+    return v
+end
+onehot(x, labels) = onehot(Float32, x, labels)
+
+
 # helper functions
 
 function normalize!(a, means, stds)
