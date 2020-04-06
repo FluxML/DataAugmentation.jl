@@ -190,7 +190,7 @@ CenterResizedCrop(crop) = CenterResizedTransform(crop) |> CropTransform(crop)
 """
     Scale
 """
-Scale(factors::Tuple) = AffineTransform(MLTransforms.getscale(factors...)) |> CropTransform(factors = factors)
+Scale(factors::Tuple) = AffineTransform(getscale(factors...)) |> CropTransform(factors = factors)
 Scale(factor) = Scale((factor, factor))
 
 

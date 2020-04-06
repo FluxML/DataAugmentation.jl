@@ -24,7 +24,7 @@ AbstractDictTransform(ins::NTuple{N, Symbol}, tfm) where N = DictTransformApplyA
 AbstractDictTransform(in_::Symbol, tfm) = DictTransformApplyAll((in_,), tfm)
 AbstractDictTransform(ins::Tuple, out::Symbol, tfm) = DictTransformCombine(ins, out, tfm)
 AbstractDictTransform(in_, out::Symbol, tfm) = DictTransformCombine((in_,), out, tfm)
-AbstractDictTransform(f)::AbstractDictTransform = SampleTransformLambda(f)
+AbstractDictTransform(f) = SampleTransformLambda(f)
 
 
 function (st::DictTransformApplyAll)(sample)
