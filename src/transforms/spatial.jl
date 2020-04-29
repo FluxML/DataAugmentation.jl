@@ -47,8 +47,8 @@ struct FlipX <: AbstractTransform end
 
 function (t::FlipX)(item::Keypoints, param = nothing)
     _, w = getbounds(item)
+    keypoints = map(k -> fmap((p) -> (p[1], w - p[2]), k), itemdata(item)),
     return Keypoints(
-        map(k -> applykeypoint((p) -> (p[1], w - p[2]), k), itemdata(item)),
         item.bounds
     )
 end
@@ -63,7 +63,7 @@ struct FlipY <: AbstractTransform end
 function (t::FlipY)(item::Keypoints, param = nothing)
     h, _ = getbounds(item)
     return Keypoints(
-        map(k -> applykeypoint((p) -> (h - p[1], p[2]), k), itemdata(item)),
+        map(k -> fmap((p) -> (h - p[1], p[2]), k), itemdata(item)),
         item.bounds
     )
 end
@@ -82,11 +82,3 @@ struct Rotate180 <: AbstractTransform end
 struct Rotate270 <: AbstractTransform end
 (t::Rotate270)(item::Image) = Image(rotr90(itemdata(item)))
 (t::Rotate270)(item::Keypoints) = error("Not implemented")
-
-
-
-# Utils
-
-applykeypoint(f, ::Nothing) = nothing
-applykeypoint(f, k::Tuple) = f(k)
-applykeypoint(f, k::Tuple{Tuple, Tuple}) = (f(k[1]), f(k[2]))

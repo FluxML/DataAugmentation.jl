@@ -19,7 +19,6 @@ Normalize(means, stds; inplace = true) = Normalize(means, stds, inplace)
 
 struct ToTensor <: AbstractTransform end
 (::ToTensor)(item::Image) = Tensor(imagetotensor(itemdata(item)))
-(::ToTensor)(item::Keypoints) = Tensor(parent(itemdata(item)))
 
 
 struct OneHot <: AbstractTransform

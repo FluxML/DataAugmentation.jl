@@ -8,6 +8,7 @@ using NamedDims
 
 include("./item.jl")
 include("./transform.jl")
+include("./utils.jl")
 include("./samples.jl")
 include("./display.jl")
 

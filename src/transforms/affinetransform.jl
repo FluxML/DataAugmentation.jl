@@ -46,18 +46,10 @@ end
 
 function applytfm(item::Keypoints, tfm, crop::Union{Nothing,Tuple} = nothing)::Keypoints
     return Keypoints(
-        map(k->applytfmkeypoint(k, tfm), itemdata(item)),
+        map(k -> fmap(tfm, k), itemdata(item)),
         isnothing(crop) ? item.bounds : crop,
     )
 end
-
-"""
-    applytfmkeypoint(k, tfm)
-
-Applies affine transformation matrix `tfm` to a single keypoint `k`
-"""
-applytfmkeypoint(k::Tuple, tfm)::Tuple = k |> collect |> tfm |> Tuple
-applytfmkeypoint(k::Nothing, tfm)::Nothing = k
 
 
 # AbstractAffineTransform composition
@@ -134,7 +126,7 @@ Base.:(|>)(cat::CroppedAffineTransform, at::AbstractAffineTransform) =
 Base.:(|>)(at::AbstractAffineTransform, cat::CroppedAffineTransform) =
     CroppedAffineTransform(at |> cat.transform, cat.crop)
 Base.:(|>)(cat1::CroppedAffineTransform, cat2::CroppedAffineTransform) =
-    CroppedAffineTransform(cat1.transform |> cat2.transform, cat2.crop)
+    CroppedAffineTransform(cat1.transform |> cat2.transform, cat2.croptransform)
 
 
 # AbstractAffineTransformations implementations
@@ -173,11 +165,11 @@ function gettfmmatrix(t::AbstractResizedTransform, bounds, param)
     scaletfm = getscale(1/factor, 1/factor)
 
     h_, w_ = Int.(floor.(bounds ./ factor))
-    
+
     ry, rx = param
     ty = pickfromrange(0:max(0, h_ - h), ry)
     tx = pickfromrange(0:max(0, w_ - w), rx)
-    
+
     translatetfm = Translation(-ty, -tx)
 
     return translatetfm ∘ scaletfm

@@ -35,7 +35,7 @@ end
         myt = MyTransform()
         item = Tensor([1])
 
-        # test if 
+        # test if
         r = rand()
         @test myt(item, r) == r
 
@@ -76,6 +76,4 @@ end
 
 @testset ExtendedTestSet "XYPipeline" begin
     pipe = XYPipeline(Image, Label)
-
-
 end
