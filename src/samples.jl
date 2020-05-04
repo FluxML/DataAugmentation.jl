@@ -1,3 +1,4 @@
+# FIXME: find a better API
 
 # DictTransform
 abstract type AbstractSampleTransform end
@@ -32,8 +33,8 @@ function (st::DictTransformApplyAll)(sample)
     outs = st.tfm(args)
     for (in_, out) in zip(st.ins, outs)
         sample[in_] = out
-    end 
-    
+    end
+
     return sample
 end
 
@@ -43,7 +44,7 @@ function (st::DictTransformCombine)(sample)
     return sample
 end
 
-function (st::SampleTransformLambda)(sample) 
+function (st::SampleTransformLambda)(sample)
     return st.f(sample)
 end
 

@@ -26,12 +26,12 @@ using Images
 
 end
 
-@testset ExtendedTestSet "AbstractTransform" begin
-    struct MyTransform <: AbstractTransform end
+@testset ExtendedTestSet "Transform" begin
+    struct MyTransform <: Transform end
     DataAugmentation.getparam(::MyTransform) = rand()
     (::MyTransform)(_, param) = param
 
-    @testset ExtendedTestSet "AbstractTransform interface" begin
+    @testset ExtendedTestSet "Transform interface" begin
         myt = MyTransform()
         item = Tensor([1])
 

@@ -9,45 +9,53 @@ Abstract supertype for affine transformations
 
 ## `AbstractAffineTransform` interface
 
-- `gettfmmatrix(t::MyAffineTransform, getbounds(item), getparam(t))`
+- `getaffine(t::MyAffineTransform, getbounds(item), getparam(t))`
   should return a transformation matrix (s. `CoordinateTransformations.jl`)
 
 ## Item interface
 
 - `getbounds(item::MyItem)::Tuple` returns the spatial bounds of an item,
   e.g. `size(img)` for an image array
-- `applytfm(item::MyItem, tfm)::MyItem` applies transformation matrix `tfm`
-  (constructed with `gettfmmatrix`) to `item` and returns an item of the same
+- `applyaffine(item::MyItem, A)::MyItem` applies transformation matrix `A`
+  (constructed with `getaffine`) to `item` and returns an item of the same
   type
 """
-abstract type AbstractAffineTransform <: AbstractTransform end
+abstract type AbstractAffine <: Transform end
 
-function (t::AbstractAffineTransform)(item::Item, param)
-    tfm = gettfmmatrix(t, getbounds(item), param)
-    return applytfm(item, tfm)
+function apply(tfm::AbstractAffine, item::Item, param)
+    A = getaffine(tfm, getbounds(item), param)
+    return applyaffine(item, A)
 end
 
-# Item interface implementation
-# TODO: rename to applyaffine
 """
-    applytfm(item, tfm, crop = nothing)
+    applyaffine(item::Item, A, crop = nothing)
+
+Applies an affine transformation `A` to `item`, optionally cropping
+to tuple `crop`.
+"""
+function applyaffine(item::Item, A, crop = nothing) end
+
+# Item interface implementation
+
+"""
+    applyaffine(item, tfm, crop = nothing)
 
 Applies affine transformation matrix `tfm` to `item`, optionally cropping to window
 of size `crop`
 """
-function applytfm(item::Image{C}, tfm, crop::Union{Nothing,Tuple} = nothing) where {C}
+function applyaffine(item::Image{C}, A, crop::Union{Nothing,Tuple} = nothing) where {C}
     if crop isa Tuple
         indices = (1:crop[1], 1:crop[2])
-        return Image(warp(parent(item.data), inv(tfm), indices, zero(C)))
+        return Image(warp(parent(item.data), inv(A), indices, zero(C)))
     else
-        return Image(warp(parent(item.data), tfm, zero(C)))
+        return Image(warp(parent(item.data), inv(A), zero(C)))
     end
 end
 
-function applytfm(item::Keypoints, tfm, crop::Union{Nothing,Tuple} = nothing)::Keypoints
+function applyaffine(keypoints::Keypoints, A, crop::Union{Nothing,Tuple} = nothing)::Keypoints
     return Keypoints(
-        map(k -> fmap(tfm, k), itemdata(item)),
-        isnothing(crop) ? item.bounds : crop,
+        map(k -> fmap(A, k), keypoints.data),
+        isnothing(crop) ? keypoints.bounds : crop,
     )
 end
 
@@ -55,45 +63,43 @@ end
 # AbstractAffineTransform composition
 
 """
-    ComposedAffineTransform(transforms)
+    ComposedAffine(transforms)
 
 Composes several affine transformations.
 
 Due to associativity of affine transformations, the transforms can be
 combined before applying, leading to large performance improvements.
 
-Chaining (`|>`) multiple `AbstractAffineTransformation`s automatically
-creates a `ComposedAffineTransform`.
+`compose`ing multiple `AbstractAffineTransformation`s automatically
+creates a `ComposedAffine`.
 """
-struct ComposedAffineTransform <: AbstractAffineTransform
-    transforms::NTuple{N,AbstractAffineTransform} where N
+struct ComposedAffine <: AbstractAffine
+    transforms::NTuple{N,AbstractAffine} where N
 end
 
-getparam(cat::ComposedAffineTransform) = Tuple(getparam(t) for t in cat.transforms)
+getparam(cat::ComposedAffine) = Tuple(getparam(t) for t in cat.transforms)
 
-# TODO: maybe refactor to use a fold
-function gettfmmatrix(cat::ComposedAffineTransform, bounds, params::Tuple)
-    tfm = IdentityTransformation()
 
+function getaffine(cat::ComposedAffine, bounds, params::Tuple)
+    A = IdentityTransformation()
     for (t, param) in zip(cat.transforms, params)
-        tfm = gettfmmatrix(t, bounds, param) ∘ tfm
+        A = getaffine(t, bounds, param) ∘ A
     end
-
-    return tfm
+    return A
 end
 
-Base.:(|>)(tfm1::AbstractAffineTransform, tfm2::AbstractAffineTransform) =
-    ComposedAffineTransform((tfm1, tfm2))
-Base.:(|>)(cat::ComposedAffineTransform, tfm::AbstractAffineTransform) =
-    ComposedAffineTransform((cat.transforms..., tfm))
-Base.:(|>)(tfm::AbstractAffineTransform, cat::ComposedAffineTransform) =
-    ComposedAffineTransform((tfm, cat.transforms))
+compose(tfm1::AbstractAffine, tfm2::AbstractAffine) =
+    ComposedAffine((tfm1, tfm2))
+compose(cat::ComposedAffine, tfm::AbstractAffine) =
+    ComposedAffine((cat.transforms..., tfm))
+compose(tfm::AbstractAffine, cat::ComposedAffine) =
+    ComposedAffine((tfm, cat.transforms))
 
 
 # Cropping transforms
 
 """
-    CroppedAffineTransform(transform, croptransform)
+    CroppedAffine(transform, croptransform)
 
 Applies an affine `transform` and crops with `croptransform`, such
 that `getbounds(t(item)) == getcrop(croptransform)`
@@ -102,49 +108,46 @@ This wrapper leads to performance improvements when warping an
 image, since only the indices within the bounds of `crop` need
 to be evaluated.
 
-Composing any `AbstractAffineTransform` with a `CropTransform`
-constructs a `CroppedAffineTransform`.
+`compose`ing any `AbstractAffine` with a `CropTransform`
+constructs a `CroppedAffine`.
 """
-struct CroppedAffineTransform <: AbstractAffineTransform
-    transform::AbstractAffineTransform
-    croptransform::AbstractCropTransform
+struct CroppedAffine <: AbstractAffine
+    transform::AbstractAffine
+    croptransform::Crop
 end
 
-getparam(t::CroppedAffineTransform) = getparam(t.transform)
+getparam(t::CroppedAffine) = getparam(t.transform)
 
-function (t::CroppedAffineTransform)(item::Item, param)
-    tfm = gettfmmatrix(t.transform, getbounds(item), param)
-    return applytfm(item, tfm, getcrop(t.croptransform, item))
+function apply(t::CroppedAffine, item::Item, param)
+    tfm = getaffine(t.transform, getbounds(item), param)
+    return applyaffine(item, tfm, getcrop(t.croptransform, item))
 end
 
-Base.:(|>)(at::AbstractAffineTransform, ct::AbstractCropTransform) =
-    CroppedAffineTransform(at, ct)
-Base.:(|>)(cat::CroppedAffineTransform, ct::AbstractCropTransform) =
-    CroppedAffineTransform(cat.transform, ct)
-Base.:(|>)(cat::CroppedAffineTransform, at::AbstractAffineTransform) =
-    CroppedAffineTransform(cat.transform |> at, cat.crop)
-Base.:(|>)(at::AbstractAffineTransform, cat::CroppedAffineTransform) =
-    CroppedAffineTransform(at |> cat.transform, cat.crop)
-Base.:(|>)(cat1::CroppedAffineTransform, cat2::CroppedAffineTransform) =
-    CroppedAffineTransform(cat1.transform |> cat2.transform, cat2.croptransform)
+compose(at::AbstractAffine, ct::Crop) = CroppedAffine(at, ct)
+
+compose(cat::CroppedAffine, ct::Crop) = CroppedAffine(cat.transform, ct)
+
+compose(cat::CroppedAffine, at::AbstractAffine) = CroppedAffine(cat.transform |> at, cat.crop)
+
+compose(at::AbstractAffine, cat::CroppedAffine) = CroppedAffine(at |> cat.transform, cat.crop)
+
+compose(cat1::CroppedAffine, cat2::CroppedAffine) =
+    CroppedAffine(cat1.transform |> cat2.transform, cat2.croptransform)
 
 
-# AbstractAffineTransformations implementations
+# AffineTransformations implementations
 
 """
-    AffineTransform
+    Affine
 
 Applies static transformation matrix `tfm` to an item
 """
-struct AffineTransform <: AbstractAffineTransform
+struct Affine <: AbstractAffine
     tfm
 end
-gettfmmatrix(t::AffineTransform, bounds, param) = t.tfm
+getaffine(t::Affine, bounds, param) = t.tfm
 
-"""
-
-"""
-abstract type AbstractResizedTransform <: AbstractAffineTransform end
+abstract type AbstractResizedTransform <: AbstractAffine end
 
 struct RandomResizedTransform <: AbstractResizedTransform
     size
@@ -153,12 +156,14 @@ struct CenterResizedTransform <: AbstractResizedTransform
     size
 end
 
+
 getparam(tfm::RandomResizedTransform) = (rand(), rand())
 getparam(tfm::CenterResizedTransform) = (1/2, 1/2)
 
+
 # FIXME: black borders
 # TODO: clean up naming
-function gettfmmatrix(t::AbstractResizedTransform, bounds, param)
+function getaffine(t::AbstractResizedTransform, bounds, param)
     h, w = t.size
     k, l = bounds
     factor = min(k / h, l / w)
@@ -175,14 +180,14 @@ function gettfmmatrix(t::AbstractResizedTransform, bounds, param)
     return translatetfm ∘ scaletfm
 end
 
-RandomResizedCrop(crop) = RandomResizedTransform(crop) |> CropTransform(crop)
-CenterResizedCrop(crop) = CenterResizedTransform(crop) |> CropTransform(crop)
+RandomResizedCrop(crop) = RandomResizedTransform(crop) |> Crop(crop)
+CenterResizedCrop(crop) = CenterResizedTransform(crop) |> Crop(crop)
 
 
 """
     Scale
 """
-Scale(factors::Tuple) = AffineTransform(getscale(factors...)) |> CropTransform(factors = factors)
+Scale(factors::Tuple) = Affine(getscale(factors...)) |> Crop(factors = factors)
 Scale(factor) = Scale((factor, factor))
 
 
@@ -194,11 +199,12 @@ Scale(factor) = Scale((factor, factor))
 
 Rotates an `Item` by `angle` degrees counter-clockwise using an affine
 transformation.
-If a vector or range `angles` of degrees is given, picks a random element.
+If a vector or range `angles` of degrees is given, picks one at random.
 
-See also [`Rotate90`](@ref), [`Rotate180`](@ref), [`Rotate270`](@ref)
+See also [`Rotate90`](@ref), [`Rotate180`](@ref), [`Rotate270`](@ref) for
+more efficient non-affine versions for those specific angles.
 """
-struct Rotate <: AbstractAffineTransform
+struct Rotate <: AbstractAffine
     angles
 end
 
@@ -206,18 +212,18 @@ end
 getparam(t::Rotate) = t.angles isa Number ? t.angles : rand(t.angles)
 
 # Transformation matrix centered in the item's bounds
-function gettfmmatrix(t::Rotate, bounds, param)
+function getaffine(t::Rotate, bounds, param)
     return recenter(RotMatrix(param * (pi / 180)), center(bounds))
 end
 
-Base.:(|>)(::Rotate90, at::AbstractAffineTransform) = Rotate(90) |> at
-Base.:(|>)(at::AbstractAffineTransform, ::Rotate90) = at |> Rotate(90)
+compose(::Rotate90, at::AbstractAffine) = Rotate(90) |> at
+compose(at::AbstractAffine, ::Rotate90) = at |> Rotate(90)
 
-Base.:(|>)(::Rotate180, at::AbstractAffineTransform) = Rotate(180) |> at
-Base.:(|>)(at::AbstractAffineTransform, ::Rotate180) = at |> Rotate(180)
+compose(::Rotate180, at::AbstractAffine) = Rotate(180) |> at
+compose(at::AbstractAffine, ::Rotate180) = at |> Rotate(180)
 
-Base.:(|>)(::Rotate270, at::AbstractAffineTransform) = Rotate(270) |> at
-Base.:(|>)(at::AbstractAffineTransform, ::Rotate270) = at |> Rotate(270)
+compose(::Rotate270, at::AbstractAffine) = Rotate(270) |> at
+compose(at::AbstractAffine, ::Rotate270) = at |> Rotate(270)
 
 
 # Utilities

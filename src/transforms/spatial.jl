@@ -3,82 +3,84 @@
 
 # for data where affine transformations can be applied, the bounds are important
 # for calculating the transformation matrix
-getbounds(itemw::ItemWrapper) = getbounds(getwrapped(itemw))
+
 getbounds(item::Image)::Tuple = size(item.data)
 getbounds(item::Keypoints)::Tuple = item.bounds
 
 
-
 # Crops
 
-abstract type AbstractCropTransform <: AbstractTransform end
+abstract type Crop <: Transform end
 
-struct CropTransformExact <: AbstractCropTransform
+struct CropExact <: Crop
     crop::Tuple
 end
 
-struct CropTransformFactor <: AbstractCropTransform
+struct CropFactor <: Crop
     factors::Tuple
 end
 
-getcrop(t::CropTransformExact, _::Item) = t.crop
-getcrop(t::CropTransformFactor, item::Item) = Int.(ceil.(getbounds(item) .* t.factors))
-CropTransform(crop) = CropTransformExact(crop)
-CropTransform(; factors = (1, 1)) = CropTransformFactor(factors)
+getcrop(t::CropExact, ::Item) = t.crop
+getcrop(t::CropFactor, item::Item) = Int.(ceil.(getbounds(item) .* t.factors))
+Crop(crop) = CropExact(crop)
+Crop(; factors = (1, 1)) = CropFactor(factors)
 
 
 # TODO: Implement
-function (t::AbstractCropTransform)(item::Image)
-    error("Not implemented")
-end
+apply(t::Crop, item::Image) = error("Not implemented")
 
 # TODO: Remove keypoints that are not in new bounds
-(t::AbstractCropTransform)(item::Keypoints) = Keypoints(itemdata(item), getcrop(t, item))
+apply(t::Crop, keypoints::Keypoints) = Keypoints(keypoints.data, getcrop(t, keypoints))
 
 
 # FlipTransform
 
 """
-    FlipX
+    FlipX()
+
+Flips an `item` along the x-axis
 """
-struct FlipX <: AbstractTransform end
+struct FlipX <: Transform end
 
-(t::FlipX)(item::Image, param = nothing) = Image(reverse(itemdata(item); dims = 2))
+(t::FlipX)(image::Image, param = nothing) = Image(reverse(image.data; dims = 2))
 
-function (t::FlipX)(item::Keypoints, param = nothing)
-    _, w = getbounds(item)
-    keypoints = map(k -> fmap((p) -> (p[1], w - p[2]), k), itemdata(item)),
+function (t::FlipX)(keypoints::Keypoints, param)
+    _, w = keypoints.bounds
+    data = map(k -> fmap((p) -> (p[1], w - p[2]), k), keypoints.data)
     return Keypoints(
-        item.bounds
+        data,
+        keypoints.bounds,
     )
 end
 
 """
-    FlipY
+    FlipY()
+
+Flips an `Item` along the y-axis
 """
-struct FlipY <: AbstractTransform end
+struct FlipY <: Transform end
 
-(t::FlipY)(item::Image, param = nothing) = Image(reverse(itemdata(item); dims = 1))
+(t::FlipY)(image::Image, param = nothing) = Image(reverse(image.data; dims = 1))
 
-function (t::FlipY)(item::Keypoints, param = nothing)
-    h, _ = getbounds(item)
+function (t::FlipY)(keypoints::Keypoints, param = nothing)
+    h, _ = keypoints.bounds
+    data = map(k -> fmap((p) -> (h - p[1], p[2]), k), keypoints.data),
     return Keypoints(
-        map(k -> fmap((p) -> (h - p[1], p[2]), k), itemdata(item)),
-        item.bounds
+        keypoints.bounds
     )
 end
 
 
 # Rotations
 
-struct Rotate90 <: AbstractTransform end
-(t::Rotate90)(item::Image) = Image(rotl90(itemdata(item)))
-(t::Rotate90)(item::Keypoints) = error("Not implemented")
+struct Rotate90 <: Transform end
+(t::Rotate90)(image::Image) = Image(rotl90(image.data))
+(t::Rotate90)(keypoints::Keypoints) = error("Not implemented")
 
-struct Rotate180 <: AbstractTransform end
-(t::Rotate180)(item::Image) = Image(rot180(itemdata(item)))
-(t::Rotate180)(item::Keypoints) = error("Not implemented")
+struct Rotate180 <: Transform end
+(t::Rotate180)(image::Image) = Image(rot180(image.data))
+(t::Rotate180)(keypoints::Keypoints) = error("Not implemented")
 
-struct Rotate270 <: AbstractTransform end
-(t::Rotate270)(item::Image) = Image(rotr90(itemdata(item)))
-(t::Rotate270)(item::Keypoints) = error("Not implemented")
+struct Rotate270 <: Transform end
+(t::Rotate270)(image::Image) = Image(rotr90(image.data))
+(t::Rotate270)(keypoints::Keypoints) = error("Not implemented")

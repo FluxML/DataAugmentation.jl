@@ -19,16 +19,17 @@ include("./transforms/preprocessing.jl")
 
 export
     # Transforms
-    AbstractTransform,
-    AbstractAffineTransform,
-    AffineTransform,
+    Transform,
+    AbstractAffine,
+    Affine,
     CenterResizedCrop,
-    CropTransform,
-    CroppedAffineTransform,
+    Crop,
+    CroppedAffine,
     Either,
     FlipX,
     FlipY,
-    LambdaTransform,
+    Identity,
+    Lambda,
     Normalize,
     OneHot,
     Pipeline,
@@ -52,8 +53,10 @@ export
     Label,
     Tensor,
 
+    # functions
+    apply,
+    compose,
     getbounds,
-    itemdata,
     showitem
 
 end # module

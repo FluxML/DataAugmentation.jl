@@ -1,13 +1,11 @@
-showitem(item::Item) = summary(itemdata(item))
-
-function showitem(item::Image)
-    return RGB{N0f8}.(parent(itemdata(item)))
+function showitem(image::Image)
+    return RGB{N0f8}.(parent(image.data))
 end
 
 
-function showitem(item::Keypoints)
-    img = zeros(RGB{N0f8}, getbounds(item)...)
-    for keypoint in itemdata(item)
+function showitem(keypoints::Keypoints)
+    img = zeros(RGB{N0f8}, getbounds(keypoints)...)
+    for keypoint in keypoints.data
         if isnothing(keypoint)
             continue
         end
