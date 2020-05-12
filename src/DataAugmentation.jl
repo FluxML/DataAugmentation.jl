@@ -2,9 +2,10 @@ module DataAugmentation
 
 using CoordinateTransformations
 using ImageTransformations
+using ImageTransformations: center, _center
 using Images
 using Images: Colorant
-using NamedDims
+using StaticArrays
 
 include("./item.jl")
 include("./transform.jl")

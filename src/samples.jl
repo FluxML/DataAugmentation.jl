@@ -30,7 +30,11 @@ AbstractDictTransform(f) = SampleTransformLambda(f)
 
 function (st::DictTransformApplyAll)(sample)
     args = Tuple(sample[in_] for in_ in st.ins)
-    outs = st.tfm(args)
+    if st.tfm isa Transform
+        outs = apply(st.tfm, args)
+    else
+        outs = st.tfm(args...)
+    end
     for (in_, out) in zip(st.ins, outs)
         sample[in_] = out
     end
@@ -38,9 +42,15 @@ function (st::DictTransformApplyAll)(sample)
     return sample
 end
 
+
 function (st::DictTransformCombine)(sample)
     args = Tuple(sample[in_] for in_ in st.ins)
-    sample[st.out] = st.tfm(args...)
+
+    if st.tfm isa Transform
+        sample[st.out] = apply(st.tfm, args...)
+    else
+        sample[st.out] = st.tfm(args...)
+    end
     return sample
 end
 

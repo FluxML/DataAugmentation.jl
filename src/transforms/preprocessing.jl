@@ -2,8 +2,8 @@
 struct ToEltype{T} <: Transform end
 ToEltype(T::Type) = ToEltype{T}()
 
-(t::ToEltype{T})(item::Image{<:T}) where T = Image(parent(item.data))
-(t::ToEltype{T})(item::Image{U}) where {T, U} = Image(parent(map(x -> convert(T, x), item.data)))
+apply(t::ToEltype{T}, item::Image{<:T}) where T = Image(parent(item.data))
+apply(t::ToEltype{T}, item::Image{U}) where {T, U} = Image(parent(map(x -> convert(T, x), item.data)))
 
 
 struct Normalize <: Transform
@@ -14,18 +14,18 @@ end
 
 Normalize(means, stds; inplace = true) = Normalize(means, stds, inplace)
 
-(t::Normalize)(item::Tensor) = Tensor(normalize!(t.inplace ? item.data : copy(item.data), t.means, t.stds))
+apply(t::Normalize, item::Tensor) = Tensor(normalize!(t.inplace ? item.data : copy(item.data), t.means, t.stds))
 
 
 struct ToTensor <: Transform end
-(::ToTensor)(image::Image) = Tensor(imagetotensor(image.data))
+apply(::ToTensor, image::Image) = Tensor(imagetotensor(image.data))
 
 
 struct OneHot <: Transform
     nclasses::Int
 end
 
-(t::OneHot)(label::Label) = Tensor(onehot(label.data, 1:t.nclasses))
+apply(t::OneHot, label::Label) = Tensor(onehot(label.data, 1:t.nclasses))
 
 
 function onehot(T, x::Int, labels::AbstractVector)

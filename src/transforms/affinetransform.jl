@@ -237,9 +237,7 @@ to `rng`'s length
 """
 pickfromrange(rng::AbstractRange, rnd::AbstractFloat) = rng[Int(ceil(length(rng) * rnd))]
 
-getscale(scaley, scalex) = LinearMap([scaley 0; 0 scalex])
+getscale(scaley, scalex) = LinearMap(SMatrix{2, 2}([scaley 0; 0 scalex]))
 
-import ImageTransformations: center, _center
-using StaticArrays: SVector
 
-center(bounds::NTuple{N}) where N = SVector{N}(map(b -> ImageTransformations._center(1:b), bounds))
+ImageTransformations.center(bounds::NTuple{N}) where N = SVector{N}(map(b -> ImageTransformations._center(1:b), bounds))
