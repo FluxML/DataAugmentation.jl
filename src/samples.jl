@@ -75,4 +75,4 @@ struct XYPipeline <: AbstractSampleTransform
     transformy
 end
 
-(pipeline::XYPipeline)((x, y)::Tuple) = (pipeline.transformx(x), pipeline.transformy(y))
+(pipeline::XYPipeline)((x, y)::Tuple) = (apply(pipeline.transformx, x), apply(pipeline.transformy, y))
