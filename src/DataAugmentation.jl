@@ -40,9 +40,9 @@ export
     Rotate270,
     RandomResizedCrop,
     RandomResizedTransform,
-    DictPipeline,
-    XYPipeline,
+    SamplePipeline,
     Scale,
+    ScaleCrop,
     ToEltype,
     ToTensor,
 
