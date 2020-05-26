@@ -54,7 +54,7 @@ end
 
 function applyaffine(keypoints::Keypoints, A, crop::Union{Nothing,Tuple} = nothing)::Keypoints
     return Keypoints(
-        map(k -> fmap(A, k), keypoints.data),
+        fmap(A, keypoints.data),
         isnothing(crop) ? keypoints.bounds : crop,
     )
 end
@@ -127,9 +127,9 @@ compose(at::AbstractAffine, ct::Crop) = CroppedAffine(at, ct)
 
 compose(cat::CroppedAffine, ct::Crop) = CroppedAffine(cat.transform, ct)
 
-compose(cat::CroppedAffine, at::AbstractAffine) = CroppedAffine(cat.transform |> at, cat.crop)
+compose(cat::CroppedAffine, at::AbstractAffine) = CroppedAffine(cat.transform |> at, cat.croptransform)
 
-compose(at::AbstractAffine, cat::CroppedAffine) = CroppedAffine(at |> cat.transform, cat.crop)
+compose(at::AbstractAffine, cat::CroppedAffine) = CroppedAffine(at |> cat.transform, cat.croptransform)
 
 compose(cat1::CroppedAffine, cat2::CroppedAffine) =
     CroppedAffine(cat1.transform |> cat2.transform, cat2.croptransform)
@@ -161,7 +161,6 @@ getparam(tfm::RandomResizedTransform) = (rand(), rand())
 getparam(tfm::CenterResizedTransform) = (1/2, 1/2)
 
 
-# FIXME: black borders
 # TODO: clean up naming
 function getaffine(t::AbstractResizedTransform, bounds, param)
     h, w = t.size
@@ -183,12 +182,16 @@ end
 RandomResizedCrop(crop) = RandomResizedTransform(crop) |> Crop(crop)
 CenterResizedCrop(crop) = CenterResizedTransform(crop) |> Crop(crop)
 
+# TODO: add Translate
 
 """
     Scale
 """
-Scale(factors::Tuple) = Affine(getscale(factors...)) |> Crop(factors = factors)
+Scale(factors::Tuple) = Affine(getscale(factors...))
 Scale(factor) = Scale((factor, factor))
+
+ScaleCrop(factors::Tuple) = Scale(factors) |> Crop(factors = factors)
+ScaleCrop(factor) = ScaleCrop((factor, factor))
 
 
 # AffineRotate

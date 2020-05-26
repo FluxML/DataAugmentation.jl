@@ -1,2 +1,3 @@
-fmap(f, x::Nothing) = nothing
-fmap(f, x) = f(x)
+fmap(::Any, ::Nothing) = nothing
+fmap(f, a::AbstractArray) = map(x -> fmap(f, x), a)
+fmap(f, x::SVector) = f(x)

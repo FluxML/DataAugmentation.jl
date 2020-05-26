@@ -113,10 +113,10 @@ pick(ps, r) = r < ps[1] ? 1 : pick(ps[2:end], r - ps[1]) + 1
 
 function apply(tfm::Either, items::Tuple)
     t = tfm.transforms[getparam(tfm)]
-    return t(items)
+    return apply(t, items)
 end
 
 function apply(tfm::Either, items::Tuple, param)
     t = tfm.transforms[param]
-    return t(items)
+    return apply(t, items)
 end

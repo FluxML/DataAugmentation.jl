@@ -27,7 +27,7 @@ Crop(; factors = (1, 1)) = CropFactor(factors)
 
 
 # TODO: Implement
-apply(t::Crop, item::Image) = error("Not implemented")
+apply(::Crop, ::Image) = error("Not implemented")
 
 # TODO: Remove keypoints that are not in new bounds
 apply(t::Crop, keypoints::Keypoints) = Keypoints(keypoints.data, getcrop(t, keypoints))
@@ -42,11 +42,11 @@ Flips an `item` along the x-axis
 """
 struct FlipX <: Transform end
 
-(t::FlipX)(image::Image, param = nothing) = Image(reverse(image.data; dims = 2))
+apply(::FlipX, image::Image, param = nothing) = Image(reverse(image.data; dims = 2))
 
-function (t::FlipX)(keypoints::Keypoints, param)
+function apply(::FlipX, keypoints::Keypoints, param)
     _, w = keypoints.bounds
-    data = map(k -> fmap((p) -> (p[1], w - p[2]), k), keypoints.data)
+    data = map(k -> fmap((p) -> SVector(p[1], w - p[2]), k), keypoints.data)
     return Keypoints(
         data,
         keypoints.bounds,
@@ -60,12 +60,13 @@ Flips an `Item` along the y-axis
 """
 struct FlipY <: Transform end
 
-(t::FlipY)(image::Image, param = nothing) = Image(reverse(image.data; dims = 1))
+apply(::FlipY, image::Image, param = nothing) = Image(reverse(image.data; dims = 1))
 
-function (t::FlipY)(keypoints::Keypoints, param = nothing)
+function apply(::FlipY, keypoints::Keypoints, param = nothing)
     h, _ = keypoints.bounds
-    data = map(k -> fmap((p) -> (h - p[1], p[2]), k), keypoints.data),
+    data = map(k -> fmap((p) -> SVector(h - p[1], p[2]), k), keypoints.data),
     return Keypoints(
+        data,
         keypoints.bounds
     )
 end
