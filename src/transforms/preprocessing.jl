@@ -57,6 +57,7 @@ end
 denormalize(a, means, stds) = denormalize!(copy(a), means, stds)
 
 
+# TODO: check if this always allocates and if it can be done without
 imagetotensor(image::AbstractArray{<:AbstractRGB, 2}) = float.(permuteddimsview(channelview(image), (2, 3, 1))) |> parent
 tensortoimage(tensor::AbstractArray{T, 3}) where T = colorview(RGB, permuteddimsview(tensor, (3, 1, 2)))
 tensortoimage(tensor::AbstractArray{T, 2}) where T = colorview(Gray, permuteddimsview(tensor, (3, 1, 2)))

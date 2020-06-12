@@ -4,9 +4,10 @@ CurrentModule = DataAugmentation
 
 # DataAugmentation
 
-```@index
-```
 
-```@autodocs
-Modules = [DataAugmentation]
-```
+[quickstart](@ref)
+
+## Documentation TODO
+
+- `Item`s
+- Computer vision example^

@@ -13,6 +13,8 @@ makedocs(;
     ),
     pages=[
         "Home" => "index.md",
+        "Image transforms" => "transforms.md",
+        "Reference" => "reference.md"
     ],
 )
 
