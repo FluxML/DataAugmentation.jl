@@ -64,7 +64,7 @@ apply(::FlipY, image::Image, param = nothing) = Image(reverse(image.data; dims =
 
 function apply(::FlipY, keypoints::Keypoints, param = nothing)
     h, _ = keypoints.bounds
-    data = map(k -> fmap((p) -> SVector(h - p[1], p[2]), k), keypoints.data),
+    data = map(k -> fmap((p) -> SVector(h - p[1], p[2]), k), keypoints.data)
     return Keypoints(
         data,
         keypoints.bounds
@@ -74,14 +74,35 @@ end
 
 # Rotations
 
+"""
+    Rotate90()
+
+Rotate clock-wise by 90 degress
+
+Faster than [`Rotate`](@ref) for array types.
+"""
 struct Rotate90 <: Transform end
 (t::Rotate90)(image::Image) = Image(rotl90(image.data))
 (t::Rotate90)(keypoints::Keypoints) = error("Not implemented")
 
+"""
+    Rotate180()
+
+Rotate clock-wise by 180 degress
+
+Faster than [`Rotate`](@ref) for array types.
+"""
 struct Rotate180 <: Transform end
 (t::Rotate180)(image::Image) = Image(rot180(image.data))
 (t::Rotate180)(keypoints::Keypoints) = error("Not implemented")
 
+"""
+    Rotate270()
+
+Rotate clock-wise by 270 degress
+
+Faster than [`Rotate`](@ref) for array types.
+"""
 struct Rotate270 <: Transform end
 (t::Rotate270)(image::Image) = Image(rotr90(image.data))
 (t::Rotate270)(keypoints::Keypoints) = error("Not implemented")

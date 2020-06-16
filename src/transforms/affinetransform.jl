@@ -53,9 +53,16 @@ function applyaffine(item::Image{C}, A, crop::Union{Nothing,Tuple} = nothing) wh
 end
 
 function applyaffine(keypoints::Keypoints, A, crop::Union{Nothing,Tuple} = nothing)::Keypoints
+    keypoints_ = fmap(A, keypoints.data)
+    if isnothing(crop)
+        # TODO: calculate actual bounds
+        bounds_ = keypoints.bounds
+    else
+        bounds_ = crop
+    end
     return Keypoints(
-        fmap(A, keypoints.data),
-        isnothing(crop) ? keypoints.bounds : crop,
+        keypoints_,
+        bounds_
     )
 end
 
