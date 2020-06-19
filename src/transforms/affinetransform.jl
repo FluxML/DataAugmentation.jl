@@ -154,22 +154,22 @@ struct Affine <: AbstractAffine
 end
 getaffine(t::Affine, bounds, param) = t.tfm
 
-abstract type AbstractResizedTransform <: AbstractAffine end
+abstract type AbstractResize <: AbstractAffine end
 
-struct RandomResizedTransform <: AbstractResizedTransform
+struct RandomResize <: AbstractResize
     size
 end
-struct CenterResizedTransform <: AbstractResizedTransform
+struct CenterResize <: AbstractResize
     size
 end
 
 
-getparam(tfm::RandomResizedTransform) = (rand(), rand())
-getparam(tfm::CenterResizedTransform) = (1/2, 1/2)
+getparam(tfm::RandomResize) = (rand(), rand())
+getparam(tfm::CenterResize) = (1/2, 1/2)
 
 
 # TODO: clean up naming
-function getaffine(t::AbstractResizedTransform, bounds, param)
+function getaffine(t::AbstractResize, bounds, param)
     h, w = t.size
     k, l = bounds
     factor = min(k / h, l / w)
@@ -186,8 +186,8 @@ function getaffine(t::AbstractResizedTransform, bounds, param)
     return translatetfm ∘ scaletfm
 end
 
-RandomResizedCrop(crop) = RandomResizedTransform(crop) |> Crop(crop)
-CenterResizedCrop(crop) = CenterResizedTransform(crop) |> Crop(crop)
+RandomResizeCrop(crop) = RandomResize(crop) |> Crop(crop)
+CenterResizeCrop(crop) = CenterResize(crop) |> Crop(crop)
 
 # TODO: add Translate
 

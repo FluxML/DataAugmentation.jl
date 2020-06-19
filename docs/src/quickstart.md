@@ -12,7 +12,7 @@ image = testimage("lighthouse")
 
 item = Image(image)
 
-tfm = RandomResizedCrop((128, 128)) |> FlipX()
+tfm = RandomResizeCrop((128, 128)) |> FlipX()
 
 
 ```

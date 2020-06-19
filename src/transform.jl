@@ -116,7 +116,7 @@ function apply(tfm::Either, items::Tuple)
     return apply(t, items)
 end
 
-function apply(tfm::Either, items::Tuple, param)
+function apply(tfm::Either, items, param)
     t = tfm.transforms[param]
     return apply(t, items)
 end

@@ -35,6 +35,8 @@ apply(t::Crop, keypoints::Keypoints) = Keypoints(keypoints.data, getcrop(t, keyp
 
 # FlipTransform
 
+# TODO: implement affine version!
+
 """
     FlipX()
 
