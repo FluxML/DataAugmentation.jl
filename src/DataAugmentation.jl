@@ -2,63 +2,87 @@ module DataAugmentation
 
 using CoordinateTransformations
 using ImageTransformations
-using ImageTransformations: center, _center
+using ImageTransformations: center, _center, box_extrapolation, warp!
 using Images
 using Images: Colorant
 using StaticArrays
+using Parameters
+using DocStringExtensions
 
 include("./item.jl")
 include("./transform.jl")
-include("./utils.jl")
+include("./buffered.jl")
 include("./samples.jl")
-include("./display.jl")
 
-include("./transforms/spatial.jl")
-include("./transforms/affinetransform.jl")
-include("./transforms/preprocessing.jl")
+include("./spatial/affine.jl")
+include("./spatial/crop.jl")
+include("./spatial/translate.jl")
+include("./spatial/scale.jl")
+include("./spatial/resize.jl")
+
+#= TODO
 
 
-export
-    # Transforms
-    Transform,
-    AbstractAffine,
-    Affine,
-    CenterResize,
-    CenterResizeCrop,
-    Crop,
-    CroppedAffine,
     Either,
     FlipX,
     FlipY,
-    Identity,
     Lambda,
     Normalize,
     OneHot,
-    Pipeline,
     Rotate,
     Rotate90,
     Rotate180,
     Rotate270,
-    RandomResize,
-    RandomResizeCrop,
-    SamplePipeline,
-    Scale,
-    ScaleCrop,
     ToEltype,
-    ToTensor,
+    ToTensor, =#
 
-    # Items
-    Item,
+
+    # items interface
+export Item,
     ItemWrapper,
+    getwrapped,
+    getbounds,
+
+    # items
     Image,
     Keypoints,
-    Label,
-    Tensor,
+    Polygon,
+    BoundingBox,
+    Category,
+
+    # pipelines
+    ApplyStep,
+    CombineStep,
+    MapStep,
+    Pipeline,
+
+    # transforms
+    Transform,
+    Identity,
+    Buffered,
+
+    # affine transforms
+    AbstractAffine,
+    Affine,
+    Crop,
+    CropFixed,
+    CropRatio,
+    CroppedAffine,
+
+    # scale & resize
+    ScaleFixed,
+    ScaleRatio,
+    ScaleKeepAspect,
+    ResizeFixed,
+    ResizeRatio,
+    CenterResizeCrop,
+    RandomResizeCrop,
 
     # functions
     apply,
+    apply!,
     compose,
-    getbounds,
-    showitem
+    itemdata,
+    makebuffer
 
 end # module
