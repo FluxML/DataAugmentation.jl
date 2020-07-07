@@ -12,6 +12,7 @@ abstract type Crop <: Transform end
     from::CropFrom = CropFromOrigin()
 end
 
+CropFixed(sz; from=CropFromOrigin()) = CropFixed(sz, from)
 CropFixed(h::Int, w::Int; from=CropFromOrigin()) = CropFixed((h, w), from)
 
 
@@ -21,6 +22,12 @@ struct CropRatio <: Crop
     from::CropFrom
     CropRatio(ratios, from=CropFromOrigin()) = new(ratios, from)
 end
+
+
+struct CropIndices <: Crop
+    indices
+end
+
 
 getrandstate(::Crop) = (rand(), rand())
 
@@ -37,6 +44,7 @@ cropindices((25, 25), CropFromOrigin(), [SVector(1, 1), SVector(50, 50)], nothin
 """
 cropindices(crop::CropFixed, bounds, randstate) = cropindices(crop.size, crop.from, bounds, randstate)
 
+cropindices(crop::CropIndices, _, _) = crop.indices
 
 function cropindices(crop::CropRatio, bounds, randstate)
     h, w = length.(index_ranges(bounds))
@@ -64,19 +72,6 @@ function cropindices(sz, ::CropFromOrigin, bounds, _)
     return cropindices(sz, CropFromRandom(), bounds, (0., 0.))
 end
 
-
-"""
-    getcropsizes(t::Crop, ::Item)
-
-Compute the indices to crop to, e.g. `(1:100, 1:100)`.
-"""
-getcropsizes(t::CropFixed, ::Item) = t.sizes
-function getcropsizes(t::CropRatio, item::Item)
-    r1, r2 = index_ranges(getbounds(item))
-
-    return (floor(Int, r1[begin]):floor(Int, r1[begin] + t.ratios[1] * (r1[end] - r1[begin])),
-        floor(Int, r2[begin]):floor(Int, r2[begin] + t.ratios[2] * (r2[end] - r2[begin])),)
-end
 
 Crop(args...) = CropFixed(args...)
 
@@ -131,7 +126,8 @@ end
 function apply!(buffer, tfm::AbstractAffine, item::Item; randstate=getrandstate(tfm))
     tfmr, cropr = randstate
     A = getaffine(tfm, getbounds(item), tfmr)
-    indices = cropindices(tfm.croptransform, getbounds(item), cropr)
+    newbounds = A.(getbounds(item))
+    indices = cropindices(tfm.croptransform, newbounds, cropr)
     return applyaffine!(buffer, item, A, indices)
 end
 

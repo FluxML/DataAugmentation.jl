@@ -2,8 +2,12 @@
 struct ToEltype{T} <: Transform end
 ToEltype(T::Type) = ToEltype{T}()
 
-apply(t::ToEltype{T}, item::Image{<:T}) where T = Image(parent(item.data))
-apply(t::ToEltype{T}, item::Image{U}) where {T, U} = Image(parent(map(x -> convert(T, x), item.data)))
+apply(::ToEltype{T}, item::AbstractArrayItem{<:T}; randstate = nothing) where T = item
+function apply(::ToEltype{T}, item::AbstractArrayItem{U}; randstate = nothing) where {T, U}
+    newdata = map(x -> convert(T, x), itemdata(item))
+    item = setdata(item, newdata)
+    return item
+end
 
 
 struct Normalize <: Transform
@@ -14,18 +18,21 @@ end
 
 Normalize(means, stds; inplace = true) = Normalize(means, stds, inplace)
 
-apply(t::Normalize, item::Tensor) = Tensor(normalize!(t.inplace ? item.data : copy(item.data), t.means, t.stds))
+apply(t::Normalize, item::ArrayItem; randstate = nothing) = ArrayItem(
+    normalize!(t.inplace ? itemdata(item) : copy(itemdata(item)), t.means, t.stds))
 
 
-struct ToTensor <: Transform end
-apply(::ToTensor, image::Image) = Tensor(imagetotensor(image.data))
+struct SplitChannels <: Transform end
+apply(::SplitChannels, image::Image; randstate = nothing) =
+    ArrayItem(imagetotensor(itemdata(image)))
 
 
-struct OneHot <: Transform
+struct OneHotEncode <: Transform
     nclasses::Int
 end
 
-apply(t::OneHot, label::Label) = Tensor(onehot(label.data, 1:t.nclasses))
+apply(t::OneHotEncode, category::Category) =
+    ArrayItem(onehot(itemdata(category), 1:t.nclasses))
 
 
 function onehot(T, x::Int, labels::AbstractVector)
@@ -58,6 +65,10 @@ denormalize(a, means, stds) = denormalize!(copy(a), means, stds)
 
 
 # TODO: check if this always allocates and if it can be done without
+# TODO: is `parent` necessary?
 imagetotensor(image::AbstractArray{<:AbstractRGB, 2}) = float.(permuteddimsview(channelview(image), (2, 3, 1))) |> parent
 tensortoimage(tensor::AbstractArray{T, 3}) where T = colorview(RGB, permuteddimsview(tensor, (3, 1, 2)))
 tensortoimage(tensor::AbstractArray{T, 2}) where T = colorview(Gray, permuteddimsview(tensor, (3, 1, 2)))
+
+
+# TODO: implement in-place version

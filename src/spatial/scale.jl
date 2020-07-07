@@ -7,6 +7,8 @@ end
 struct ScaleRatio <: Scale
     ratios
 end
+ScaleRatio(fy::Number, fx::Number) = ScaleRatio((fy, fx))
+ScaleRatio(f::Number) = ScaleRatio((f, f))
 
 ScaleFixed(h::Int, w::Int) = ScaleFixed((h, w))
 

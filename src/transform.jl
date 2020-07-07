@@ -12,10 +12,10 @@ getrandstate(::Transform) = nothing
 apply(tfm::Transform, item::Item) = apply(tfm, item; randstate = getrandstate(tfm))
 
 
-function apply(tfm::Transform, itemw::ItemWrapper)
+function apply(tfm::Transform, itemw::ItemWrapper; randstate = getrandstate(tfm))
     item = apply(tfm, getwrapped(itemw); randstate = getrandstate(tfm))
-    setwrapped(itemw, item)
-    itemw
+    itemw = setwrapped(itemw, item)
+    return itemw
 end
 
 apply(tfm::Transform, items; randstate = getrandstate(tfm)) =
@@ -34,10 +34,16 @@ function apply(seq::Sequential, items; randstate = getrandstate(seq))
     end
     return items
 end
+#apply(seq::Sequential, item::Item) = apply(seq, item; randstate = getrandstate(seq))
+apply(seq::Sequential, item::Item; randstate = getrandstate(seq)) =
+    apply(seq, [item]; randstate = randstate)[1]
 
 compose(tfm) = tfm
 compose(tfm1::Transform, tfm2::Transform) = Sequential([tfm1, tfm2])
-compose(seq::Sequential, tfm::Transform) = push!(seq.transforms, tfm)
+function compose(seq::Sequential, tfm::Transform)
+    push!(seq.transforms, tfm)
+    return seq
+end
 compose(tfms...) = compose(compose(tfms[1], tfms[2]), tfms[3:end]...)
 Base.:(|>)(tfm1::Transform, tfm2::Transform) = compose(tfm1, tfm2)
 

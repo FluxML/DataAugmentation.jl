@@ -8,8 +8,13 @@ abstract type ItemWrapper <: AbstractItem end
 itemfield(wrapped::ItemWrapper) = :item
 getwrapped(wrapped::ItemWrapper) = getfield(wrapped, itemfield(wrapped))
 function setwrapped(wrapped::ItemWrapper, item)
-    Setfield.@set wrapped.item = item
-    wrapped
+    wrapped = Setfield.@set wrapped.item = item
+    return wrapped
+end
+
+function setdata(item::Item, data)
+    item = Setfield.@set item.data = data
+    return item
 end
 
 itemdata(item::Item) = item.data
@@ -31,7 +36,14 @@ Keypoints{2, SVector{2, Float32}}(
 )
 
 """
-struct Keypoints{N, T} <: Item
+
+abstract type AbstractArrayItem{T} <: Item end
+
+struct ArrayItem{T} <: AbstractArrayItem{T}
+    data::AbstractArray{T}
+end
+
+struct Keypoints{N, T} <: AbstractArrayItem{T}
     data::AbstractArray{>:SVector{N, T}}
     bounds::AbstractVector{<:SVector{N}}
 end
@@ -39,12 +51,17 @@ end
 struct Polygon{N, T} <: ItemWrapper
     item::Keypoints{N, T}
 end
+Polygon(data, bounds) = Polygon(Keypoints(data, bounds))
 
+"""
+
+"""
 struct BoundingBox{N, T} <: ItemWrapper
     item::Keypoints{N, T}
 end
+BoundingBox{N, T}(data, bounds) where {N, T} = BoundingBox{N, T}(Keypoints(data, bounds))
 
-struct Image{C<:Colorant} <: Item
+struct Image{C<:Colorant} <: AbstractArrayItem{C}
     data::AbstractMatrix{C}
     bounds::AbstractVector{<:SVector{2}}
 end
@@ -57,32 +74,15 @@ struct Category{N} <: Item
 end
 
 
-# TODO: bounds should begin at 0 so that they're transformed properly
-#=
-makebounds(a::AbstractMatrix) = makebounds(indices_spatial(a)...)
-makebounds(h::Int, w::Int) = makebounds(1:h, 1:w)
-function makebounds(r1::AbstractRange, r2::AbstractRange)
-    y1, y2 = r1[begin], r1[end]
-    x1, x2 = r2[begin], r2[end]
-    return [
-        SVector(y1, x1) .- 1,
-        SVector(y1, x2) .- 1,
-        SVector(y2, x2) .- 1,
-        SVector(y2, x1) .- 1,
-    ]
-end
-=#
-
-
 function index_ranges(bounds::AbstractVector{<:SVector{N}}) where N
     ext = [extrema([b[i] for b in bounds]) for i in 1:N]
     return Tuple(floor(Int, mi+1):ceil(Int, ma) for (mi, ma) in ext)
 end
 
 
+boundssize(item::AbstractItem) = boundssize(getbounds(item))
 boundssize(bounds) = length.(index_ranges(bounds))
 
-# Experimental
 
 function makebounds(a::AbstractArray)
     idxs = CartesianIndices(a)
@@ -99,10 +99,4 @@ function makebounds(idx1, idx2)
         SVector(y2, x2),
         SVector(y2, x1),
     ]
-end
-
-function makesizes(bounds)
-    p1, p2, p3, p4 = bounds
-
-
 end
