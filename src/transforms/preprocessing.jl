@@ -46,6 +46,7 @@ onehot(x, labels) = onehot(Float32, x, labels)
 # helper functions
 
 function normalize!(a, means, stds)
+    # TODO: use vectorized ops for generality
     for i = 1:3
         a[:,:,i] .-= means[i]
         a[:,:,i] ./= stds[i]

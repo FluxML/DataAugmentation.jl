@@ -13,7 +13,7 @@ ScaleRatio(f::Number) = ScaleRatio((f, f))
 ScaleFixed(h::Int, w::Int) = ScaleFixed((h, w))
 
 function getaffine(tfm::ScaleFixed, bounds, randstate)
-    ratios = boundssize(bounds) ./ tfm.size
+    ratios = tfm.size ./ boundssize(bounds)
     return getaffine(ScaleRatio(ratios), bounds, randstate)
 end
 
