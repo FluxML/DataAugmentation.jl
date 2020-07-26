@@ -17,9 +17,14 @@ function setdata(item::Item, data)
     return item
 end
 
+struct Many{I<:AbstractItem} <: AbstractItem
+    items::AbstractArray{<:I}
+end
+
 itemdata(item::Item) = item.data
 itemdata(wrapper::ItemWrapper) = itemdata(getwrapped(wrapper))
 itemdata(items) = itemdata.(items)
+itemdata(many::Many) = itemdata.(many.items)
 
 # Keypoint data
 
