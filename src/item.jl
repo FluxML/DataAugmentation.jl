@@ -64,7 +64,7 @@ Polygon(data, bounds) = Polygon(Keypoints(data, bounds))
 struct BoundingBox{N, T} <: ItemWrapper
     item::Keypoints{N, T}
 end
-BoundingBox{N, T}(data, bounds) where {N, T} = BoundingBox{N, T}(Keypoints(data, bounds))
+BoundingBox(data, bounds) = BoundingBox(Keypoints(data, bounds))
 
 struct Image{C<:Colorant} <: AbstractArrayItem{C}
     data::AbstractMatrix{C}

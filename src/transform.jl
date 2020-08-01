@@ -18,8 +18,8 @@ function apply(tfm::Transform, itemw::ItemWrapper; randstate = getrandstate(tfm)
     return itemw
 end
 
-function apply(tfm::Transform, many::Many; randstate = DataAugmentation.getrandstate(tfm))
-    map(item -> apply(tfm, item, randstate = randstate), many.items)
+function apply(tfm::Transform, many::Many; randstate = getrandstate(tfm))
+    return Many(map(item -> apply(tfm, item, randstate = randstate), many.items))
 end
 
 # FIXME: Stack overflow when passing an `Int` to `apply`

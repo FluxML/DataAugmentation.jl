@@ -47,6 +47,7 @@ export Item,
     getbounds,
 
     # items
+    Many,
     ArrayItem,
     Image,
     Keypoints,
