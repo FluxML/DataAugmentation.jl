@@ -1,49 +1,25 @@
-"""
-    $(TYPEDEF)
-
-Designate that the inplace-version of `Transform::T` should be used
-for all items that are a subtype of `itemtype`.
-
-`apply!(buffer, tfm::T, item)` needs to be implemented for all `Item`
-types that should be buffered.
-"""
-@with_kw struct Buffered{T<:Transform} <: Transform
-    transform::T
-    itemtype::Type{<:Item}  = Item
-end
-Buffered(tfm::T) where {T<:Transform} = Buffered{T}(transform = tfm)
-
-
-getrandstate(buffered::Buffered) = getrandstate(buffered.transform)
-apply(buffered::Buffered, item::Item, randstate = getrandstate(buffered)) =
-    apply(buffered.transform, item)
 
 
 """
-    makebuffer(tfm::Buffered, item) = apply(buffered.transform, item)
-    makebuffer(tfm::Transform, item) = nothing
+    makebuffer(tfm::Transform, item) = apply(tfm, item)
 
-Allocate a buffer. If `tfm` is not `Buffered`, default to `nothing`.
-If `tfm` is a `Buffered{T}`, default to `buffer = apply(tfm.transform, item)`.
+Allocate a buffer. Default to `buffer = apply(tfm, item)`.
 """
-makebuffer(::Transform, _) = nothing
-makebuffer(buffered::Buffered, item::Item) = apply(buffered.transform, item)
+makebuffer(tfm::Transform, items) = apply(tfm, items)
 
 
 """
-    apply!(buffer, buffered::Buffered{T}, item::I)
+    apply!(buffer, tfm, item::I)
 
-Applies `buffered.transform` to `item`, mutating the preallocated
-`buffer`.
+Applies `tfm` to `item`, mutating the preallocated `buffer`.
 
-`buffer` can be obtained with `buffer = makebuffer(buffered, item)`
+`buffer` can be obtained with `buffer = makebuffer(tfm, item)`
 
     apply!(buffer, tfm::Transform, item::I; randstate) = apply(tfm, item; randstate)
 
-If `tfm` is not a `Buffered`, simply return `apply(tfm, item)` (non-mutating
-version).
+Default to `apply(tfm, item)` (non-mutating version).
 """
-apply!(_, tfm::Transform, items) = apply(tfm, items)
+apply!(buf, tfm::Transform, items; randstate = getrandstate(tfm)) = apply(tfm, items, randstate = randstate)
 
 
 function makebuffer(pipeline::Sequential, items)
@@ -56,9 +32,57 @@ function makebuffer(pipeline::Sequential, items)
 end
 
 
-function apply!(buffers, pipeline::Sequential, items)
-    for (tfm, buffer) in zip(pipeline.transforms, buffers)
-        items = apply!(buffer, tfm, items)
+function apply!(buffers, pipeline::Sequential, items; randstate = getrandstate(pipeline))
+    for (tfm, buffer, r) in zip(pipeline.transforms, buffers, randstate)
+        items = apply!(buffer, tfm, items; randstate = r)
     end
     return items
 end
+
+
+# Inplace wrappers
+
+mutable struct Inplace{T<:Transform}
+    tfm::T
+    buffer
+    Inplace(tfm::T, buffer = nothing) where T = new{T}(tfm, buffer)
+end
+
+
+function (inplace::Inplace)(items; randstate = getrandstate(inplace.tfm))
+    if isnothing(inplace.buffer)
+        inplace.buffer = makebuffer(inplace.tfm, items)
+    end
+    return apply!(inplace.buffer, inplace.tfm, items, randstate = randstate)
+end
+
+function (inplace::Inplace)(buf, items; randstate = getrandstate(inplace.tfm))
+    titems = inplace(items, randstate = randstate)
+    copyitemdata!(buf, titems)
+end
+
+
+struct InplaceThreadsafe
+    inplaces::Vector{Inplace}
+    function InplaceThreadsafe(tfm; n = Threads.nthreads())
+        @assert n >= 1
+        return new([Inplace(tfm) for _ in 1:n])
+    end
+end
+
+
+"""
+    (::InplaceThreadsafe)(buf, items)
+    (::InplaceThreadsafe)(items)
+"""
+function (inplacet::InplaceThreadsafe)(args...; kwargs...)
+    inplacethread = inplacet.inplaces[Threads.threadid()]
+    return inplacethread(args...; kwargs...)
+end
+
+
+# Utils
+
+copyitemdata!(buf::I, item::I) where I<:Item = copy!(itemdata(buf), itemdata(item))
+copyitemdata!(bufs::T, items::T) where T<:Tuple = (copyitemdata!.(bufs, items); bufs)
+copyitemdata!(bufs::T, items::T) where T<:AbstractVector = (copyitemdata!.(bufs, items); bufs)

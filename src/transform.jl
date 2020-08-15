@@ -40,6 +40,7 @@ function apply(seq::Sequential, items; randstate = getrandstate(seq))
     return items
 end
 
+
 apply(seq::Sequential, item::Item; randstate = getrandstate(seq)) =
     apply(seq, [item]; randstate = randstate)[1]
 
@@ -64,3 +65,17 @@ apply(::Identity, item::Item; randstate = nothing) = item
 compose(::Identity, ::Identity) = Identity()
 compose(tfm::Transform, ::Identity) = tfm
 compose(::Identity, tfm::Transform) = tfm
+
+
+struct Map <: Transform
+    fn
+end
+
+function apply(tfm::Map, item::AbstractArrayItem; randstate = getrandstate(tfm))
+    return setdata(item, map(tfm.fn, itemdata(item)))
+end
+
+function apply!(buf, tfm::Map, item::AbstractArrayItem; randstate = getrandstate(tfm))
+    map!(tfm.fn, itemdata(buf), itemdata(item))
+    return buf
+end

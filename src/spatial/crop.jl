@@ -123,16 +123,15 @@ function apply(tfm::CroppedAffine, item::Item; randstate=getrandstate(tfm))
 end
 
 
-function apply!(buffer, tfm::AbstractAffine, item::Item; randstate=getrandstate(tfm))
+function apply!(buffer, tfm::CroppedAffine, item::Item; randstate=getrandstate(tfm))
     tfmr, cropr = randstate
-    A = getaffine(tfm, getbounds(item), tfmr)
-    newbounds = A.(getbounds(item))
-    indices = cropindices(tfm.croptransform, newbounds, cropr)
-    return applyaffine!(buffer, item, A, indices)
+    A = getaffine(tfm, getbounds(item), randstate)
+    return applyaffine!(buffer, item, A)
 end
 
-function applyaffine!(buffer::Image, item::Image, A, cropsizes)
-    warp!(buffer.data, box_extrapolation(item.data), A, cropsizes)
+function applyaffine!(buffer::Image, item::Image, A)
+    warp!(buffer.data, box_extrapolation(item.data), inv(A))
+    return buffer
 end
 
 compose(at::AbstractAffine, ct::Crop) = CroppedAffine(at, ct)

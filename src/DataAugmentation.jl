@@ -64,7 +64,7 @@ export Item,
     # transforms
     Transform,
     Identity,
-    Buffered,
+    Map,
 
     # pre/postprocessing transforms
     ToEltype,

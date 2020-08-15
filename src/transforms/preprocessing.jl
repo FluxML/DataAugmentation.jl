@@ -1,4 +1,6 @@
 
+# ToEltype
+
 struct ToEltype{T} <: Transform end
 ToEltype(T::Type) = ToEltype{T}()
 
@@ -7,6 +9,12 @@ function apply(::ToEltype{T}, item::AbstractArrayItem{U}; randstate = nothing) w
     newdata = map(x -> convert(T, x), itemdata(item))
     item = setdata(item, newdata)
     return item
+end
+
+function apply!(buf, ::ToEltype, item::AbstractArrayItem; randstate = nothing)
+    # copy! does type conversion under the hood
+    copy!(itemdata(buf), itemdata(item))
+    return buf
 end
 
 
@@ -25,6 +33,12 @@ apply(t::Normalize, item::ArrayItem; randstate = nothing) = ArrayItem(
 struct SplitChannels <: Transform end
 apply(::SplitChannels, image::Image; randstate = nothing) =
     ArrayItem(imagetotensor(itemdata(image)))
+
+# TODO: inplace-version is much slower
+function apply!(buf, ::SplitChannels, image::Image; randstate = nothing)
+    imagetotensor!(buf.data, image.data)
+    return buf
+end
 
 
 struct OneHotEncode <: Transform
@@ -65,11 +79,43 @@ end
 denormalize(a, means, stds) = denormalize!(copy(a), means, stds)
 
 
-# TODO: check if this always allocates and if it can be done without
 # TODO: is `parent` necessary?
 imagetotensor(image::AbstractArray{<:AbstractRGB, 2}) = float.(permuteddimsview(channelview(image), (2, 3, 1))) |> parent
-tensortoimage(tensor::AbstractArray{T, 3}) where T = colorview(RGB, permuteddimsview(tensor, (3, 1, 2)))
-tensortoimage(tensor::AbstractArray{T, 2}) where T = colorview(Gray, permuteddimsview(tensor, (3, 1, 2)))
+# improve performance, this takes double the time of `imagetotensor`
+imagetotensor!(buf, image::AbstractArray{<:AbstractRGB, 2}) = permutedims!(
+    buf,
+    channelview(image),
+    (2, 3, 1))
+tensortoimage(a::AbstractArray{T, 3}) where T = colorview(RGB, permuteddimsview(a, (3, 1, 2)))
+tensortoimage(a::AbstractArray{T, 2}) where T = colorview(Gray, a)
+
+#=
+T = Normed{UInt8,8}
+img = zeros(RGB{T}, 224, 224)
+
+using BenchmarkTools
+@btime begin
+    imagetotensor(img)
+end;  # 676.103 μs (11 allocations: 588.47 KiB)
+
+@btime begin
+    imagetotensor!(b2, img)
+    nothing
+end;  #
 
 
-# TODO: implement in-place version
+b1 = collect(channelview(img))
+b2 = imagetotensor(img)
+b3 = permutedims(b1, (2, 3, 1))
+
+@btime begin
+    channels!(b1, img)
+    permutedims!(b2, b1, (2, 3, 1))
+end  # 839.176 μs (9 allocations: 336 bytes)
+
+@btime begin
+    channels!(b1, img)
+    permutedims!(b3, b1, (2, 3, 1))
+end  # 707.046 μs (2 allocations: 112 bytes)
+
+=#
