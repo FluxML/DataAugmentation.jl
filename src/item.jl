@@ -17,8 +17,8 @@ function setdata(item::Item, data)
     return item
 end
 
-struct Many{I<:AbstractItem} <: AbstractItem
-    items::AbstractArray{<:I}
+struct Many{I} <: AbstractItem
+    items::AbstractArray{I}
 end
 
 itemdata(item::Item) = item.data
