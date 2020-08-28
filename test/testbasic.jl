@@ -85,7 +85,7 @@ end
 
     @testset ExtendedTestSet "setwrapped" begin
         bbox1 = BoundingBox(keypoints1)
-        bbox3 = setdata(bbox1, keypoints2)
+        bbox3 = setwrapped(bbox1, keypoints1)
         @test getwrapped(bbox3) == getwrapped(bbox1)
     end
 
