@@ -4,7 +4,7 @@ using CoordinateTransformations
 using ImageTransformations
 using ImageTransformations: center, _center, box_extrapolation, warp!
 using Images
-using Images: Colorant
+using Images: Colorant, permuteddimsview
 using StaticArrays
 using Parameters
 using DocStringExtensions
@@ -69,6 +69,7 @@ export Item,
     ToEltype,
     Normalize,
     SplitChannels,
+    OneHotEncode,
 
 
     # affine transforms
