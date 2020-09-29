@@ -28,6 +28,18 @@ struct CropIndices <: Crop
     indices
 end
 
+"""
+    CropDivisible(factor, [from])
+
+Does not remove any pixels, but pads width and height so they're
+divisible by `factor`
+"""
+struct CropDivisible <: Crop
+    factor::Int
+    from::CropFrom
+    CropDivisible(factor, from=CropFromOrigin()) = new(factor, from)
+end
+
 
 getrandstate(::Crop) = (rand(), rand())
 
@@ -45,6 +57,13 @@ cropindices((25, 25), CropFromOrigin(), [SVector(1, 1), SVector(50, 50)], nothin
 cropindices(crop::CropFixed, bounds, randstate) = cropindices(crop.size, crop.from, bounds, randstate)
 
 cropindices(crop::CropIndices, _, _) = crop.indices
+
+function cropindices(crop::CropDivisible, bounds, randstate)
+    sz = roundtodivisible.(length.(index_ranges(bounds)), crop.factor)
+    cropindices(sz, crop.from, bounds, randstate)
+end
+
+roundtodivisible(x::Int, factor::Int) = (x ÷ factor + Bool(x % factor > 0)) * factor
 
 function cropindices(crop::CropRatio, bounds, randstate)
     h, w = length.(index_ranges(bounds))

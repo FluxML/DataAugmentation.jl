@@ -79,6 +79,7 @@ export Item,
     CropFixed,
     CropIndices,
     CropRatio,
+    CropDivisible,
     CroppedAffine,
 
     # scale & resize
@@ -87,6 +88,7 @@ export Item,
     ScaleKeepAspect,
     ResizeFixed,
     ResizeRatio,
+    ResizeDivisible,
     CenterResizeCrop,
     RandomResizeCrop,
 

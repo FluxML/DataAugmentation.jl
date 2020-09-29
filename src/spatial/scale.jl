@@ -24,8 +24,8 @@ end
 
 
 """
-    ScaleKeepAspect(minglengths) <: Scale <: AbstractAffine
-    ScaleKeepAspect(minglength)
+    ScaleKeepAspect(minlengths) <: Scale <: AbstractAffine
+    ScaleKeepAspect(minlength)
 
 Affine transformation that scales the shortest side of `item`
 to `minlengths`, keeping the original aspect ratio.

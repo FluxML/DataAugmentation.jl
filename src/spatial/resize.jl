@@ -6,3 +6,5 @@ CenterResizeCrop(sz::Tuple{Int, Int}) = ScaleKeepAspect(sz) |> CropFixed(sz, Cro
 CenterResizeCrop(h, w) = CenterResizeCrop((h, w))
 RandomResizeCrop(sz::Tuple{Int, Int}) = ScaleKeepAspect(sz) |> CropFixed(sz, CropFromRandom())
 RandomResizeCrop(h, w) = RandomResizeCrop((h, w))
+
+ResizeDivisible(sz::Tuple{Int, Int}; divisible = 1) = ScaleKeepAspect(sz) |> CropDivisible(divisible)
