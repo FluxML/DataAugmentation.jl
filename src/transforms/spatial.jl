@@ -4,8 +4,9 @@
 # for data where affine transformations can be applied, the bounds are important
 # for calculating the transformation matrix
 
-getbounds(item::Image)::Tuple = size(item.data)
-getbounds(item::Keypoints)::Tuple = item.bounds
+getbounds(item::Image) = item.bounds
+getbounds(item::Keypoints) = item.bounds
+getbounds(a::AbstractMatrix) = makebounds(a)
 
 
 # Crops

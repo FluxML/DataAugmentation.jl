@@ -3,6 +3,7 @@
 getbounds(item::Image) = item.bounds
 getbounds(item::Keypoints) = item.bounds
 getbounds(wrapper::ItemWrapper) = getbounds(getwrapped(wrapper))
+getbounds(a::AbstractMatrix) = makebounds(a)
 
 
 

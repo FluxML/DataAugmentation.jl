@@ -95,6 +95,7 @@ function makebounds(a::AbstractArray)
     return makebounds(Tuple(idxs[begin]), Tuple(idxs[end]))
 end
 makebounds(h::Int, w::Int) = makebounds((1, 1), (h, w))
+makebounds(sz::Tuple{Int, Int}) = makebounds(sz...)
 makebounds(r1::R, r2::R) where R<:AbstractRange = makebounds((r1[begin], r2[begin]), (r1[end], r2[end]))
 function makebounds(idx1, idx2)
     y1, x1 = idx1 .- 1

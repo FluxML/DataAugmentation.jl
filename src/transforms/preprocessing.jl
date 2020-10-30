@@ -49,12 +49,12 @@ apply(t::OneHotEncode, category::Category) =
     ArrayItem(onehot(itemdata(category), 1:t.nclasses))
 
 
-function onehot(T, x::Int, labels::AbstractVector)
-    v = fill(zero(T), length(labels))
+function onehot(T, x::Int, n::Int)
+    v = fill(zero(T), n)
     v[x] = one(T)
     return v
 end
-onehot(x, labels) = onehot(Float32, x, labels)
+onehot(x, n) = onehot(Float32, x, n)
 
 
 # helper functions
@@ -80,7 +80,7 @@ denormalize(a, means, stds) = denormalize!(copy(a), means, stds)
 
 
 # TODO: is `parent` necessary?
-imagetotensor(image::AbstractArray{<:AbstractRGB, 2}) = float.(permuteddimsview(channelview(image), (2, 3, 1))) |> parent
+imagetotensor(image::AbstractArray{<:AbstractRGB, 2}, T = Float32) = T.(permuteddimsview(channelview(image), (2, 3, 1))) |> parent
 # improve performance, this takes double the time of `imagetotensor`
 imagetotensor!(buf, image::AbstractArray{<:AbstractRGB, 2}) = permutedims!(
     buf,
