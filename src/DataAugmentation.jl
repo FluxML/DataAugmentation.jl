@@ -1,10 +1,12 @@
 module DataAugmentation
 
 using CoordinateTransformations
+using ColorBlendModes
 using ImageTransformations
 using ImageTransformations: center, _center, box_extrapolation, warp!
 using Images
 using Images: Colorant, permuteddimsview
+using ImageDraw
 using StaticArrays
 using Parameters
 using DocStringExtensions
@@ -12,7 +14,6 @@ using DocStringExtensions
 include("./item.jl")
 include("./transform.jl")
 include("./buffered.jl")
-include("./samples.jl")
 include("./show.jl")
 
 include("./spatial/affine.jl")

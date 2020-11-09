@@ -1,19 +1,31 @@
+"""
+    abstract type Transform
+
+Abstract supertype for all transformations.
+"""
 abstract type Transform end
 
 """
     getrandstate(transform)
 
-Random state to pass as keyword argument to `apply`. Useful for
+Random state to pass as keyword argument to [`apply`](#). Useful for
 stochastic transforms.
 """
 getrandstate(::Transform) = nothing
 
 
+"""
+    apply(tfm, item[; randstate])
+    apply(tfm, items[; randstate])
+
+Apply `tfm` to an `item` or a tuple `items`.
+
+"""
 apply(tfm::Transform, item::Item) = apply(tfm, item; randstate = getrandstate(tfm))
 
 
 function apply(tfm::Transform, itemw::ItemWrapper; randstate = getrandstate(tfm))
-    item = apply(tfm, getwrapped(itemw); randstate = getrandstate(tfm))
+    item = apply(tfm, getwrapped(itemw); randstate = randstate)
     itemw = setwrapped(itemw, item)
     return itemw
 end
@@ -22,9 +34,9 @@ function apply(tfm::Transform, many::Many; randstate = getrandstate(tfm))
     return Many(map(item -> apply(tfm, item, randstate = randstate), many.items))
 end
 
-# FIXME: Stack overflow when passing an `Int` to `apply`
-apply(tfm::Transform, items; randstate = getrandstate(tfm)) =
+function apply(tfm::Transform, items::Tuple; randstate = getrandstate(tfm))
     map(item -> apply(tfm, item; randstate = randstate), items)
+end
 
 
 struct Sequential <: Transform
@@ -67,15 +79,20 @@ compose(tfm::Transform, ::Identity) = tfm
 compose(::Identity, tfm::Transform) = tfm
 
 
-struct Map <: Transform
+"""
+    MapElem(f)
+
+Applies `f` to every element in an [`AbstractArrayItem`].
+"""
+struct MapElem <: Transform
     fn
 end
 
-function apply(tfm::Map, item::AbstractArrayItem; randstate = getrandstate(tfm))
+function apply(tfm::MapElem, item::AbstractArrayItem; randstate = getrandstate(tfm))
     return setdata(item, map(tfm.fn, itemdata(item)))
 end
 
-function apply!(buf, tfm::Map, item::AbstractArrayItem; randstate = getrandstate(tfm))
+function apply!(buf, tfm::MapElem, item::AbstractArrayItem; randstate = getrandstate(tfm))
     map!(tfm.fn, itemdata(buf), itemdata(item))
     return buf
 end

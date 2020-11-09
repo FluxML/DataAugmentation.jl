@@ -87,10 +87,10 @@ end
 getparam(cat::ComposedAffine) = Tuple(getparam(t) for t in cat.transforms)
 
 
-function getaffine(cat::ComposedAffine, bounds, params::Tuple)
+function getaffine(cat::ComposedAffine, bounds, params::Tuple, T = Float32)
     A = IdentityTransformation()
     for (t, param) in zip(cat.transforms, params)
-        A = getaffine(t, bounds, param) ∘ A
+        A = getaffine(t, bounds, param, T) ∘ A
     end
     return A
 end
@@ -169,7 +169,7 @@ getparam(tfm::CenterResize) = (1/2, 1/2)
 
 
 # TODO: clean up naming
-function getaffine(t::AbstractResize, bounds, param)
+function getaffine(t::AbstractResize, bounds, param, T = Float32)
     h, w = t.size
     k, l = bounds
     factor = min(k / h, l / w)
@@ -178,8 +178,8 @@ function getaffine(t::AbstractResize, bounds, param)
     h_, w_ = Int.(floor.(bounds ./ factor))
 
     ry, rx = param
-    ty = pickfromrange(0:max(0, h_ - h), ry)
-    tx = pickfromrange(0:max(0, w_ - w), rx)
+    ty = convert(T, pickfromrange(0:max(0, h_ - h), ry))
+    tx = convert(T, pickfromrange(0:max(0, w_ - w), rx))
 
     translatetfm = Translation(-ty, -tx)
 
@@ -222,8 +222,9 @@ end
 getparam(t::Rotate) = t.angles isa Number ? t.angles : rand(t.angles)
 
 # Transformation matrix centered in the item's bounds
-function getaffine(t::Rotate, bounds, param)
-    return recenter(RotMatrix(param * (pi / 180)), center(bounds))
+function getaffine(t::Rotate, bounds, param, T = Float32)
+    angle = convert(T, param * (pi / 180))
+    return recenter(RotMatrix(angle), center(bounds))
 end
 
 compose(::Rotate90, at::AbstractAffine) = Rotate(90) |> at

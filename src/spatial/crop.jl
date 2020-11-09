@@ -1,26 +1,26 @@
 abstract type CropFrom end
 
-struct CropFromOrigin <: CropFrom end
-struct CropFromCenter <: CropFrom end
-struct CropFromRandom <: CropFrom end
+struct FromOrigin <: CropFrom end
+struct FromCenter <: CropFrom end
+struct FromRandom <: CropFrom end
 
 
 abstract type Crop <: Transform end
 
 @with_kw struct CropFixed <: Crop
     size::Tuple{Int,Int}
-    from::CropFrom = CropFromOrigin()
+    from::CropFrom = FromOrigin()
 end
 
-CropFixed(sz; from=CropFromOrigin()) = CropFixed(sz, from)
-CropFixed(h::Int, w::Int; from=CropFromOrigin()) = CropFixed((h, w), from)
+CropFixed(sz; from=FromOrigin()) = CropFixed(sz, from)
+CropFixed(h::Int, w::Int; from=FromOrigin()) = CropFixed((h, w), from)
 
 
 
 struct CropRatio <: Crop
     ratios
     from::CropFrom
-    CropRatio(ratios, from=CropFromOrigin()) = new(ratios, from)
+    CropRatio(ratios, from=FromOrigin()) = new(ratios, from)
 end
 
 
@@ -37,7 +37,7 @@ divisible by `factor`
 struct CropDivisible <: Crop
     factor::Int
     from::CropFrom
-    CropDivisible(factor, from=CropFromOrigin()) = new(factor, from)
+    CropDivisible(factor, from=FromOrigin()) = new(factor, from)
 end
 
 
@@ -51,7 +51,7 @@ getrandstate(::Crop) = (rand(), rand())
 # Example:
 
 ```julia
-cropindices((25, 25), CropFromOrigin(), [SVector(1, 1), SVector(50, 50)], nothing) == (1:25, 1:25)
+cropindices((25, 25), FromOrigin(), [SVector(1, 1), SVector(50, 50)], nothing) == (1:25, 1:25)
 ```
 """
 cropindices(crop::CropFixed, bounds, randstate) = cropindices(crop.size, crop.from, bounds, randstate)
@@ -59,21 +59,21 @@ cropindices(crop::CropFixed, bounds, randstate) = cropindices(crop.size, crop.fr
 cropindices(crop::CropIndices, _, _) = crop.indices
 
 function cropindices(crop::CropDivisible, bounds, randstate)
-    sz = roundtodivisible.(length.(index_ranges(bounds)), crop.factor)
+    sz = roundtodivisible.(length.(boundsranges(bounds)), crop.factor)
     cropindices(sz, crop.from, bounds, randstate)
 end
 
 roundtodivisible(x::Int, factor::Int) = (x ÷ factor + Bool(x % factor > 0)) * factor
 
 function cropindices(crop::CropRatio, bounds, randstate)
-    h, w = length.(index_ranges(bounds))
+    h, w = length.(boundsranges(bounds))
     sz = ceil.(Int, (h, w) .* crop.ratios)
     cropindices(sz, crop.from, bounds, randstate)
 end
 
 
-function cropindices(sz, ::CropFromRandom, bounds, r::Tuple{Float64,Float64})
-    ranges = index_ranges(bounds)
+function cropindices(sz, ::FromRandom, bounds, r::Tuple{Float64,Float64})
+    ranges = boundsranges(bounds)
     mins = minimum.(ranges)
     maxs = maximum.(ranges)
     lengths = length.(ranges)
@@ -83,23 +83,23 @@ function cropindices(sz, ::CropFromRandom, bounds, r::Tuple{Float64,Float64})
     return Tuple(start:end_ for (start, end_) in zip(starts, ends))
 end
 
-function cropindices(sz, ::CropFromCenter, bounds, _)
-    return cropindices(sz, CropFromRandom(), bounds, (.5, .5))
+function cropindices(sz, ::FromCenter, bounds, _)
+    return cropindices(sz, FromRandom(), bounds, (.5, .5))
 end
 
-function cropindices(sz, ::CropFromOrigin, bounds, _)
-    return cropindices(sz, CropFromRandom(), bounds, (0., 0.))
+function cropindices(sz, ::FromOrigin, bounds, _)
+    return cropindices(sz, FromRandom(), bounds, (0., 0.))
 end
 
 
-Crop(args...) = CropFixed(args...)
+Crop(args...) = Affine(CoordinateTransformations.IdentityTransformation()) |> CropFixed(args...)
 
 
 """
     CroppedAffine(transform, croptransform)
 
 Applies an affine `transform` and crops with `croptransform`, such
-that `getbounds(t(item)) == getcrop(croptransform)`
+that `getbounds(apply(transform, item)) == getcrop(croptransform)`
 
 This wrapper leads to performance improvements when warping an
 image, since only the indices within the bounds of `crop` need
@@ -122,9 +122,9 @@ getrandstate(tfm::CroppedAffine) = getrandstate(tfm.transform), getrandstate(tfm
 
 
 # TODO: take into account if not cropping from origin
-function getaffine(tfm::CroppedAffine, bounds, randstate)
+function getaffine(tfm::CroppedAffine, bounds, randstate, T = Float32)
     randtfm, randcrop = randstate
-    A = getaffine(tfm.transform, bounds, randstate)
+    A = getaffine(tfm.transform, bounds, randstate, T)
     if tfm.fixcorner
         newbounds = A.(bounds)
         indices = cropindices(tfm.croptransform, newbounds, randcrop)
@@ -135,7 +135,7 @@ end
 
 function apply(tfm::CroppedAffine, item::Item; randstate=getrandstate(tfm))
     tfmr, cropr = randstate
-    A = getaffine(tfm, getbounds(item), randstate)
+    A = getaffine(tfm, getbounds(item), randstate, affinetype(item))
     newbounds = A.(getbounds(item))
     indices = cropindices(tfm.croptransform, newbounds, cropr)
     return applyaffine(item, A, indices)

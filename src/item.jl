@@ -3,7 +3,7 @@ using Setfield
 
 abstract type AbstractItem end
 abstract type Item <: AbstractItem end
-abstract type ItemWrapper <: AbstractItem end
+abstract type ItemWrapper{Item} <: AbstractItem end
 
 itemfield(wrapped::ItemWrapper) = :item
 getwrapped(wrapped::ItemWrapper) = getfield(wrapped, itemfield(wrapped))
@@ -27,83 +27,221 @@ itemdata(wrapper::ItemWrapper) = itemdata(getwrapped(wrapper))
 itemdata(items) = itemdata.(items)
 itemdata(many::Many) = itemdata.(many.items)
 
-# Keypoint data
 
 """
-    Keypoints{N, T>:SVector{N}}
+    abstract type AbstractArrayItem{N, T}
 
-`n`-dimensionalKeypoints represented as SVector{N}.
-Spatial bounds are given by the polygon `bounds`.
+Abstract type for all [`Item`]s that wrap a `N`-dimensional
+array with element type `T`.
+"""
+abstract type AbstractArrayItem{N, T} <: Item end
 
-Example:
 
-Keypoints{2, SVector{2, Float32}}(
-    [SVector(1.f, 1.f), SVector()]
-)
+struct ArrayItem{N, T} <: AbstractArrayItem{N, T}
+    data::AbstractArray{T, N}
+end
+
 
 """
+    Image(image[, bounds])
 
-abstract type AbstractArrayItem{T} <: Item end
+Item representing an N-dimensional image with element type T.
 
-struct ArrayItem{T} <: AbstractArrayItem{T}
-    data::AbstractArray{T}
+Supported `Transform`s:
+
+- all [`AbstractAffine`](#)s
+
+## Examples
+
+{cell=image}
+```julia
+using DataAugmentation, Images
+
+imagedata = rand(RGB, 100, 100)
+item = Image(imagedata)
+showitem(item)
+```
+
+If `T` is not a color, the image will be interpreted as grayscale:
+
+{cell=image}
+```julia
+imagedata = rand(Float32, 100, 100)
+item = Image(imagedata)
+showitem(item)
+```
+
+"""
+struct Image{N, T, B} <: AbstractArrayItem{N, T}
+    data::AbstractArray{T, N}
+    bounds::AbstractArray{<:SVector{N, B}, N}
 end
 
-struct Keypoints{N, T} <: AbstractArrayItem{T}
-    data::AbstractArray{>:SVector{N, T}}
-    bounds::AbstractVector{<:SVector{N}}
+
+function Image(data::AbstractArray{T, N}, bounds = makebounds(size(data))) where {T, N}
+    return Image{T, N}(data, bounds)
 end
 
-struct Polygon{N, T} <: ItemWrapper
-    item::Keypoints{N, T}
+Base.show(io::IO, item::Image{N, T}) where {N, T} =
+    print(io, "Image{$N, $T}() with size $(size(itemdata(item)))")
+
+
+"""
+    Keypoints(points, sz)
+    Keypoints{N, T, M}(points, bounds)
+
+`N`-dimensional keypoints represented as `SVector{N, T}`.
+
+Spatial bounds are given by the polygon `bounds::Vector{SVector{N, T}}`
+or `sz::NTuple{N, Int}`.
+
+## Examples
+{cell=Keypoints}
+```julia
+using DataAugmentation, StaticArrays
+points = [SVector(y, x) for (y, x) in zip(4:5:80, 10:6:90)]
+item = Keypoints(points, (100, 100))
+```
+
+{cell=Keypoints}
+```julia
+showitem(item)
+```
+
+"""
+struct Keypoints{N, T, M} <: AbstractArrayItem{M, Union{SVector{N, T}, Nothing}}
+    data::AbstractArray{Union{SVector{N, T}, Nothing}, M}
+    bounds::AbstractArray{<:SVector{N, T}, N}
 end
+
+Base.show(io::IO, item::Keypoints{N, T, M}) where {N, T, M} =
+    print(io, "Keypoints{$N, $T, $M}() with $(length(item.data)) elements")
+
+function Keypoints(data::AbstractArray{<:SVector{N, T}, M}, sz::NTuple{N, Int}) where {N, T, M}
+    return Keypoints{N, T, M}(data, makebounds(sz, T))
+end
+
+function Keypoints(data::AbstractArray{<:SVector{N, T}, M}, bounds) where {N, T, M}
+    return Keypoints{N, T, M}(data, bounds)
+end
+
+"""
+    Polygon(points, sz)
+    Polygon{N, T, M}(points, bounds)
+
+Item wrapper around [`Keypoints`](#).
+
+## Examples
+
+{cell=Polygon}
+```julia
+using DataAugmentation, StaticArrays
+points = [SVector(10., 10.), SVector(80., 20.), SVector(90., 70.), SVector(20., 90.)]
+item = Polygon(points, (100, 100))
+```
+
+{cell=Polygon}
+```julia
+showitem(item)
+```
+"""
+struct Polygon{N, T, M} <: ItemWrapper{Keypoints{N, T, M}}
+    item::Keypoints{N, T, M}
+end
+
 Polygon(data, bounds) = Polygon(Keypoints(data, bounds))
 
-"""
+Base.show(io::IO, item::Polygon{N, T, M}) where {N, T, M} =
+    print(io, "Polygon{$N, $T}() with $(length(item.item.data)) elements")
 
 """
-struct BoundingBox{N, T} <: ItemWrapper
-    item::Keypoints{N, T}
+    Polygon(points, sz)
+    Polygon{N, T, M}(points, bounds)
+
+Item wrapper around [`Keypoints`](#).
+
+## Examples
+
+{cell=BoundingBox}
+```julia
+using DataAugmentation, StaticArrays
+points = [SVector(10., 10.), SVector(80., 60.)]
+item = BoundingBox(points, (100, 100))
+```
+
+{cell=BoundingBox}
+```julia
+showitem(item)
+```
+"""
+struct BoundingBox{N, T} <: ItemWrapper{Keypoints{N, T, 1}}
+    item::Keypoints{N, T, 1}
 end
-BoundingBox(data, bounds) = BoundingBox(Keypoints(data, bounds))
 
-struct Image{C<:Colorant} <: AbstractArrayItem{C}
-    data::AbstractMatrix{C}
-    bounds::AbstractVector{<:SVector{2}}
+function BoundingBox(data::AbstractVector{<:SVector{N}}, bounds) where N
+    length(data) == N || error("Give $N corner points for an $N-dimensional bounding box")
+    BoundingBox(Keypoints(data, bounds))
 end
 
-Image(imdata::AbstractMatrix{C}, bounds = makebounds(imdata)) where C<:Colorant = Image(imdata, bounds)
 
+Base.show(io::IO, item::BoundingBox{N, T}) where {N, T} =
+    print(io, "BoundingBox{$N, $T}()")
+
+# TODO: add cropping to `BoundingBox` and `Polygon` so the area they enclose is in bounds
 
 struct Category{N} <: Item
     data::Int
 end
 
 
-function index_ranges(bounds::AbstractVector{<:SVector{N}}) where N
-    ext = [extrema([b[i] for b in bounds]) for i in 1:N]
-    return Tuple(floor(Int, mi+1):ceil(Int, ma) for (mi, ma) in ext)
+function boundsextrema(bounds::AbstractArray{<:SVector{N}}) where N
+    mins = Tuple(floor(Int, minimum(getindex.(bounds, i))) for i = 1:N)
+    maxs = Tuple(ceil(Int, maximum(getindex.(bounds, i))) for i = 1:N)
+    return mins, maxs
+
 end
 
-
-boundssize(item::AbstractItem) = boundssize(getbounds(item))
-boundssize(bounds) = length.(index_ranges(bounds))
-
-
-function makebounds(a::AbstractArray)
-    idxs = CartesianIndices(a)
-    return makebounds(Tuple(idxs[begin]), Tuple(idxs[end]))
+function boundsranges(bounds)
+    mins, maxs = boundsextrema(bounds)
+    return UnitRange.(mins .+ 1, maxs)
 end
-makebounds(h::Int, w::Int) = makebounds((1, 1), (h, w))
-makebounds(sz::Tuple{Int, Int}) = makebounds(sz...)
-makebounds(r1::R, r2::R) where R<:AbstractRange = makebounds((r1[begin], r2[begin]), (r1[end], r2[end]))
-function makebounds(idx1, idx2)
-    y1, x1 = idx1 .- 1
-    y2, x2 = idx2
-    return [
-        SVector(y1, x1),
-        SVector(y1, x2),
-        SVector(y2, x2),
-        SVector(y2, x1),
-    ]
+
+"""
+    boundssize(bounds)
+
+`(100, 100) |> makebounds |> boundssize == (100, 100)`
+"""
+boundssize(bounds) = length.(boundsranges(bounds))
+
+
+"""
+    makebounds(sz[, T])
+    makebounds(ranges[, T])
+
+Helper for creating spatial bounds.
+
+## Examples
+
+{cell=makebounds}
+```julia
+using DataAugmentation: makebounds, showbounds
+makebounds((100, 100), Float32)
+```
+{cell=makebounds}
+```julia
+makebounds((100, 100)) == makebounds((1:100, 1:100))
+```
+
+{cell=makebounds}
+```julia
+bounds = makebounds((100, 100))
+showbounds(bounds)
+```
+"""
+function makebounds(sz::NTuple{N, Int}, T = Float32) where N
+    return makebounds(Tuple(1:a for a in sz), T)
+end
+
+function makebounds(ranges::NTuple{N, R}, T = Float32) where {N, R<:AbstractUnitRange}
+    return collect(SVector{N, T}, Iterators.product(((r[begin]-1, r[end]) for r in ranges)...))
 end
