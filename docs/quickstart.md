@@ -43,9 +43,3 @@ using DataAugmentation
     titem = apply(tfm, item)
     timage = itemdata(titem)
     ```
-
-
-Now read the [overview](./overview.md).
-
-
-

@@ -26,6 +26,8 @@ tfm = Crop((196, 196))
 image = Image(imagedata)
 apply(tfm, image) |> itemdata
 
+# abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz
+#
 # Now let's say we want to train a light house detector and have a bounding box
 # for the light house. We can use the [`BoundingBox`](#) item to represent it.
 # It takes the two corners of the bounding rectangle as the first argument. As
