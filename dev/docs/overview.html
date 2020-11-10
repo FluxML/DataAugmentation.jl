@@ -40,9 +40,15 @@
 <li><em>efficient</em>: The most performant way of applying a transformation is selected based on the context</li>
 <li><em>composable</em>: Transformations can be sequenced and combined in a sensible way</li>
 <li><em>stochastic</em>: Parameters of the transformations can be random variables. Care is taken to ensure that all transformations are
-target-preserving</li>
+target-preserving.</li>
 </ul>
 <p>The library also aims to be extensible and provides <a href="./interface.md">interfaces</a> for implementing new transformations and custom kinds of data.</p>
+<p>In DataAugmentation.jl, you use transforms to transform <a href="items.html">items</a> which represent your data. This means you have to wrap your data in an <a href="../docstrings/DataAugmentation.Item.html"><code>Item</code></a> type before applying transformations to it. This might seem tedious but has some benefits:</p>
+<ul>
+<li>It resolves type ambiguities that arise because the same machine type can represent different data. For example, <code>Array{Float, 3}</code> could represent an RGB image or a segmentation mask.</li>
+<li>Transformations can dispatch on the <code>Item</code> type.</li>
+<li>We can attach metadata to the data.</li>
+</ul>
 </article>
         <div id="page-navigation">
             <a id="previous-page" title="Previous" href="quickstart.html"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16.2426 6.34317L14.8284 4.92896L7.75739 12L14.8285 19.0711L16.2427 17.6569L10.5858 12L16.2426 6.34317Z" fill="currentColor" /></svg></a>
@@ -54,7 +60,6 @@ target-preserving</li>
 <li><a href="../docs/quickstart.html">Quickstart</a></li>
 <li><a href="../docs/overview.html">Overview</a></li>
 <li><a href="../docs/items.html">Items</a></li>
-<li><a href="../docs/transformations.html">Transformations</a></li>
 <li><a href="../docs/imagetransforms.html">Image transformations</a></li>
 <li><a href="../docstrings.html">Docstrings</a></li>
 </ul>

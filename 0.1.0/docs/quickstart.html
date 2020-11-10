@@ -40,7 +40,6 @@ using ImageShow
 using Images
 using DataAugmentation
 </code></pre>
-<pre><code class="plaintext cell-output cell-result" class="language-plaintext">LoadError(&quot;string&quot;, 2, ArgumentError(&quot;Package ImageShow not found in current path:\n- Run `import Pkg; Pkg.add(\&quot;ImageShow\&quot;)` to install the ImageShow package.\n&quot;))</code></pre>
 <ol>
 <li>
 <p>Import the library:</p>
@@ -53,8 +52,7 @@ using DataAugmentation
 </code></pre>
 <pre><code style="display:none;" cell="main" class="language-julia">image = imresize(testimage(&quot;lighthouse&quot;), ratio = 1/3)
 </code></pre>
-<pre><code class="plaintext cell-output cell-result" class="language-plaintext">LoadError(&quot;string&quot;, 1, UndefVarError(:imresize))</code></pre>
-</li>
+<img src="4455846638156911597.png" alt="" /></li>
 <li>
 <p>Create an item that contains the data you want to augment:</p>
 <pre><code cell="main" result="false" class="language-julia">item = Image(image)
@@ -70,10 +68,8 @@ using DataAugmentation
 <pre><code cell="main" class="language-julia">titem = apply(tfm, item)
 timage = itemdata(titem)
 </code></pre>
-<pre><code class="plaintext cell-output cell-result" class="language-plaintext">LoadError(&quot;string&quot;, 1, UndefVarError(:apply))</code></pre>
-</li>
+<img src="6293864809758154776.png" alt="" /></li>
 </ol>
-<p>Now read the <a href="./overview.html">overview</a>.</p>
 </article>
         <div id="page-navigation">
             <a id="previous-page" title="Previous" href="..&#x2F;README.html"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16.2426 6.34317L14.8284 4.92896L7.75739 12L14.8285 19.0711L16.2427 17.6569L10.5858 12L16.2426 6.34317Z" fill="currentColor" /></svg></a>
@@ -85,7 +81,6 @@ timage = itemdata(titem)
 <li><a href="../docs/quickstart.html">Quickstart</a></li>
 <li><a href="../docs/overview.html">Overview</a></li>
 <li><a href="../docs/items.html">Items</a></li>
-<li><a href="../docs/transformations.html">Transformations</a></li>
 <li><a href="../docs/imagetransforms.html">Image transformations</a></li>
 <li><a href="../docstrings.html">Docstrings</a></li>
 </ul>

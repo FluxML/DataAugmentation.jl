@@ -2,6 +2,7 @@
 DataAugmentation = "88a5189c-e7ff-4f85-ac6b-e6158070f02e"
 ImageIO = "82e4d734-157c-48bb-816b-45c225c6df19"
 ImageMagick = "6218d12a-5da1-5696-b52f-db25d2ecc6d1"
+ImageShow = "4e3cecfd-b093-5904-9786-8bbb286a6a31"
 Images = "916415d5-f1e6-5110-898d-aaa5f9f070e0"
 MosaicViews = "e94cdb99-869f-56ef-bcf0-1ae2bcbe0389"
 Publish = "f065f642-d108-4f50-8aa5-6749150a895a"
