@@ -5,7 +5,7 @@
 # the keypoint-based items [`Keypoints`](#), [`Polygon`](#), and [`BoundingBox`](#).
 #
 # Let's take this picture of a light house:
-# {cell=main style="display:none;" result=false}
+# {cell=main style="display:none;" result=false output=false}
 using DataAugmentation
 using MosaicViews
 using Images
