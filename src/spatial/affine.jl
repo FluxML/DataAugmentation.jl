@@ -45,7 +45,7 @@ function getbounds() end
 getbounds(item::Image) = item.bounds
 getbounds(item::Keypoints) = item.bounds
 getbounds(wrapper::ItemWrapper) = getbounds(getwrapped(wrapper))
-getbounds(a::AbstractMatrix) = makebounds(a)
+getbounds(a::AbstractMatrix) = makebounds(size(a))
 
 affinetype(item) = Float32
 affinetype(keypoints::Keypoints{N, T}) where {N, T} = T
