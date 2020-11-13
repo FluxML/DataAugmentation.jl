@@ -1,10 +1,10 @@
 using DataAugmentation
 using DataAugmentation:
-    Affine, ApplyStep, CropFixed, CropRatio, Sequential,
+    Affine, CropFixed, CropRatio, Sequential,
     makebuffer, getrandstate, normalize, denormalize, Normalize, setwrapped, setdata,
-    applyaffine, getaffine, applystep!, getwrapped, index_ranges,
+    applyaffine, getaffine, getwrapped,
     ScaleFixed, ScaleRatio, ScaleKeepAspect, cropindices, imagetotensor, tensortoimage,
-    CropFromOrigin, CropFromCenter, CropFromRandom
+    FromOrigin, FromCenter, FromRandom, MapElem, Inplace, boundsranges
 import DataAugmentation: apply, apply!, compose, makebuffer
 using Images
 using StaticArrays

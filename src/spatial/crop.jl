@@ -142,7 +142,7 @@ function apply(tfm::CroppedAffine, item::Item; randstate=getrandstate(tfm))
 end
 
 
-function apply!(buffer, tfm::CroppedAffine, item::Item; randstate=getrandstate(tfm))
+function apply!(buffer::I, tfm::CroppedAffine, item::I; randstate=getrandstate(tfm)) where I<:Item
     tfmr, cropr = randstate
     A = getaffine(tfm, getbounds(item), randstate)
     return applyaffine!(buffer, item, A)

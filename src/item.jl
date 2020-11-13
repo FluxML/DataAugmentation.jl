@@ -77,9 +77,11 @@ struct Image{N, T, B} <: AbstractArrayItem{N, T}
     bounds::AbstractArray{<:SVector{N, B}, N}
 end
 
+Image(data) = Image(data, size(data))
 
-function Image(data::AbstractArray{T, N}, bounds = makebounds(size(data))) where {T, N}
-    return Image{T, N}(data, bounds)
+function Image(data::AbstractArray{T, N}, sz::NTuple{N, Int}) where {T, N}
+    bounds = makebounds(sz)
+    return Image(data, bounds)
 end
 
 Base.show(io::IO, item::Image{N, T}) where {N, T} =
@@ -109,20 +111,16 @@ showitem(item)
 ```
 
 """
-struct Keypoints{N, T, M} <: AbstractArrayItem{M, Union{SVector{N, T}, Nothing}}
-    data::AbstractArray{Union{SVector{N, T}, Nothing}, M}
+struct Keypoints{N, T, S<:Union{SVector{N, T}, Nothing}, M} <: AbstractArrayItem{M, S}
+    data::AbstractArray{S, M}
     bounds::AbstractArray{<:SVector{N, T}, N}
 end
 
 Base.show(io::IO, item::Keypoints{N, T, M}) where {N, T, M} =
     print(io, "Keypoints{$N, $T, $M}() with $(length(item.data)) elements")
 
-function Keypoints(data::AbstractArray{<:SVector{N, T}, M}, sz::NTuple{N, Int}) where {N, T, M}
-    return Keypoints{N, T, M}(data, makebounds(sz, T))
-end
-
-function Keypoints(data::AbstractArray{<:SVector{N, T}, M}, bounds) where {N, T, M}
-    return Keypoints{N, T, M}(data, bounds)
+function Keypoints(data::AbstractArray{S, M}, sz::NTuple{N, Int}) where {T, N, S<:Union{SVector{N, T}, Nothing}, M}
+    return Keypoints{N, T, S, M}(data, makebounds(sz, T))
 end
 
 """
@@ -145,8 +143,8 @@ item = Polygon(points, (100, 100))
 showitem(item)
 ```
 """
-struct Polygon{N, T, M} <: ItemWrapper{Keypoints{N, T, M}}
-    item::Keypoints{N, T, M}
+struct Polygon{N, T, S, M} <: ItemWrapper{Keypoints{N, T, S, M}}
+    item::Keypoints{N, T, S, M}
 end
 
 Polygon(data, bounds) = Polygon(Keypoints(data, bounds))
@@ -174,8 +172,8 @@ item = BoundingBox(points, (100, 100))
 showitem(item)
 ```
 """
-struct BoundingBox{N, T} <: ItemWrapper{Keypoints{N, T, 1}}
-    item::Keypoints{N, T, 1}
+struct BoundingBox{N, T, S} <: ItemWrapper{Keypoints{N, T, S, 1}}
+    item::Keypoints{N, T, S, 1}
 end
 
 function BoundingBox(data::AbstractVector{<:SVector{N}}, bounds) where N

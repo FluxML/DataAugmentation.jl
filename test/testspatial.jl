@@ -5,23 +5,23 @@ include("./imports.jl")
     bounds = getbounds(item)
 
     @testset ExtendedTestSet "cropindices" begin
-        c = CropFixed((50, 50), CropFromRandom())
+        c = CropFixed((50, 50), FromRandom())
         r = (rand(), rand())
-        @test cropindices((50, 50), CropFromOrigin(), bounds, r) == (1:50, 1:50)
-        @test cropindices((50, 50), CropFromCenter(), bounds, r) == (1:50, 26:75)
-        @test cropindices((50, 50), CropFromRandom(), bounds, (1., 1.)) == (1:50, 51:100)
+        @test cropindices((50, 50), FromOrigin(), bounds, r) == (1:50, 1:50)
+        @test cropindices((50, 50), FromCenter(), bounds, r) == (1:50, 26:75)
+        @test cropindices((50, 50), FromRandom(), bounds, (1., 1.)) == (1:50, 51:100)
     end
 end
 
 
 @testset ExtendedTestSet "Affine helpers" begin
-    @testset ExtendedTestSet "index_ranges" begin
+    @testset ExtendedTestSet "boundsranges" begin
         keypoints = Keypoints(
             [SVector(1, 1)],
-            [SVector(0, 0), SVector(50, 0), SVector(50, 50), SVector(0, 50)]
+            (50, 50)
         )
         image = Image(rand(RGB, 50, 50))
-        @test index_ranges(getbounds(keypoints)) == index_ranges(getbounds(image))
+        @test boundsranges(getbounds(keypoints)) == boundsranges(getbounds(image))
     end
 end
 
@@ -30,10 +30,7 @@ end
     A = CoordinateTransformations.Translation(10, 10)
     tfm = Affine(A)
 
-    keypoints = Keypoints(
-            [SVector(1, 1)],
-            [SVector(0, 0), SVector(50, 0), SVector(50, 50), SVector(0, 50)]
-    )
+    keypoints = Keypoints([SVector(1, 1)], (50, 50))
     image = Image(rand(RGB, 50, 50))
 
 
@@ -53,7 +50,7 @@ end
         @test getbounds(timage)[1] == SVector(10, 10)
     end
 
-    tfmcropped = CroppedAffine(tfm, Crop(50, 50))
+    tfmcropped = CroppedAffine(tfm, CropFixed(50, 50))
 
     @testset ExtendedTestSet "Affine Cropped Image" begin
         @test_nowarn apply(tfmcropped, keypoints)
@@ -79,10 +76,7 @@ end
     @testset ExtendedTestSet "ScaleKeepAspect" begin
         image = Image(zeros(RGB, 100, 50))
 
-        keypoints = Keypoints(
-            [SVector(0, 0)],
-            [SVector(0, 0), SVector(50, 0), SVector(50, 50), SVector(0, 50)]
-        )
+        keypoints = Keypoints([SVector(0., 0)], (50, 50))
 
         imbounds = getbounds(image)
         kpbounds = getbounds(keypoints)
@@ -96,10 +90,7 @@ end
     end
 
     @testset ExtendedTestSet "Resize" begin
-        keypoints = Keypoints(
-            [SVector(0, 0)],
-            [SVector(0, 0), SVector(50, 0), SVector(50, 50), SVector(0, 50)]
-        )
+        keypoints = Keypoints([SVector(0., 0)], (50, 50))
         image = Image(rand(RGB, 50, 50))
         @testset ExtendedTestSet "ResizeFixed" begin
             tfm = ResizeFixed((25, 25))
@@ -107,7 +98,7 @@ end
             @test_nowarn apply(tfm, keypoints)
             timage = apply(tfm, image)
             tkeypoints = apply(tfm, keypoints)
-            @test index_ranges(getbounds(timage)) == (1:25, 1:25)
+            @test boundsranges(getbounds(timage)) == (1:25, 1:25)
             @test getbounds(timage) == getbounds(tkeypoints)
 
         end
@@ -117,27 +108,24 @@ end
             @test_nowarn apply(tfm, keypoints)
             timage = apply(tfm, image)
             tkeypoints = apply(tfm, keypoints)
-            @test index_ranges(getbounds(timage)) == (1:25, 1:25)
+            @test boundsranges(getbounds(timage)) == (1:25, 1:25)
             @test getbounds(timage) == getbounds(tkeypoints)
         end
     end
 
     @testset ExtendedTestSet "RandomResizeCrop" begin
         tfm = CenterResizeCrop((25, 40))
-        keypoints = Keypoints(
-            [SVector(0, 0)],
-            [SVector(0, 0), SVector(50, 0), SVector(50, 50), SVector(0, 50)]
-        )
+        keypoints = Keypoints([SVector(0., 0)], (50, 50))
         image = Image(rand(RGB, 50, 50))
         timage, tkeypoints = apply(tfm, (image, keypoints))
         @test getbounds(timage) == getbounds(tkeypoints)
-        @test index_ranges(getbounds(timage)) == (1:25, 1:40)
+        @test boundsranges(getbounds(timage)) == (1:25, 1:40)
     end
 
     @testset ExtendedTestSet "CroppedAffine inplace" begin
         image1 = Image(rand(RGB, 100, 100))
         image2 = Image(rand(RGB, 100, 100))
-        tfm = Buffered(ResizeFixed((50, 50)), Image)
+        tfm = Inplace(ResizeFixed((50, 50)), Image)
         buffer = makebuffer(tfm, image1)
 
         @test_nowarn apply!(buffer, tfm, image2)

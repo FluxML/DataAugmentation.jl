@@ -21,7 +21,7 @@ getrandstate(::Transform) = nothing
 Apply `tfm` to an `item` or a tuple `items`.
 
 """
-apply(tfm::Transform, item::Item) = apply(tfm, item; randstate = getrandstate(tfm))
+apply(tfm::Transform, items) = apply(tfm, items; randstate = getrandstate(tfm))
 
 
 function apply(tfm::Transform, itemw::ItemWrapper; randstate = getrandstate(tfm))
@@ -45,7 +45,7 @@ end
 
 getrandstate(seq::Sequential) = getrandstate.(seq.transforms)
 
-function apply(seq::Sequential, items; randstate = getrandstate(seq))
+function apply(seq::Sequential, items::Tuple; randstate = getrandstate(seq))
     for (tfm, r) in zip(seq.transforms, randstate)
         items = apply(tfm, items; randstate = r)
     end
@@ -54,7 +54,7 @@ end
 
 
 apply(seq::Sequential, item::Item; randstate = getrandstate(seq)) =
-    apply(seq, [item]; randstate = randstate)[1]
+    apply(seq, (item,); randstate = randstate) |> only
 
 compose(tfm) = tfm
 compose(tfm1::Transform, tfm2::Transform) = Sequential([tfm1, tfm2])

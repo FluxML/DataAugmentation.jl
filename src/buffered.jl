@@ -42,23 +42,25 @@ end
 
 # Inplace wrappers
 
-mutable struct Inplace{T<:Transform}
+mutable struct Inplace{T<:Transform} <: Transform
     tfm::T
     buffer
     Inplace(tfm::T, buffer = nothing) where T = new{T}(tfm, buffer)
 end
 
+getrandstate(inplace::Inplace) = getrandstate(inplace.tfm)
 
-function (inplace::Inplace)(items; randstate = getrandstate(inplace.tfm))
+function apply(inplace::Inplace, items; randstate = getrandstate(inplace))
     if isnothing(inplace.buffer)
         inplace.buffer = makebuffer(inplace.tfm, items)
     end
     return apply!(inplace.buffer, inplace.tfm, items, randstate = randstate)
 end
 
-function (inplace::Inplace)(buf, items; randstate = getrandstate(inplace.tfm))
-    titems = inplace(items, randstate = randstate)
+function apply!(buf, inplace::Inplace, items; randstate = getrandstate(inplace))
+    titems = apply(inplace, items, randstate = randstate)
     copyitemdata!(buf, titems)
+    return titems
 end
 
 
@@ -71,13 +73,15 @@ struct InplaceThreadsafe
 end
 
 
-"""
-    (::InplaceThreadsafe)(buf, items)
-    (::InplaceThreadsafe)(items)
-"""
-function (inplacet::InplaceThreadsafe)(args...; kwargs...)
+function apply(inplacet::InplaceThreadsafe, items; kwargs...)
     inplacethread = inplacet.inplaces[Threads.threadid()]
-    return inplacethread(args...; kwargs...)
+    return apply(inplacethread, items; kwargs...)
+end
+
+
+function apply!(buf, inplacet::InplaceThreadsafe, items; kwargs...)
+    inplacethread = inplacet.inplaces[Threads.threadid()]
+    return apply!(buf, inplacethread, items; kwargs...)
 end
 
 

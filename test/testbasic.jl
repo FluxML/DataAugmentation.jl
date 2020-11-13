@@ -4,7 +4,7 @@ struct TestItem <: Item
     data::Any
 end
 
-struct TestItemWrapper <: ItemWrapper
+struct TestItemWrapper <: ItemWrapper{TestItem}
     item::TestItem
 end
 
@@ -27,7 +27,6 @@ compose(add1::Add, add2::Add) = Add(add1.n + add2.n)
 
     @testset ExtendedTestSet "`apply` multiple items" begin
         @test_nowarn apply(tfm, (item, item); randstate=nothing)
-        @test_nowarn apply(tfm, [item, item]; randstate=nothing)
     end
 
     @testset ExtendedTestSet "`itemdata` single item" begin
@@ -74,9 +73,9 @@ end
 end
 
 @testset ExtendedTestSet "setdata, setwrapped" begin
-    bounds = [SVector(0, 0), SVector(50, 0), SVector(50, 50), SVector(0, 50)]
-    keypoints1 = Keypoints([SVector(1, 1)], bounds)
-    keypoints2 = Keypoints([SVector(2, 2)], bounds)
+    sz = (50, 50)
+    keypoints1 = Keypoints([SVector(1., 1)], sz)
+    keypoints2 = Keypoints([SVector(2., 2)], sz)
 
     @testset ExtendedTestSet "setdata" begin
         keypoints3 = setdata(keypoints1, itemdata(keypoints2))
@@ -88,109 +87,50 @@ end
         bbox3 = setwrapped(bbox1, keypoints1)
         @test getwrapped(bbox3) == getwrapped(bbox1)
     end
-
 end
 
 @testset ExtendedTestSet "Sequential" begin
     seq = Sequential([Add(10), Add(10)])
-    @test_nowarn apply(seq, [TestItem(10)])
+    @test_nowarn apply(seq, TestItem(10))
+    @test_nowarn apply(seq, (TestItem(10),))
 
 end
 
-
-struct ArrayItem <: Item
-    a::AbstractArray
-end
-
-struct MapArray <: Transform
-    f
-end
-
-apply(tfm::MapArray, item::ArrayItem) = ArrayItem(map(tfm.f, item.a))
-function apply!(buffer::ArrayItem, tfm::Buffered{MapArray}, item::ArrayItem; randstate=getrandstate(tfm))
-    return ArrayItem(map!(tfm.transform.f, buffer.a, item.a))
-end
 
 @testset ExtendedTestSet "`apply!`" begin
     data = rand(Float32, 10, 10)
     item = ArrayItem(data)
-    tfm = MapArray(x->round(Int, x))
-    buftfm = Buffered(tfm)
+    tfm = MapElem(x->round(Int, x))
+    buftfm = Inplace(tfm)
 
     @testset ExtendedTestSet "`makebuffer`" begin
-        @test_nowarn buffer = makebuffer(tfm, item)
-        buffer = makebuffer(tfm, item)
-        @test buffer === nothing
-
         buffer = makebuffer(buftfm, item)
-        @test eltype(buffer.a) === Int
+        @test eltype(itemdata(buffer)) === Int
     end
 
     @testset ExtendedTestSet "`apply!` default" begin
-        buffer::Nothing = makebuffer(tfm, item)
+        buffer = makebuffer(tfm, item)
         @test_nowarn apply!(buffer, tfm, item)
     end
 
     @testset ExtendedTestSet "`apply!` default" begin
         buffer::ArrayItem = makebuffer(buftfm, item)
-        buffer.a[1] = -1
+        a = itemdata(buffer)
+        a[1] = -1
         @test_nowarn apply!(buffer, buftfm, item)
         # buffer should have been mutated
-        @test buffer.a[1] != -1
+        @test itemdata(buffer)[1] != -1
     end
 
     @testset ExtendedTestSet "`apply!` pipeline" begin
         item1 = ArrayItem(rand(Float32, 10, 10))
         item2 = ArrayItem(rand(Float32, 10, 10))
-        tfm1 = MapArray(round)
-        tfm2 = MapArray(Int)
-        pipeline = Buffered(tfm1) |> Buffered(tfm2)
+        tfm1 = MapElem(round)
+        tfm2 = MapElem(Int)
+        pipeline = Inplace(tfm1) |> Inplace(tfm2)
         buffers = makebuffer(pipeline, item1)
-        a = copy(buffers[2].a)
+        a = copy(itemdata(buffers[2]))
         @test_nowarn apply!(buffers, pipeline, item2)
-        @test buffers[2].a != a
-    end
-
-end
-
-
-@testset ExtendedTestSet "`Pipeline`" begin
-    @testset ExtendedTestSet "`ApplyStep`" begin
-        sample = Dict(:x => TestItem(-10))
-        step = ApplyStep(Add(10), :x)
-        @test_nowarn applystep!(sample, step)
-        @test itemdata(sample[:x]) == 0
-    end
-
-    @testset ExtendedTestSet "`CombineStep`" begin
-        sample = Dict(:x => TestItem(-10), :y => TestItem(10))
-        # combines to :z = :x + :y
-        step = CombineStep((x, y)->TestItem(itemdata(x) + itemdata(y)), (:x, :y), :z)
-        @test_nowarn applystep!(sample, step)
-        @test itemdata(sample[:z]) == 0
-    end
-
-    @testset ExtendedTestSet "`MapStep`" begin
-        sample = Dict(:x => TestItem(-10), :y => TestItem(10))
-        step = MapStep(
-            (x, y)->(TestItem(itemdata(x) + 10), TestItem(itemdata(y) - 10)),
-            (:x, :y))
-        @test_nowarn applystep!(sample, step)
-        @test itemdata(sample[:x]) == itemdata(sample[:y])
-    end
-
-    @testset ExtendedTestSet "Pipeline" begin
-        sample = Dict(:x => TestItem(-23), :y => TestItem(10))
-        pipeline = Pipeline(
-            ApplyStep(Add(13), :x),
-            MapStep(
-                (x, y)->(TestItem(itemdata(x) + 10), TestItem(itemdata(y) - 10)),
-                (:x, :y)
-            ),
-            CombineStep((x, y)->TestItem(itemdata(x) + itemdata(y)), (:x, :y), :z),
-        )
-        sample = pipeline(sample)
-        @test itemdata(sample[:z]) == 0
-
+        @test itemdata(buffers[2]) != a
     end
 end

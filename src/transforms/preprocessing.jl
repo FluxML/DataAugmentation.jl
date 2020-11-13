@@ -4,9 +4,9 @@
 struct ToEltype{T} <: Transform end
 ToEltype(T::Type) = ToEltype{T}()
 
-apply(::ToEltype{T}, item::AbstractArrayItem{<:T}; randstate = nothing) where T = item
-function apply(::ToEltype{T}, item::AbstractArrayItem{U}; randstate = nothing) where {T, U}
-    newdata = map(x -> convert(T, x), itemdata(item))
+apply(::ToEltype{T}, item::AbstractArrayItem{N, <:T}; randstate = nothing) where {N, T} = item
+function apply(::ToEltype{T1}, item::AbstractArrayItem{N, T2}; randstate = nothing) where {N, T1, T2}
+    newdata = map(x -> convert(T1, x), itemdata(item))
     item = setdata(item, newdata)
     return item
 end
