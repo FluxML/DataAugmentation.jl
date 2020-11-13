@@ -69,7 +69,7 @@ export Item,
     # pre/postprocessing transforms
     ToEltype,
     Normalize,
-    SplitChannels,
+    ImageToTensor,
     OneHotEncode,
 
 

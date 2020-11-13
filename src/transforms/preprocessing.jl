@@ -18,24 +18,50 @@ function apply!(buf, ::ToEltype, item::AbstractArrayItem; randstate = nothing)
 end
 
 
-struct Normalize <: Transform
-    means
-    stds
-    inplace::Bool
+"""
+    Normalize(means, stds)
+
+Normalizes a 3D `AbstractArrayItem` of size (h, w, c)
+using `means` and `stds`.
+"""
+struct Normalize{N} <: Transform
+    means::SArray{Tuple{1, 1, N}}
+    stds::SArray{Tuple{1, 1, N}}
 end
 
-Normalize(means, stds; inplace = true) = Normalize(means, stds, inplace)
+function Normalize(means, stds)
+    length(means) == length(stds) || error("`means` and `stds` must have same length")
+    N = length(means)
+    return Normalize{N}(SArray{Tuple{1, 1, N}}(means), SArray{Tuple{1, 1, N}}(stds))
+end
 
-apply(t::Normalize, item::ArrayItem; randstate = nothing) = ArrayItem(
-    normalize!(t.inplace ? itemdata(item) : copy(itemdata(item)), t.means, t.stds))
+function apply(tfm::Normalize, item::ArrayItem; randstate = nothing)
+    return ArrayItem(normalize(itemdata(item), tfm.means, tfm.stds))
+end
+
+function apply!(buf, tfm::Normalize, item::ArrayItem; randstate = nothing)
+    copy!(itemdata(buf), itemdata(item))
+    normalize!(itemdata(buf), tfm.means, tfm.stds)
+    return buf
+end
 
 
-struct SplitChannels <: Transform end
-apply(::SplitChannels, image::Image; randstate = nothing) =
-    ArrayItem(imagetotensor(itemdata(image)))
+"""
+    ImageToTensor()
+
+Converts a 2D [`Image`](#) to a 3D array item of size `(h, w, ch)`.
+"""
+struct ImageToTensor{T} <: Transform end
+
+ImageToTensor(T::Type{<:Number} = Float32) = ImageToTensor{T}()
+
+
+function apply(::ImageToTensor{T}, image::Image; randstate = nothing) where T
+    return ArrayItem(imagetotensor(itemdata(image), T))
+end
 
 # TODO: inplace-version is much slower
-function apply!(buf, ::SplitChannels, image::Image; randstate = nothing)
+function apply!(buf, ::ImageToTensor, image::Image; randstate = nothing)
     imagetotensor!(buf.data, image.data)
     return buf
 end
@@ -60,62 +86,27 @@ onehot(x, n) = onehot(Float32, x, n)
 # helper functions
 
 function normalize!(a, means, stds)
-    # TODO: use vectorized ops for generality
-    for i = 1:3
-        a[:,:,i] .-= means[i]
-        a[:,:,i] ./= stds[i]
-    end
-    a
+    a .-= means
+    a ./= stds
+    return a
 end
+
 normalize(a, means, stds) = normalize!(copy(a), means, stds)
 
 function denormalize!(a, means, stds)
-    for i = 1:3
-        a[:,:,i] .*= stds[i]
-        a[:,:,i] .+= means[i]
-    end
-    a
+    a .*= stds
+    a .+= means
+    return a
 end
+
 denormalize(a, means, stds) = denormalize!(copy(a), means, stds)
 
 
-# TODO: is `parent` necessary?
-imagetotensor(image::AbstractArray{<:AbstractRGB, 2}, T = Float32) = T.(permuteddimsview(channelview(image), (2, 3, 1))) |> parent
-# improve performance, this takes double the time of `imagetotensor`
+imagetotensor(image::AbstractArray{<:AbstractRGB, 2}, T = Float32) = T.(permuteddimsview(channelview(image), (2, 3, 1)))
+
 imagetotensor!(buf, image::AbstractArray{<:AbstractRGB, 2}) = permutedims!(
     buf,
     channelview(image),
     (2, 3, 1))
 tensortoimage(a::AbstractArray{T, 3}) where T = colorview(RGB, permuteddimsview(a, (3, 1, 2)))
 tensortoimage(a::AbstractArray{T, 2}) where T = colorview(Gray, a)
-
-#=
-T = Normed{UInt8,8}
-img = zeros(RGB{T}, 224, 224)
-
-using BenchmarkTools
-@btime begin
-    imagetotensor(img)
-end;  # 676.103 μs (11 allocations: 588.47 KiB)
-
-@btime begin
-    imagetotensor!(b2, img)
-    nothing
-end;  #
-
-
-b1 = collect(channelview(img))
-b2 = imagetotensor(img)
-b3 = permutedims(b1, (2, 3, 1))
-
-@btime begin
-    channels!(b1, img)
-    permutedims!(b2, b1, (2, 3, 1))
-end  # 839.176 μs (9 allocations: 336 bytes)
-
-@btime begin
-    channels!(b1, img)
-    permutedims!(b3, b1, (2, 3, 1))
-end  # 707.046 μs (2 allocations: 112 bytes)
-
-=#

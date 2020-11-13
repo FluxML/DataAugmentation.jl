@@ -54,11 +54,18 @@ function apply(inplace::Inplace, items; randstate = getrandstate(inplace))
     if isnothing(inplace.buffer)
         inplace.buffer = makebuffer(inplace.tfm, items)
     end
-    return apply!(inplace.buffer, inplace.tfm, items, randstate = randstate)
+    titems = apply!(inplace.buffer, inplace.tfm, items, randstate = randstate)
+    # The following is so that the returned value is not invalidated.
+    # Use `apply!` for no copies.
+    return deepcopy(titems)
 end
 
+
 function apply!(buf, inplace::Inplace, items; randstate = getrandstate(inplace))
-    titems = apply(inplace, items, randstate = randstate)
+    if isnothing(inplace.buffer)
+        inplace.buffer = makebuffer(inplace.tfm, items)
+    end
+    titems = apply!(inplace.buffer, inplace.tfm, items, randstate = randstate)
     copyitemdata!(buf, titems)
     return titems
 end

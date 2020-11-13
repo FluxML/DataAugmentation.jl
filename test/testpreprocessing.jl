@@ -7,7 +7,7 @@ Test
     - normalize
     - denormalize
 - ToEltype
-- SplitChannels
+- ImageToTensor
     - imagetotensor
     - tensortoimage
 - OneHotEncode
@@ -44,7 +44,7 @@ end
 end
 
 
-@testset ExtendedTestSet "SplitChannels" begin
+@testset ExtendedTestSet "ImageToTensor" begin
     @testset ExtendedTestSet "imagetotensor,tensortoimage" begin
         data = rand(RGB, 10, 10)
         @test size(imagetotensor(data)) == (10, 10, 3)
@@ -52,9 +52,9 @@ end
 
     end
 
-    @testset ExtendedTestSet "SplitChannels" begin
+    @testset ExtendedTestSet "ImageToTensor" begin
         image = Image(rand(RGB, 10, 10))
-        tfm = SplitChannels()
+        tfm = ImageToTensor()
         @test_nowarn apply(tfm, image)
         a = itemdata(apply(tfm, image))
         @test size(a) == (10, 10, 3)
@@ -67,7 +67,7 @@ end
     tfm = compose(
         ToEltype(RGB),
         RandomResizeCrop((128, 64)),
-        SplitChannels(),
+        ImageToTensor(),
         Normalize([0, 0, 0], [1, 1, 1])
     )
 
