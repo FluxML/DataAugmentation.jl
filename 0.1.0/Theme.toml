@@ -1,10 +1,11 @@
-theme = "lorenzo"
+theme = "default"
 
 [html]
 default_css = [
     "normalize.css",
     "tabulator_simple.min.css",
-    "lorenzo.css",
+    "publish.css",
+    "default.min.css",
 ]
 default_js = [
     "versions.js",
