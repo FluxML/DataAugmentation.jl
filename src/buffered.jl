@@ -20,6 +20,11 @@ Applies `tfm` to `item`, mutating the preallocated `buffer`.
 Default to `apply(tfm, item)` (non-mutating version).
 """
 apply!(buf, tfm::Transform, items; randstate = getrandstate(tfm)) = apply(tfm, items, randstate = randstate)
+apply!(buf, tfm::Transform, item::Item; randstate = getrandstate(tfm)) = apply(tfm, item, randstate = randstate)
+function apply!(bufs::Tuple, tfm::Transform, items::Tuple; randstate = getrandstate(tfm))
+    map((item, buf) -> apply!(buf, tfm, item; randstate = randstate), items, bufs)
+end
+
 
 
 function makebuffer(pipeline::Sequential, items)
@@ -28,17 +33,20 @@ function makebuffer(pipeline::Sequential, items)
         push!(buffers, makebuffer(tfm, items))
         items = apply(tfm, items)
     end
-    return buffers
+    return Tuple(buffers)
 end
 
 
-function apply!(buffers, pipeline::Sequential, items; randstate = getrandstate(pipeline))
+function apply!(buffers::Tuple, pipeline::Sequential, items::Tuple; randstate = getrandstate(pipeline))
     for (tfm, buffer, r) in zip(pipeline.transforms, buffers, randstate)
         items = apply!(buffer, tfm, items; randstate = r)
     end
     return items
 end
 
+function apply!(buffer::I, pipeline::Sequential, item::I; randstate = getrandstate(pipeline)) where {I<:Item}
+    return apply!((buffer,), pipeline, (item,); randstate = randstate) |> only
+end
 
 # Inplace wrappers
 
@@ -50,24 +58,31 @@ end
 
 getrandstate(inplace::Inplace) = getrandstate(inplace.tfm)
 
-function apply(inplace::Inplace, items; randstate = getrandstate(inplace))
+function apply(inplace::Inplace, items::Tuple; randstate = getrandstate(inplace))
     if isnothing(inplace.buffer)
         inplace.buffer = makebuffer(inplace.tfm, items)
     end
     titems = apply!(inplace.buffer, inplace.tfm, items, randstate = randstate)
-    # The following is so that the returned value is not invalidated.
-    # Use `apply!` for no copies.
-    return deepcopy(titems)
+    return titems
 end
 
+apply(inplace::Inplace, item::Item; randstate = getrandstate(inplace)) =
+    apply(inplace, (item,); randstate = randstate) |> only
 
-function apply!(buf, inplace::Inplace, items; randstate = getrandstate(inplace))
+
+function apply!(buf::Tuple, inplace::Inplace, items::Tuple; randstate = getrandstate(inplace))
     if isnothing(inplace.buffer)
         inplace.buffer = makebuffer(inplace.tfm, items)
     end
-    titems = apply!(inplace.buffer, inplace.tfm, items, randstate = randstate)
-    copyitemdata!(buf, titems)
-    return titems
+    inplace.buffer = apply!(inplace.buffer, inplace.tfm, items; randstate = randstate)
+    copyitemdata!(buf, inplace.buffer)
+    return buf
+end
+
+function apply!(buf::I, inplace::Inplace, item::I; randstate = getrandstate(inplace)) where {I<:Item}
+    bufs, items = (buf,), (item,)
+    titems = apply!(bufs, inplace, items; randstate = randstate)
+    return only(titems)
 end
 
 
