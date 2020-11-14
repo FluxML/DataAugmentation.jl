@@ -55,6 +55,27 @@ function apply(tfm::AbstractAffine, item::Item; randstate=getrandstate(tfm))
     return applyaffine(item, A)
 end
 
+"""
+    applyaffine(item, A[, crop])
+
+Applies affine transformation `A` to `item`, optionally cropping
+to index ranges `crop`.
+"""
+function applyaffine end
+
+
+"""
+    applyaffine!(dstitem::I, item::I, A[, crop])
+
+Applies affine transformation `A` to `item` inplace, optionally cropping
+to index ranges `crop` and saving the result directly to `dstitem`.
+
+If inplace transformation is not supported for item type `I`, defaults
+to non-inplace version `applyaffine(item, A, crop)`.
+"""
+function applyaffine!(dstitem, item, A, crop = nothing)
+    return applyaffine(item, A, crop)
+end
 
 # Image implementation
 
