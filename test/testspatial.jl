@@ -131,3 +131,18 @@ end
         @test_nowarn apply!(buffer, tfm, image2)
     end
 end
+
+
+@testset ExtendedTestSet "`MaskMulti`" begin
+    item = MaskMulti(rand(1:10, 10, 10))
+    tfm = RandomResizeCrop((5, 5))
+    @test_nowarn apply(tfm, item)
+
+end
+
+
+@testset ExtendedTestSet "`MaskBinary`" begin
+    item = MaskBinary(rand(Bool, 10, 10))
+    tfm = RandomResizeCrop((5, 5))
+    @test_nowarn apply(tfm, item)
+end

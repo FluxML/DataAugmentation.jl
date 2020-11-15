@@ -9,7 +9,7 @@ makebuffer(tfm::Transform, items) = apply(tfm, items)
 
 
 """
-    apply!(buffer, tfm, item::I)
+    apply!(buffer::I, tfm, item::I)
 
 Applies `tfm` to `item`, mutating the preallocated `buffer`.
 
@@ -22,12 +22,13 @@ Default to `apply(tfm, item)` (non-mutating version).
 apply!(buf, tfm::Transform, items; randstate = getrandstate(tfm)) = apply(tfm, items, randstate = randstate)
 apply!(buf, tfm::Transform, item::Item; randstate = getrandstate(tfm)) = apply(tfm, item, randstate = randstate)
 function apply!(bufs::Tuple, tfm::Transform, items::Tuple; randstate = getrandstate(tfm))
-    map((item, buf) -> apply!(buf, tfm, item; randstate = randstate), items, bufs)
+    return map((item, buf) -> apply!(buf, tfm, item; randstate = randstate), items, bufs)
 end
 
 
 
-function makebuffer(pipeline::Sequential, items)
+makebuffer(pipeline::Sequential, item::Item) = only.(makebuffer(pipeline, (item,)))
+function makebuffer(pipeline::Sequential, items::Tuple)
     buffers = []
     for tfm in pipeline.transforms
         push!(buffers, makebuffer(tfm, items))

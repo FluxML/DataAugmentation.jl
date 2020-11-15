@@ -44,6 +44,8 @@ function getbounds() end
 
 getbounds(item::Image) = item.bounds
 getbounds(item::Keypoints) = item.bounds
+getbounds(item::MaskMulti) = item.bounds
+getbounds(item::MaskBinary) = item.bounds
 getbounds(wrapper::ItemWrapper) = getbounds(getwrapped(wrapper))
 getbounds(a::AbstractMatrix) = makebounds(size(a))
 
@@ -81,8 +83,7 @@ end
 
 function applyaffine(item::Image{N, T}, A, crop=nothing) where {N, T}
     if crop isa Tuple
-        newdata = warp(itemdata(item), inv(A), crop, zero(T))
-        # TODO: add correct bounds for offset image
+        newdata = warp(itemdata(item), inv(A), crop, Reflect())
         return Image(newdata)
     else
         newdata = warp(itemdata(item), inv(A), zero(T))
@@ -105,6 +106,46 @@ function applyaffine(keypoints::Keypoints{N, T}, A, crop = nothing) where {N, T}
         newbounds
     )
 end
+
+
+function applyaffine(mask::MaskMulti, A, crop = nothing)
+    a = itemdata(mask)
+    etp = mask_extrapolation(a)
+    if crop isa Tuple
+        a_ = warp(etp, inv(A), crop)
+        return MaskMulti(a_, mask.classes)
+    else
+        a_ = warp(etp, inv(A))
+        bounds_ = A.(getbounds(mask))
+        return MaskMulti(a_, mask.classes, bounds_)
+    end
+end
+
+
+function applyaffine(mask::Union{MaskBinary, MaskMulti}, A, crop = nothing)
+    a = itemdata(mask)
+    etp = mask_extrapolation(a)
+    if crop isa Tuple
+        a_ = warp(etp, inv(A), crop)
+        return MaskBinary(a_)
+    else
+        a_ = warp(etp, inv(A))
+        bounds_ = A.(getbounds(mask))
+        return MaskBinary(a_, bounds_)
+    end
+end
+
+function mask_extrapolation(
+        mask::AbstractArray{T};
+        degree = Constant(),
+        boundary = Flat()) where T
+    itp = interpolate(T, T, mask, BSpline(degree))
+    etp = extrapolate(itp, Flat())
+    return etp
+end
+
+
+# ## `Transform`s
 
 struct Affine <: AbstractAffine
     A

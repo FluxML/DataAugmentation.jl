@@ -192,6 +192,41 @@ struct Category{N} <: Item
 end
 
 
+"""
+    MaskMulti(a, [classes])
+
+An `N`-dimensional multilabel mask with labels `classes`.
+"""
+struct MaskMulti{N, T, B} <: AbstractArrayItem{N, T}
+    data::AbstractArray{T, N}
+    classes::AbstractVector{T}
+    bounds::AbstractArray{<:SVector{N, B}, N}
+end
+
+
+function MaskMulti(a::AbstractArray, classes = unique(a), bounds = makebounds(size(a)))
+    return MaskMulti(a, classes = bounds)
+end
+
+"""
+    MaskBinary(a)
+
+An `N`-dimensional binary mask with labels `classes`.
+"""
+struct MaskBinary{N, B} <: AbstractArrayItem{N, Bool}
+    data::AbstractArray{Bool, N}
+    bounds::AbstractArray{<:SVector{N, B}, N}
+end
+
+function MaskBinary(a::AbstractArray{Bool, N}, bounds = makebounds(size(a))) where N
+    return MaskBinary(a, bounds)
+end
+
+
+
+# ## Bounds helpers
+
+
 function boundsextrema(bounds::AbstractArray{<:SVector{N}}) where N
     mins = Tuple(floor(Int, minimum(getindex.(bounds, i))) for i = 1:N)
     maxs = Tuple(ceil(Int, maximum(getindex.(bounds, i))) for i = 1:N)

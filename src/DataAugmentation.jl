@@ -10,6 +10,7 @@ using ImageDraw
 using StaticArrays
 using Parameters
 using DocStringExtensions
+using Interpolations
 
 include("./item.jl")
 include("./transform.jl")
@@ -54,6 +55,8 @@ export Item,
     Polygon,
     BoundingBox,
     Category,
+    MaskBinary,
+    MaskMulti,
 
     # pipelines
     ApplyStep,
