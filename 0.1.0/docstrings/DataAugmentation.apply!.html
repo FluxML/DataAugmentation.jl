@@ -35,7 +35,7 @@
     <main id="page"><article><div class='docs' id='apply!'>
 <p><code>public</code> <code>apply!</code> — <code>function</code></p>
 <div class='doc' id='1'>
-<pre><code>apply!(buffer, tfm, item::I)
+<pre><code>apply!(buffer::I, tfm, item::I)
 </code></pre>
 <p>Applies <code>tfm</code> to <code>item</code>, mutating the preallocated <code>buffer</code>.</p>
 <p><code>buffer</code> can be obtained with <code>buffer = makebuffer(tfm, item)</code></p>

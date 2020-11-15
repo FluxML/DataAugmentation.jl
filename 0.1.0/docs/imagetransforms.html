@@ -79,11 +79,11 @@ showitem((
     apply(tfm, bbox)
 ))
 </code></pre>
-<img src="6182410213178258797.png" alt="" /><p>Instead, pass a tuple of the items to a single <code>apply</code> call so the same
+<img src="17204117822830576802.png" alt="" /><p>Instead, pass a tuple of the items to a single <code>apply</code> call so the same
 random state will be used for both image and bounding box:</p>
 <pre><code cell="main" class="language-julia">apply(tfm, (image, bbox)) |&gt; showitem
 </code></pre>
-<img src="4689432190710862700.png" alt="" /><h2 id="gallery"><a href="#gallery" class="anchor"></a>Gallery</h2>
+<img src="2757261518928894697.png" alt="" /><h2 id="gallery"><a href="#gallery" class="anchor"></a>Gallery</h2>
 <pre><code style="display:none;" cell="main" result="false" class="language-julia">function showtransform(tfm, item, n = 8; ncol = 4)
     return mosaicview(
         [showitem(apply(tfm, item)) for _ in 1:n],
@@ -109,14 +109,14 @@ crops a region of size <code>sz</code> <em>from a random location</em>.</p>
 </code></pre>
 <pre><code style="display:none;" cell="main" class="language-julia">o = showtransform(tfm, (image, bbox), 6, ncol=6)
 </code></pre>
-<img src="1847984613184220408.png" alt="" /><h3 id="centerresizecrop"><a href="#centerresizecrop" class="anchor"></a><a href="../docstrings/DataAugmentation.CenterResizeCrop.html"><code>CenterResizeCrop</code></a></h3>
+<img src="10278129360475973880.png" alt="" /><h3 id="centerresizecrop"><a href="#centerresizecrop" class="anchor"></a><a href="../docstrings/DataAugmentation.CenterResizeCrop.html"><code>CenterResizeCrop</code></a></h3>
 <p>Resizes the sides so that one of them is no longer than <code>sz</code> and
 crops a region of size <code>sz</code> <em>from the center</em>.</p>
 <pre><code cell="main" result="false" class="language-julia">tfm = CenterResizeCrop((128, 128))
 </code></pre>
 <pre><code style="display:none;" cell="main" class="language-julia">o = showtransform(tfm, (image, bbox), 1)
 </code></pre>
-<img src="1845973879612368985.png" alt="" /><h3 id="cropsz-from"><a href="#cropsz-from" class="anchor"></a><a href="../docstrings/DataAugmentation.Crop.html"><code>Crop</code></a><code>(sz[, from])</code></h3>
+<img src="12683540669736905754.png" alt="" /><h3 id="cropsz-from"><a href="#cropsz-from" class="anchor"></a><a href="../docstrings/DataAugmentation.Crop.html"><code>Crop</code></a><code>(sz[, from])</code></h3>
 <p>Crops a region of size <code>sz</code> from the image, <em>without resizing</em> the image first.</p>
 <pre><code cell="main" result="false" class="language-julia">using DataAugmentation: FromOrigin, FromCenter, FromRandom
 tfms = [
@@ -130,7 +130,7 @@ tfms = [
 </code></pre>
 <pre><code style="display:none;" cell="main" class="language-julia">o = showtransforms(tfms, (image, bbox))
 </code></pre>
-<img src="4067335428248318820.png" alt="" /></article>
+<img src="5922475649036409233.png" alt="" /></article>
         <div id="page-navigation">
             <a id="previous-page" title="Previous" href="items.html"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16.2426 6.34317L14.8284 4.92896L7.75739 12L14.8285 19.0711L16.2427 17.6569L10.5858 12L16.2426 6.34317Z" fill="currentColor" /></svg></a>
             <a id="next-page" title="Next" href="..&#x2F;docstrings.html"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10.5858 6.34317L12 4.92896L19.0711 12L12 19.0711L10.5858 17.6569L16.2427 12L10.5858 6.34317Z" fill="currentColor" /></svg></a>

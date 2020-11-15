@@ -130,7 +130,7 @@ uuid = "9a962f9c-6df0-11e9-0e5d-c546b8b5ee8a"
 version = "1.4.0"
 
 [[DataAugmentation]]
-deps = ["ColorBlendModes", "CoordinateTransformations", "DocStringExtensions", "ImageDraw", "ImageTransformations", "Images", "Parameters", "Setfield", "StaticArrays"]
+deps = ["ColorBlendModes", "CoordinateTransformations", "DocStringExtensions", "ImageDraw", "ImageTransformations", "Images", "Interpolations", "Parameters", "Setfield", "StaticArrays"]
 path = ".."
 uuid = "88a5189c-e7ff-4f85-ac6b-e6158070f02e"
 version = "0.1.0"
