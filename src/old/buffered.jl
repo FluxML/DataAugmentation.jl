@@ -27,8 +27,8 @@ end
 
 
 
-makebuffer(pipeline::Sequential, item::Item) = only.(makebuffer(pipeline, (item,)))
-function makebuffer(pipeline::Sequential, items::Tuple)
+makebuffer(pipeline::Sequence, item::Item) = only.(makebuffer(pipeline, (item,)))
+function makebuffer(pipeline::Sequence, items::Tuple)
     buffers = []
     for tfm in pipeline.transforms
         push!(buffers, makebuffer(tfm, items))
@@ -38,14 +38,14 @@ function makebuffer(pipeline::Sequential, items::Tuple)
 end
 
 
-function apply!(buffers::Tuple, pipeline::Sequential, items::Tuple; randstate = getrandstate(pipeline))
+function apply!(buffers::Tuple, pipeline::Sequence, items::Tuple; randstate = getrandstate(pipeline))
     for (tfm, buffer, r) in zip(pipeline.transforms, buffers, randstate)
         items = apply!(buffer, tfm, items; randstate = r)
     end
     return items
 end
 
-function apply!(buffer::I, pipeline::Sequential, item::I; randstate = getrandstate(pipeline)) where {I<:Item}
+function apply!(buffer::I, pipeline::Sequence, item::I; randstate = getrandstate(pipeline)) where {I<:Item}
     return apply!((buffer,), pipeline, (item,); randstate = randstate) |> only
 end
 

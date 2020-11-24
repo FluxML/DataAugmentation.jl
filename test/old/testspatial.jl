@@ -137,7 +137,6 @@ end
     item = MaskMulti(rand(1:10, 10, 10))
     tfm = RandomResizeCrop((5, 5))
     @test_nowarn apply(tfm, item)
-
 end
 
 

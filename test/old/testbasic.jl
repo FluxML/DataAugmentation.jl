@@ -54,7 +54,6 @@ end
     res = apply(tfm, itemw)
     @test res isa TestItemWrapper
     @test itemdata(res) == data
-
 end
 
 
@@ -69,7 +68,6 @@ end
 
     t = Add(10)
     @test compose(t, t, t, t) == t |> t |> t |> t
-
 end
 
 @testset ExtendedTestSet "setdata, setwrapped" begin

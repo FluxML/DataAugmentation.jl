@@ -1,16 +1,5 @@
-using StaticArrays
-using Setfield
 
-abstract type AbstractItem end
-abstract type Item <: AbstractItem end
-abstract type ItemWrapper{Item} <: AbstractItem end
 
-itemfield(wrapped::ItemWrapper) = :item
-getwrapped(wrapped::ItemWrapper) = getfield(wrapped, itemfield(wrapped))
-function setwrapped(wrapped::ItemWrapper, item)
-    wrapped = Setfield.@set wrapped.item = item
-    return wrapped
-end
 
 
 function setdata(item::Item, data)
@@ -21,20 +10,6 @@ end
 struct Many{I} <: AbstractItem
     items::AbstractArray{I}
 end
-
-itemdata(item::Item) = item.data
-itemdata(wrapper::ItemWrapper) = itemdata(getwrapped(wrapper))
-itemdata(items) = itemdata.(items)
-itemdata(many::Many) = itemdata.(many.items)
-
-
-"""
-    abstract type AbstractArrayItem{N, T}
-
-Abstract type for all [`Item`]s that wrap a `N`-dimensional
-array with element type `T`.
-"""
-abstract type AbstractArrayItem{N, T} <: Item end
 
 
 struct ArrayItem{N, T} <: AbstractArrayItem{N, T}
