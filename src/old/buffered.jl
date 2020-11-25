@@ -26,7 +26,6 @@ function apply!(bufs::Tuple, tfm::Transform, items::Tuple; randstate = getrandst
 end
 
 
-
 makebuffer(pipeline::Sequence, item::Item) = only.(makebuffer(pipeline, (item,)))
 function makebuffer(pipeline::Sequence, items::Tuple)
     buffers = []

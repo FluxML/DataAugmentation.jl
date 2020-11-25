@@ -1,5 +1,6 @@
 
 """
+    abstract type ItemWrapper{Item}
 
 """
 abstract type ItemWrapper{Item} <: AbstractItem end

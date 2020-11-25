@@ -128,8 +128,8 @@ Base.show(io::IO, item::Polygon{N, T, M}) where {N, T, M} =
     print(io, "Polygon{$N, $T}() with $(length(item.item.data)) elements")
 
 """
-    Polygon(points, sz)
-    Polygon{N, T, M}(points, bounds)
+    BoundingBox(points, sz)
+    BoundingBox{N, T, M}(points, bounds)
 
 Item wrapper around [`Keypoints`](#).
 

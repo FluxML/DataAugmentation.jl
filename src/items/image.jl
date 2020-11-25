@@ -12,10 +12,6 @@
 
 Item representing an N-dimensional image with element type T.
 
-Supported `Transform`s:
-
-- all [`AbstractAffine`](#)s
-
 ## Examples
 
 {cell=image}
@@ -52,6 +48,16 @@ end
 Base.show(io::IO, item::Image{N,T}) where {N,T} =
     print(io, "Image{$N, $T}() with size $(size(itemdata(item)))")
 
+
+function showitem(image::Image{2, <:Colorant})
+    return image.data
+end
+
+
+function showitem(image::Image{2, <:AbstractFloat})
+    return colorview(Gray, image.data)
+end
+
 # ### Projective transformations
 #
 # To support projective transformations, we need to implement [`getbounds`](#)
@@ -63,29 +69,22 @@ getbounds(image::Image) = image.bounds
 # [ImageTransformations.jl](https://github.com/JuliaImages/ImageTransformations.jl).
 # We have to pass the inverse of the projection `P` as it uses backward
 # mode warping.
-#
-# For good interpolation quality, cubic b-spline interpolation with reflection
-# padding is used.
-
 
 function project(P, image::Image, indices)
     ## Transform the bounds along with the image
     bounds_ = P.(getbounds(image))
     data_ = warp(itemdata(image), inv(P), indices)
-    return Image(data_, bounds_)
+    return Image(data_, makebounds(indices))
 end
-
 
 # The inplace version `project!` is quite similar. Note `indices` are not needed
 # as they are implicitly given by the buffer.
 
-
-function project!(bufitem::Image, P, image::Image, indices)
-    bounds_ = P.(getbounds(image))
-    data_ = warp!(
-        itemdata(bufitem),
-        box_extrapolation(itemdata(item), BSpline(Cubic(Reflect()))),
+function project!(bufimage::Image, P, image::Image, indices)
+    warp!(
+        itemdata(bufimage),
+        box_extrapolation(itemdata(image)),
         inv(P),
     )
-    return Image(data_, bounds_)
+    return Image(itemdata(bufimage), P.(getbounds(image)))
 end

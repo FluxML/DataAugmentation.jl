@@ -13,7 +13,7 @@ end
 
     image = Image(rand(100, 100))
     tfm = Project(Translation(20, 20))
-    crop = CropCenter((50, 50))
+    crop = CenterCrop((50, 50))
 
     @test tfm |> crop isa CroppedProjectiveTransform
 

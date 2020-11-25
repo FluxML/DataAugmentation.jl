@@ -9,16 +9,26 @@ abstract type AbstractArrayItem{N, T} <: Item end
 
 
 """
+    ArrayItem(a)
+
+An item that contains an array.
+"""
+struct ArrayItem{N, T} <: AbstractArrayItem{N, T}
+    data::AbstractArray{T, N}
+end
+
+
+"""
     MapElem(f)
 
 Applies `f` to every element in an [`AbstractArrayItem`].
 """
 struct MapElem <: Transform
-    fn
+    f
 end
 
 function apply(tfm::MapElem, item::AbstractArrayItem; randstate = nothing)
-    return setdata(item, map(tfm.fn, itemdata(item)))
+    return setdata(item, map(tfm.f, itemdata(item)))
 end
 
 function apply!(

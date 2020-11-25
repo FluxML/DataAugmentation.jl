@@ -6,5 +6,9 @@ include("../imports.jl")
     tfm = Project(Translation(20, 10))
 
     @test_nowarn apply(tfm, image)
-    @show boundsranges(apply(tfm, image).bounds) == (21:52, 11:42)
+    timage = apply(tfm, image)
+    @test boundsranges(timage.bounds) == (21:52, 11:42)
+
+    @test_nowarn apply!(timage, tfm, image)
+
 end

@@ -13,8 +13,8 @@ struct Crop{N, F<:CropFrom} <: AbstractCrop
     from::F
 end
 
-CropCenter(sz) = Crop(sz, FromCenter())
-CropRandom(sz) = Crop(sz, FromRandom())
+CenterCrop(sz) = Crop(sz, FromCenter())
+RandomCrop(sz) = Crop(sz, FromRandom())
 
 # The random state of a [`Crop`](#) consists of offsets from the origin.
 

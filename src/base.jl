@@ -24,6 +24,18 @@ abstract type Item <: AbstractItem end
 
 
 """
+    showitem(item)
+
+Visualize `item`. Should return an image.
+"""
+function showitem end
+
+function showitem(items::Tuple)
+    return blend.(showitem.(items)...)
+end
+
+
+"""
     abstract type Transform
 
 Abstract supertype for all transformations.
@@ -74,37 +86,6 @@ function apply(tfm::Transform, items::Tuple; randstate = getrandstate(tfm))
 end
 
 
-# To make composition possible, we implement [`compose`](#), which
-# defaults to returning a [`Sequence`](#).
-
-"""
-    Sequence(transforms...)
-
-`Transform` that applies multiple `transformations`
-after each other.
-
-You should not use this explicitly. Instead use [`compose`](#).
-"""
-struct Sequence{T<:Tuple where N} <: Transform
-    transforms::T
-end
-
-Sequence(tfms...) = Sequence{typeof(tfms)}(tfms)
-
-getrandstate(seq::Sequence) = getrandstate.(seq.transforms)
-
-function apply(seq::Sequence, items::Tuple; randstate = getrandstate(seq))
-    for (tfm, r) in zip(seq.transforms, randstate)
-        items = apply(tfm, items; randstate = r)
-    end
-    return items
-end
-
-
-apply(seq::Sequence, item::Item; randstate = getrandstate(seq)) =
-    apply(seq, (item,); randstate = randstate) |> only
-
-
 #
 
 
@@ -117,11 +98,9 @@ Defaults to creating a [`Sequence`](#) of transformations,
 but smarter behavior can be implemented.
 For example, `MapElem(f) |> MapElem(g) == MapElem(g ∘ f)`.
 """
+function compose end
 compose(tfm) = tfm
-compose(tfm1::Transform, tfm2::Transform) = Sequence(tfm1, tfm2)
 compose(tfms...) = compose(compose(tfms[1], tfms[2]), tfms[3:end]...)
-compose(seq::Sequence, tfm::Transform) = Sequence(seq.transforms..., tfm)
-
 Base.:(|>)(tfm1::Transform, tfm2::Transform) = compose(tfm1, tfm2)
 
 # [`Identity`](#) is the identity transformation.

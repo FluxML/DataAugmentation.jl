@@ -122,7 +122,7 @@ function applyaffine(mask::MaskMulti, A, crop = nothing)
 end
 
 
-function applyaffine(mask::Union{MaskBinary, MaskMulti}, A, crop = nothing)
+function applyaffine(mask::MaskBinary, A, crop = nothing)
     a = itemdata(mask)
     etp = mask_extrapolation(a)
     if crop isa Tuple

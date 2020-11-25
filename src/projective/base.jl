@@ -28,6 +28,7 @@ of the N-dimensional hypercube bounding the data. In practive, use
 """
 function getbounds end
 
+getbounds(wrapper::ItemWrapper) = getbounds(getwrapped(wrapper))
 
 """
     project(P, item, indices)

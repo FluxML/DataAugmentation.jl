@@ -9,5 +9,5 @@ using TestImages
 
 using DataAugmentation: Item, Transform, getrandstate, itemdata, setdata, ComposedProjectiveTransform,
     cropindices, makebounds, getprojection, boundsextrema, boundsranges, boundssize, offsetcropindices,
-    CroppedProjectiveTransform
+    CroppedProjectiveTransform, getbounds, project, project!, makebuffer
 import DataAugmentation: apply, compose
