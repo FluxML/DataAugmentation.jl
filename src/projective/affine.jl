@@ -114,7 +114,17 @@ function getprojection(::PinOrigin, bounds; randstate = nothing)
     return Translation(-bounds[1])
 end
 
+function apply(::PinOrigin, item::Union{Image, MaskMulti, MaskBinary}; randstate = nothing)
+    item = @set item.data = parent(itemdata(item))
+    item = @set item.bounds = makebounds(size(itemdata(item)))
+    return item
+end
+
+# `PinOrigin` should not compose with a cropped transform otherwise the pinning won't work.
+
+compose(cropped::CroppedProjectiveTransform, pin::PinOrigin) = Sequence(cropped, pin)
+
 # ## Resize crops
 
-RandomResizeCrop(sz) = ScaleKeepAspect(sz) |> PinOrigin() |> RandomCrop(sz)
-CenterResizeCrop(sz) = ScaleKeepAspect(sz) |> PinOrigin() |> CenterCrop(sz)
+RandomResizeCrop(sz) = ScaleKeepAspect(sz) |> RandomCrop(sz) |> PinOrigin()
+CenterResizeCrop(sz) = ScaleKeepAspect(sz) |> CenterCrop(sz) |> PinOrigin()

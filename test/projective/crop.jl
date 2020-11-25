@@ -14,10 +14,8 @@ end
     image = Image(rand(100, 100))
     tfm = Project(Translation(20, 20))
     crop = CenterCrop((50, 50))
-
     @test tfm |> crop isa CroppedProjectiveTransform
 
     cropped = tfm |> crop
     @test_nowarn apply(cropped, image)
-
 end

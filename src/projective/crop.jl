@@ -13,6 +13,15 @@ struct Crop{N, F<:CropFrom} <: AbstractCrop
     from::F
 end
 
+
+function apply(crop::Crop, items; randstate = getrandstate(crop))
+    return apply(
+        Project(CoordinateTransformations.IdentityTransformation()) |> crop,
+        items;
+        randstate = (nothing, randstate))
+end
+
+
 CenterCrop(sz) = Crop(sz, FromCenter())
 RandomCrop(sz) = Crop(sz, FromRandom())
 
