@@ -17,6 +17,9 @@ struct ArrayItem{N, T} <: AbstractArrayItem{N, T}
     data::AbstractArray{T, N}
 end
 
+Base.show(io::IO, item::ArrayItem{N, T}) where {N, T} =
+    print(io, "ArrayItem{$N, $T}() of size $(size(itemdata(item)))")
+
 
 """
     MapElem(f)

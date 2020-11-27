@@ -14,10 +14,10 @@ struct Crop{N, F<:CropFrom} <: AbstractCrop
 end
 
 
-function apply(crop::Crop, items; randstate = getrandstate(crop))
+function apply(crop::Crop, item::Item; randstate = getrandstate(crop))
     return apply(
         Project(CoordinateTransformations.IdentityTransformation()) |> crop,
-        items;
+        item;
         randstate = (nothing, randstate))
 end
 

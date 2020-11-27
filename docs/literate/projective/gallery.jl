@@ -1,7 +1,8 @@
 # # Gallery
 #
-# DataAugmentation.jl comes with various spatial transformations that you
-# can apply to your data. You can apply them to [`Image`](#)s and
+# Let's visualize what these projective transformations look like.
+#
+# You can apply them to [`Image`](#)s and
 # the keypoint-based items [`Keypoints`](#), [`Polygon`](#), and [`BoundingBox`](#).
 #
 # Let's take this picture of a light house:
@@ -15,7 +16,9 @@ using StaticArrays
 imagedata = testimage("lighthouse")
 imagedata = imresize(imagedata, ratio = 196 / size(imagedata, 1))
 #
-imagedata = testimage("lighthouse")
+# ```julia
+# imagedata = testimage("lighthouse")
+# ```
 # {cell=main style="display:none;"}
 imagedata
 # To apply a transformation `tfm` to it, wrap it in
@@ -63,6 +66,15 @@ showitem((
 
 apply(tfm, (image, bbox)) |> showitem
 
+# !!! info "3D Projective dimensions"
+#
+#     We'll use a 2-dimensional [`Image`](#) and [`BoundingBox`](#) here, but you can apply
+#     most projective transformations to any spatial item (including [`Keypoints`](#),
+#     [`MaskBinary`](#) and [`MaskMulti`](#)) in 3 dimensions.
+#
+#     Of course, you have to create a 3-dimensional transformation, i.e.
+#     `CenterCrop((128, 128, 128))` instead of `CenterCrop((128, 128))`.
+#
 #
 # ## Gallery
 # {cell=main style="display:none;" result=false}
@@ -78,7 +90,7 @@ end
 
 function showtransforms(tfms, item; ncol = length(tfms))
     return mosaicview(
-        [showitem(apply(tfm, item)) for tfm in tfms],
+        [parent(showitem(apply(tfm, item))) for tfm in tfms],
         fillvalue = RGBA(1, 1, 1, 0),
         npad = 8,
         rowmajor = true,
@@ -130,3 +142,32 @@ tfms = [
 # {cell=main style="display:none;"}
 
 o = showtransforms(tfms, (image, bbox))
+
+# ### [`FlipX`](#), [`FlipY`](#), [`Reflect`](#)
+#
+# Flip the data on the horizontally and vertically, respectively. More generally, reflect
+# around an angle from the x-axis.
+#
+# {cell=main result=false}
+
+tfms = [
+    FlipX(),
+    FlipY(),
+    Reflect(30),
+]
+
+# {cell=main style="display:none;"}
+
+o = showtransforms(tfms, (image, bbox))
+
+# ### [`Rotate`](#)
+#
+# Rotate counter-clockwise by an angle.
+#
+# {cell=main result=false}
+
+tfm = Rotate(20) |> CenterCrop((256, 256))
+
+# {cell=main style="display:none;"}
+
+o = showtransform(tfm, (image, bbox), 1)

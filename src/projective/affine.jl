@@ -87,8 +87,8 @@ function getprojection(reflect::Reflect, bounds; randstate = nothing)
 end
 
 
-FlipX() = Reflect(90)
-FlipY() = Reflect(0)
+FlipX() = Reflect(180)
+FlipY() = Reflect(90)
 
 reflectionmatrix(r) = SMatrix{2, 2, Float32}(cos(2r), sin(2r), sin(2r), -cos(2r))
 

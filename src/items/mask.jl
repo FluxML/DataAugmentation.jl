@@ -2,6 +2,19 @@
     MaskMulti(a, [classes])
 
 An `N`-dimensional multilabel mask with labels `classes`.
+
+## Examples
+
+{cell=MaskMulti}
+```julia
+using DataAugmentation
+
+mask = MaskMulti(rand(1:3, 100, 100))
+```
+{cell=MaskMulti}
+```julia
+showitem(mask)
+```
 """
 struct MaskMulti{N, T, B} <: AbstractArrayItem{N, T}
     data::AbstractArray{T, N}
@@ -13,6 +26,9 @@ end
 function MaskMulti(a::AbstractArray, classes = unique(a), bounds = makebounds(size(a)))
     return MaskMulti(a, classes = bounds)
 end
+
+Base.show(io::IO, mask::MaskMulti{N, T}) where {N, T} =
+    print(io, "MaskMulti{$N, $T}() with size $(size(itemdata(mask))) and $(length(mask.classes)) classes")
 
 
 getbounds(mask::MaskMulti) = mask.bounds
@@ -40,12 +56,33 @@ function project!(bufmask::MaskMulti, P, mask::MaskMulti, indices)
 end
 
 
+function showitem(mask::MaskMulti)
+    colors = distinguishable_colors(length(mask.classes))
+    map(itemdata(mask)) do val
+        colors[findfirst(==(val), mask.classes)]
+    end
+end
+
+
 # ## Binary masks
 
 """
     MaskBinary(a)
 
-An `N`-dimensional binary mask with labels `classes`.
+An `N`-dimensional binary mask.
+
+## Examples
+
+{cell=MaskMulti}
+```julia
+using DataAugmentation
+
+mask = MaskBinary(rand(Bool, 100, 100))
+```
+{cell=MaskMulti}
+```julia
+showitem(mask)
+```
 """
 struct MaskBinary{N, B} <: AbstractArrayItem{N, Bool}
     data::AbstractArray{Bool, N}
@@ -56,6 +93,8 @@ function MaskBinary(a::AbstractArray{Bool, N}, bounds = makebounds(size(a))) whe
     return MaskBinary(a, bounds)
 end
 
+Base.show(io::IO, mask::MaskBinary{N}) where {N} =
+    print(io, "MaskBinary{$N}() with size $(size(itemdata(mask)))")
 
 getbounds(mask::MaskBinary) = mask.bounds
 
@@ -78,7 +117,9 @@ function project!(bufmask::MaskBinary, P, mask::MaskBinary, indices)
     return MaskBinary(itemdata(bufmask), P.(getbounds(mask)))
 end
 
-
+function showitem(mask::MaskBinary)
+    return colorview(Gray, itemdata(mask))
+end
 # ## Helpers
 
 

@@ -22,13 +22,14 @@ include("./sequence.jl")
 include("./utils/draw.jl")
 include("./items/arrayitem.jl")
 include("./projective/base.jl")
+include("./items/image.jl")
+include("./items/keypoints.jl")
+include("./items/mask.jl")
 include("./projective/bounds.jl")
 include("./projective/compose.jl")
 include("./projective/crop.jl")
 include("./projective/affine.jl")
-include("./items/image.jl")
-include("./items/keypoints.jl")
-include("./items/mask.jl")
+include("./preprocessing.jl")
 
 export Item,
     Transform,
@@ -40,12 +41,16 @@ export Item,
     Image,
     Keypoints,
     Polygon,
+    ToEltype,
+    ImageToTensor,
+    Normalize,
     MaskMulti,
     MaskBinary,
     BoundingBox,
     ScaleKeepAspect,
     ScaleRatio,
     itemdata,
+    Crop,
     CenterCrop,
     RandomCrop,
     ScaleFixed,

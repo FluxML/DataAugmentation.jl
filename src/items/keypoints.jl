@@ -48,7 +48,7 @@ end
 
 
 function showitem(keypoints::Keypoints{N}) where N
-    img = zeros(RGBA{N0f8}, boundssize(getbounds(keypoints)))
+    img = zeros(RGBA{N0f8}, boundsranges(getbounds(keypoints)))
     for point in filter(!isnothing, keypoints.data)
         drawkeypoint!(img, point, RGBA(1, 0, 0, 1))
     end
@@ -92,7 +92,7 @@ Base.show(io::IO, item::Polygon{N, T, M}) where {N, T, M} =
 
 
 function showitem(polygon::Polygon)
-    img = zeros(RGBA{N0f8}, boundssize(getbounds(polygon)))
+    img = zeros(RGBA{N0f8}, boundranges(getbounds(polygon)))
     drawpolygon!(img, itemdata(polygon), RGBA(1, 0, 0, 1))
     return img
 end
@@ -133,7 +133,7 @@ Base.show(io::IO, item::BoundingBox{N, T}) where {N, T} =
 
 
 function showitem(bbox::BoundingBox{2})
-    img = zeros(RGBA{N0f8}, boundssize(getbounds(bbox)))
+    img = zeros(RGBA{N0f8}, boundsranges(getbounds(bbox)))
     ul, br = itemdata(bbox)
     points = [
         ul,
