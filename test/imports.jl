@@ -4,7 +4,6 @@ using StaticArrays
 using Test
 using TestSetExtensions
 using CoordinateTransformations
-using TestImages
 
 
 using DataAugmentation: Item, Transform, getrandstate, itemdata, setdata, ComposedProjectiveTransform,
