@@ -47,7 +47,7 @@ end
 end
 
 @testset ExtendedTestSet "Image pipeline" begin
-    image = Image(testimage("lighthouse"))
+    image = Image(rand(RGB, 150, 150))
 
     tfm = compose(
         ToEltype(RGB),
