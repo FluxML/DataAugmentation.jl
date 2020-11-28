@@ -1,20 +1,5 @@
 include("./imports.jl")
 
-#=
-Test
-
-- Normalize
-    - normalize
-    - denormalize
-- ToEltype
-- ImageToTensor
-    - imagetotensor
-    - tensortoimage
-- OneHotEncode
-    - onehot
-
-- ImagePipeline
-=#
 
 
 @testset ExtendedTestSet "Normalize" begin
