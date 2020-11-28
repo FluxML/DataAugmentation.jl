@@ -1,9 +1,12 @@
 
-
 """
-    makebuffer(tfm::Transform, item) = apply(tfm, item)
+    makebuffer(tfm, item)
 
-Allocate a buffer. Default to `buffer = apply(tfm, item)`.
+Create a buffer `buf` that can be used in a call to `apply!(buf, tfm, item)`.
+Default to `buffer = apply(tfm, item)`.
+
+You only need to implement this if the default `apply(tfm, item)` isn't
+enough. See `apply(tfm::Sequence, item)` for an example of this.
 """
 makebuffer(tfm::Transform, items) = apply(tfm, items)
 
@@ -26,85 +29,62 @@ function apply!(bufs::Tuple, tfm::Transform, items::Tuple; randstate = getrandst
 end
 
 
+# ## Buffered transforms
 
-makebuffer(pipeline::Sequential, item::Item) = only.(makebuffer(pipeline, (item,)))
-function makebuffer(pipeline::Sequential, items::Tuple)
-    buffers = []
-    for tfm in pipeline.transforms
-        push!(buffers, makebuffer(tfm, items))
-        items = apply(tfm, items)
-    end
-    return Tuple(buffers)
-end
-
-
-function apply!(buffers::Tuple, pipeline::Sequential, items::Tuple; randstate = getrandstate(pipeline))
-    for (tfm, buffer, r) in zip(pipeline.transforms, buffers, randstate)
-        items = apply!(buffer, tfm, items; randstate = r)
-    end
-    return items
-end
-
-function apply!(buffer::I, pipeline::Sequential, item::I; randstate = getrandstate(pipeline)) where {I<:Item}
-    return apply!((buffer,), pipeline, (item,); randstate = randstate) |> only
-end
-
-# Inplace wrappers
-
-mutable struct Inplace{T<:Transform} <: Transform
+mutable struct Buffered{T<:Transform} <: Transform
     tfm::T
     buffer
-    Inplace(tfm::T, buffer = nothing) where T = new{T}(tfm, buffer)
+    Buffered(tfm::T, buffer = nothing) where T = new{T}(tfm, buffer)
 end
 
-getrandstate(inplace::Inplace) = getrandstate(inplace.tfm)
+getrandstate(buffered::Buffered) = getrandstate(buffered.tfm)
 
-function apply(inplace::Inplace, items::Tuple; randstate = getrandstate(inplace))
-    if isnothing(inplace.buffer)
-        inplace.buffer = makebuffer(inplace.tfm, items)
+function apply(buffered::Buffered, items::Tuple; randstate = getrandstate(buffered))
+    if isnothing(buffered.buffer)
+        buffered.buffer = makebuffer(buffered.tfm, items)
     end
-    titems = apply!(inplace.buffer, inplace.tfm, items, randstate = randstate)
+    titems = apply!(buffered.buffer, buffered.tfm, items, randstate = randstate)
     return titems
 end
 
-apply(inplace::Inplace, item::Item; randstate = getrandstate(inplace)) =
-    apply(inplace, (item,); randstate = randstate) |> only
+apply(buffered::Buffered, item::Item; randstate = getrandstate(buffered)) =
+    apply(buffered, (item,); randstate = randstate) |> only
 
 
-function apply!(buf::Tuple, inplace::Inplace, items::Tuple; randstate = getrandstate(inplace))
-    if isnothing(inplace.buffer)
-        inplace.buffer = makebuffer(inplace.tfm, items)
+function apply!(buf::Tuple, buffered::Buffered, items::Tuple; randstate = getrandstate(buffered))
+    if isnothing(buffered.buffer)
+        buffered.buffer = makebuffer(buffered.tfm, items)
     end
-    inplace.buffer = apply!(inplace.buffer, inplace.tfm, items; randstate = randstate)
-    copyitemdata!(buf, inplace.buffer)
+    buffered.buffer = apply!(buffered.buffer, buffered.tfm, items; randstate = randstate)
+    copyitemdata!(buf, buffered.buffer)
     return buf
 end
 
-function apply!(buf::I, inplace::Inplace, item::I; randstate = getrandstate(inplace)) where {I<:Item}
+function apply!(buf::I, buffered::Buffered, item::I; randstate = getrandstate(buffered)) where {I<:Item}
     bufs, items = (buf,), (item,)
-    titems = apply!(bufs, inplace, items; randstate = randstate)
+    titems = apply!(bufs, buffered, items; randstate = randstate)
     return only(titems)
 end
 
 
-struct InplaceThreadsafe
-    inplaces::Vector{Inplace}
-    function InplaceThreadsafe(tfm; n = Threads.nthreads())
+struct BufferedThreadsafe
+    buffereds::Vector{Buffered}
+    function BufferedThreadsafe(tfm; n = Threads.nthreads())
         @assert n >= 1
-        return new([Inplace(tfm) for _ in 1:n])
+        return new([Buffered(tfm) for _ in 1:n])
     end
 end
 
 
-function apply(inplacet::InplaceThreadsafe, items; kwargs...)
-    inplacethread = inplacet.inplaces[Threads.threadid()]
-    return apply(inplacethread, items; kwargs...)
+function apply(bufferedt::BufferedThreadsafe, items; kwargs...)
+    bufferedthread = bufferedt.buffereds[Threads.threadid()]
+    return apply(bufferedthread, items; kwargs...)
 end
 
 
-function apply!(buf, inplacet::InplaceThreadsafe, items; kwargs...)
-    inplacethread = inplacet.inplaces[Threads.threadid()]
-    return apply!(buf, inplacethread, items; kwargs...)
+function apply!(buf, bufferedt::BufferedThreadsafe, items; kwargs...)
+    bufferedthread = bufferedt.buffereds[Threads.threadid()]
+    return apply!(buf, bufferedthread, items; kwargs...)
 end
 
 

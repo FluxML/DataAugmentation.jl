@@ -1,20 +1,5 @@
 include("./imports.jl")
 
-#=
-Test
-
-- Normalize
-    - normalize
-    - denormalize
-- ToEltype
-- ImageToTensor
-    - imagetotensor
-    - tensortoimage
-- OneHotEncode
-    - onehot
-
-- ImagePipeline
-=#
 
 
 @testset ExtendedTestSet "Normalize" begin
@@ -62,7 +47,7 @@ end
 end
 
 @testset ExtendedTestSet "Image pipeline" begin
-    image = Image(testimage("lighthouse"))
+    image = Image(rand(RGB, 150, 150))
 
     tfm = compose(
         ToEltype(RGB),

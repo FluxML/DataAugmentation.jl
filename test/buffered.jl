@@ -6,7 +6,7 @@ include("./imports.jl")
 a = randn(5, 5)
 item = ArrayItem(a)
 
-tfm = Map(x -> x + 1)
+tfm = MapElem(x -> x + 1)
 
 buf = apply(tfm, item)
 
@@ -18,7 +18,7 @@ buf
 
 @testset ExtendedTestSet "apply!(buf, ::Map, ...)" begin
     newitem() = ArrayItem(randn(5, 5))
-    tfm = Map(x -> x + 1)
+    tfm = MapElem(x -> x + 1)
 
     buf = apply(tfm, newitem())
     buf_copy = deepcopy(buf)
@@ -58,45 +58,41 @@ end
 end
 
 
-@testset ExtendedTestSet "Inplace" begin
+@testset ExtendedTestSet "`Buffered`" begin
     newitem() = ArrayItem(randn(5, 5))
     # buffer should be created
-    ti = DataAugmentation.Inplace(Map(x -> x + 1))
-    @test isnothing(ti.buffer)
-    @test_nowarn ti(newitem())
-    @test !isnothing(ti.buffer)
+    tb = Buffered(MapElem(x -> x + 1))
+    @test isnothing(tb.buffer)
+    @test_nowarn apply(tb, newitem())
+    @test !isnothing(tb.buffer)
 
     # buffer should change
-    buf = deepcopy(ti.buffer)
-    @test_nowarn ti(newitem())
-    @test !(buf.data ≈ ti.buffer.data)
+    buf = deepcopy(tb.buffer)
+    @test_nowarn apply(tb, newitem())
+    @test !(buf[1].data ≈ tb.buffer[1].data)
 
     # inplace version
     buf2 = deepcopy(buf)
-    @test_nowarn ti(buf2, newitem())
-    @test !(buf2.data ≈ buf.data)
-
+    @test_nowarn apply!(buf2, tb, newitem())
+    @test !(buf2[1].data ≈ tb.buffer[1].data)
 end
 
-@testset ExtendedTestSet "Inplace" begin
+@testset ExtendedTestSet "`BufferedThreadsafe`" begin
     newitem() = ArrayItem(randn(5, 5))
     # buffer should be created
-    ti = DataAugmentation.InplaceThreadsafe(Map(x -> x + 1))
-    @test isnothing(ti.inplaces[Threads.threadid()].buffer)
-    @test_nowarn ti(newitem())
-    @test !isnothing(ti.inplaces[Threads.threadid()].buffer)
+    tbt = BufferedThreadsafe(MapElem(x -> x + 1))
+    tb = tbt.buffereds[1]
+    @test isnothing(tb.buffer)
+    @test_nowarn apply(tbt, newitem())
+    @test !isnothing(tb.buffer)
 
     # buffer should change
-    buf = deepcopy(ti.inplaces[Threads.threadid()].buffer)
-    @test_nowarn ti(newitem())
-    @test !(buf.data ≈ ti.inplaces[Threads.threadid()].buffer.data)
+    buf = deepcopy(tb.buffer)
+    @test_nowarn apply(tbt, newitem())
+    @test !(buf[1].data ≈ tb.buffer[1].data)
 
     # inplace version
     buf2 = deepcopy(buf)
-    @test_nowarn ti(buf2, newitem())
-    @test !(buf2.data ≈ buf.data)
-
+    @test_nowarn apply!(buf2, tbt, newitem())
+    @test !(buf2[1].data ≈ tb.buffer[1].data)
 end
-
-tfm = Map(x -> x + 1)
-DataAugmentation.InplaceThreadsafe(tfm)

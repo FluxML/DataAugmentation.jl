@@ -1,11 +1,14 @@
 include("./imports.jl")
 
-include("./testbasic.jl")
-include("./testspatial.jl")
-include("./testpreprocessing.jl")
 
-#= TODO:
-- test Keypoints transformation with Nothing
-- test Normalize
-
-=#
+include("base.jl")
+include("buffered.jl")
+include("projective/base.jl")
+include("projective/bounds.jl")
+include("projective/compose.jl")
+include("projective/crop.jl")
+include("projective/affine.jl")
+include("items/image.jl")
+include("items/keypoints.jl")
+include("items/mask.jl")
+include("preprocessing.jl")

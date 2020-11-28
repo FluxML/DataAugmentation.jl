@@ -1,107 +1,74 @@
 module DataAugmentation
 
-using CoordinateTransformations
 using ColorBlendModes
-using ImageTransformations
-using ImageTransformations: center, _center, box_extrapolation, warp!
+using CoordinateTransformations
+using ImageDraw
 using Images
 using Images: Colorant, permuteddimsview
-using ImageDraw
-using StaticArrays
-using Parameters
-using DocStringExtensions
+using ImageTransformations
+using ImageTransformations: center, _center, box_extrapolation, warp!
 using Interpolations
+using LinearAlgebra: I
+using Parameters
+using Rotations
+using Setfield
+using StaticArrays
 
-include("./item.jl")
-include("./transform.jl")
+
+include("./base.jl")
+include("./wrapper.jl")
 include("./buffered.jl")
-include("./show.jl")
+include("./sequence.jl")
+include("./utils/draw.jl")
+include("./items/arrayitem.jl")
+include("./projective/base.jl")
+include("./items/image.jl")
+include("./items/keypoints.jl")
+include("./items/mask.jl")
+include("./projective/bounds.jl")
+include("./projective/compose.jl")
+include("./projective/crop.jl")
+include("./projective/affine.jl")
+include("./preprocessing.jl")
 
-include("./spatial/affine.jl")
-include("./spatial/crop.jl")
-include("./spatial/translate.jl")
-include("./spatial/scale.jl")
-include("./spatial/resize.jl")
-
-include("./transforms/preprocessing.jl")
-
-#= TODO
-
-
-    Either,
-    FlipX,
-    FlipY,
-    Lambda,
-    Normalize,
-    OneHot,
-    Rotate,
-    Rotate90,
-    Rotate180,
-    Rotate270,
-    ToEltype,
-    ToTensor, =#
-
-    # items interface
 export Item,
-    ItemWrapper,
-    getwrapped,
-    getbounds,
-
-    # items
-    Many,
+    Transform,
     ArrayItem,
+    MapElem,
+    Identity,
+    Sequence,
+    Project,
     Image,
     Keypoints,
     Polygon,
-    BoundingBox,
-    Category,
-    MaskBinary,
-    MaskMulti,
-
-    # pipelines
-    ApplyStep,
-    CombineStep,
-    MapStep,
-    Pipeline,
-
-    # transforms
-    Transform,
-    Identity,
-    Map,
-
-    # pre/postprocessing transforms
     ToEltype,
-    Normalize,
     ImageToTensor,
-    OneHotEncode,
-
-
-    # affine transforms
-    AbstractAffine,
-    Affine,
-    Crop,
-    CropFixed,
-    CropIndices,
-    CropRatio,
-    CropDivisible,
-    CroppedAffine,
-
-    # scale & resize
-    ScaleFixed,
-    ScaleRatio,
+    Normalize,
+    MaskMulti,
+    MaskBinary,
+    BoundingBox,
     ScaleKeepAspect,
-    ResizeFixed,
-    ResizeRatio,
-    ResizeDivisible,
-    CenterResizeCrop,
-    RandomResizeCrop,
-
-    # functions
-    apply,
-    apply!,
-    compose,
+    ScaleRatio,
     itemdata,
-    makebuffer,
+    Crop,
+    CenterCrop,
+    RandomCrop,
+    ScaleFixed,
+    Rotate,
+    RandomResizeCrop,
+    CenterResizeCrop,
+    Buffered,
+    BufferedThreadsafe,
+    apply,
+    Reflect,
+    FlipX,
+    FlipY,
+    PinOrigin,
+    apply!,
+    PadDivisible,
+    ResizePadDivisible,
+    onehot,
     showitem
+
 
 end # module
