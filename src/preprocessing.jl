@@ -151,3 +151,10 @@ function imagetotensor!(buf, image::AbstractArray{<:AbstractRGB, N}) where N
 end
 tensortoimage(a::AbstractArray{T, 3}) where T = colorview(RGB, permuteddimsview(a, (3, 1, 2)))
 tensortoimage(a::AbstractArray{T, 2}) where T = colorview(Gray, a)
+
+function onehot(T, x::Int, n::Int)
+    v = fill(zero(T), n)
+    v[x] = one(T)
+    return v
+end
+onehot(x, n) = onehot(Float32, x, n)

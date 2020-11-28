@@ -14,6 +14,7 @@ struct Crop{N, F<:CropFrom} <: AbstractCrop
 end
 
 
+
 function apply(crop::Crop, item::Item; randstate = getrandstate(crop))
     return apply(
         Project(CoordinateTransformations.IdentityTransformation()) |> crop,
@@ -30,6 +31,12 @@ RandomCrop(sz) = Crop(sz, FromRandom())
 getrandstate(crop::Crop{N, FromOrigin}) where N = Tuple(0. for _ in 1:N)
 getrandstate(crop::Crop{N, FromCenter}) where N = Tuple(0.5 for _ in 1:N)
 getrandstate(crop::Crop{N, FromRandom}) where N = Tuple(rand() for _ in 1:N)
+
+
+struct PadDivisible <: AbstractCrop
+    by::Int
+end
+
 
 
 struct CroppedProjectiveTransform{P<:ProjectiveTransform, C<:AbstractCrop} <: ProjectiveTransform
@@ -53,14 +60,30 @@ end
 
 
 function cropindices(
-        cropped::CroppedProjectiveTransform,
+        cropped::CroppedProjectiveTransform{PT, C},
         P,
         bounds;
-        randstate = getrandstate(cropped))
+        randstate = getrandstate(cropped)) where {PT, C<:Crop}
     tfmstate, cropstate = randstate
     bounds_ = P.(bounds)
     return offsetcropindices(cropped.crop.size, boundsranges(bounds_), cropstate)
 end
+
+
+function cropindices(
+        cropped::CroppedProjectiveTransform{PT, PadDivisible},
+        P,
+        bounds;
+        randstate = getrandstate(cropped)) where {PT, C<:Crop}
+    tfmstate, cropstate = randstate
+    bounds_ = P.(bounds)
+    ranges = boundsranges(bounds_)
+    sz = length.(ranges)
+    pad = length.(ranges) .%  cropped.crop.by
+
+    return UnitRange.(getindex.(ranges, 1), sz .+ pad)
+end
+
 
 
 compose(tfm::ProjectiveTransform, crop::AbstractCrop) = CroppedProjectiveTransform(tfm, crop)

@@ -70,10 +70,10 @@ getbounds(image::Image) = image.bounds
 # We have to pass the inverse of the projection `P` as it uses backward
 # mode warping.
 
-function project(P, image::Image, indices)
+function project(P, image::Image{N, T}, indices) where {N, T}
     ## Transform the bounds along with the image
     bounds_ = P.(getbounds(image))
-    data_ = warp(itemdata(image), inv(P), indices)
+    data_ = warp(itemdata(image), inv(P), indices, zero(T))
     return Image(data_, makebounds(indices))
 end
 

@@ -65,6 +65,9 @@ export Item,
     FlipY,
     PinOrigin,
     apply!,
+    PadDivisible,
+    ResizePadDivisible,
+    onehot,
     showitem
 
 

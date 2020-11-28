@@ -116,7 +116,7 @@ include("../imports.jl")
         timage, tkeypoints = apply(tfm, (image, keypoints))
 
         @test getbounds(timage) ≈ getbounds(tkeypoints)
-        @test boundsranges(getbounds(timage)) == (8:32, 1:40)
+        @test boundsranges(getbounds(timage)) == (1:25, 1:40)
     end
 
     @testset ExtendedTestSet "CroppedAffine inplace" begin
@@ -126,5 +126,42 @@ include("../imports.jl")
         buffer = makebuffer(tfm, image1)
 
         @test_nowarn apply!(buffer, tfm, image2)
+    end
+end
+
+
+@testset ExtendedTestSet "Big pipeline" begin
+    @testset ExtendedTestSet "2D" begin
+        sz = (100, 100)
+        items = (
+            Image(rand(RGB, sz)),
+            Keypoints(rand(SVector{2, Float32}, 50), sz),
+            MaskBinary(rand(Bool, sz)),
+            MaskMulti(rand(UInt8, sz)),
+        )
+
+        tfms = compose(
+            Rotate(10),
+            FlipX(), FlipY(),
+            ScaleRatio((.8, .8)),
+            RandomResizeCrop((50, 50)),
+        )
+        @test_nowarn apply(tfms, items)
+    end
+
+    @testset ExtendedTestSet "2D" begin
+        sz = (50, 50, 50)
+        items = (
+            Image(rand(RGB, sz)),
+            Keypoints(rand(SVector{3, Float32}, 50), sz),
+            MaskBinary(rand(Bool, sz)),
+            MaskMulti(rand(UInt8, sz)),
+        )
+
+        tfms = compose(
+            ScaleRatio((.8, .8, .8)),
+            RandomResizeCrop((25, 25, 25)),
+        )
+        @test_nowarn apply(tfms, items)
     end
 end

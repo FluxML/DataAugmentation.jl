@@ -128,3 +128,5 @@ compose(cropped::CroppedProjectiveTransform, pin::PinOrigin) = Sequence(cropped,
 
 RandomResizeCrop(sz) = ScaleKeepAspect(sz) |> RandomCrop(sz) |> PinOrigin()
 CenterResizeCrop(sz) = ScaleKeepAspect(sz) |> CenterCrop(sz) |> PinOrigin()
+
+ResizePadDivisible(sz, by) = ScaleKeepAspect(sz) |> PadDivisible(by) |> PinOrigin()
