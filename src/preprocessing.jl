@@ -90,6 +90,14 @@ end
 
 normalize(a, means, stds) = normalize!(copy(a), means, stds)
 
+function Normalize(array)
+    slices = ones(Bool, size(array))
+    means = mean(array[slices])
+    stds = std(array[slices])
+    array[slices] = (array[slices] .- means) / stds
+    return array
+end
+
 function denormalize!(a, means, stds)
     a .*= stds
     a .+= means

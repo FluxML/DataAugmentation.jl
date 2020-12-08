@@ -17,6 +17,13 @@ include("./imports.jl")
         tfm = Normalize(means, stds)
         @test itemdata(apply(tfm, item)) ≈ -1 .* ones(10, 10, 3)
     end
+
+    @testset ExtendedTestSet "Normalize" begin
+    array = Float32.(collect(1:5))
+    ground_truth = [-1.2649, -0.6325, 0, 0.6325, 1.2649]
+    pred = Normalize(array)
+    @test ground_truth ≈ pred
+    end
 end
 
 @testset ExtendedTestSet "ToEltype" begin
