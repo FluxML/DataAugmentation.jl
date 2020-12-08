@@ -13,6 +13,7 @@ using Parameters
 using Rotations
 using Setfield
 using StaticArrays
+using Statistics
 
 
 include("./base.jl")
