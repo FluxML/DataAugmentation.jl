@@ -107,6 +107,32 @@ end
 denormalize(a, means, stds) = denormalize!(copy(a), means, stds)
 
 
+# ### [`NormalizeIntensity`]
+
+"""
+    NormalizeIntensity()
+
+Normalizes the pixels of an array based on calculated mean and std. 
+"""
+
+# struct NormalizeIntensity!{N} <: Transform 
+#     array::SArray{N}
+# end
+
+function NormalizeIntensity!(array)
+    slices = ones(Bool, size(array))
+    means = mean(array[slices])
+    stds = std(array[slices])
+    array[slices] = (array[slices] .- means) / stds
+    return array
+end
+
+# function apply!(buf, tfm::NormalizeIntensity!, item::ArrayItem; randstate = nothing)
+#     copy!(itemdata(buf), itemdata(item))
+#     NormalizeIntensity!(itemdata(buf))
+#     return buf
+# end
+
 # ### [`ImageToTensor`]
 
 """
