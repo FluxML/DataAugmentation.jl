@@ -78,10 +78,12 @@ function cropindices(
     tfmstate, cropstate = randstate
     bounds_ = P.(bounds)
     ranges = boundsranges(bounds_)
-    sz = length.(ranges)
-    pad = length.(ranges) .%  cropped.crop.by
 
-    return UnitRange.(getindex.(ranges, 1), sz .+ pad)
+    sz = length.(ranges)
+    pad = cropped.crop.by .- (length.(ranges) .%  cropped.crop.by)
+
+    indices = UnitRange.(getindex.(ranges, 1), sz .+ pad)
+    return indices
 end
 
 
