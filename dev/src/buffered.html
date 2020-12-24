@@ -60,8 +60,17 @@ Default to `apply(tfm, item)` (non-mutating version).
 &quot;&quot;&quot;
 apply!(buf, tfm::Transform, items; randstate = getrandstate(tfm)) = apply(tfm, items, randstate = randstate)
 apply!(buf, tfm::Transform, item::Item; randstate = getrandstate(tfm)) = apply(tfm, item, randstate = randstate)
-function apply!(bufs::Tuple, tfm::Transform, items::Tuple; randstate = getrandstate(tfm))
-    return map((item, buf) -&gt; apply!(buf, tfm, item; randstate = randstate), items, bufs)
+</code></pre>
+<p>Applying transforms inplace to tuples of items works fine when they always have the same
+length. When you have a varying number of items however, (e.g. different number of
+bounding boxes per sample) the number of items doesn’t match up with the buffer and
+we fall back to regular <code>apply</code>.</p>
+<pre><code class="language-julia">function apply!(bufs::Tuple, tfm::Transform, items::Tuple; randstate = getrandstate(tfm))
+    if length(bufs) == length(items)
+        return map((item, buf) -&gt; apply!(buf, tfm, item; randstate = randstate), items, bufs)
+    else
+        return apply(tfm, items; randstate = randstate)
+    end
 end
 </code></pre>
 <h2 id="buffered-transforms"><a href="#buffered-transforms" class="anchor"></a>Buffered transforms</h2>

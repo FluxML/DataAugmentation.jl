@@ -113,7 +113,7 @@ is applied for this to work.</p>
     bounds = getbounds(item)
     P = getprojection(tfm, bounds; randstate = randstate)
     indices = cropindices(tfm, P, bounds; randstate = randstate)
-    return project!(bufitem, P, item, bounds)
+    return project!(bufitem, P, item, indices)
 end
 </code></pre>
 <p>The simplest <code>ProjectiveTransform</code> is the static <code>Project</code>.</p>

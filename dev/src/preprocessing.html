@@ -103,21 +103,26 @@ function Normalize(means, stds)
 end
 
 function apply(tfm::Normalize, item::ArrayItem{N, T}; randstate = nothing) where {N, T}
-    means = reshape(convert.(T, tfm.means), (1 for _ = 2:N)..., N)
-    stds = reshape(convert.(T, tfm.stds), (1 for _ = 2:N)..., N)
-    return ArrayItem(normalize(itemdata(item), means, stds))
+    return ArrayItem(normalize(itemdata(item), tfm.means, tfm.stds))
 end
 
-function apply!(buf, tfm::Normalize, item::ArrayItem; randstate = nothing)
+function apply!(
+        buf,
+        tfm::Normalize,
+        item::ArrayItem;
+        randstate = nothing)
     copy!(itemdata(buf), itemdata(item))
-    means = reshape(convert.(T, tfm.means), (1 for _ = 2:N)..., N)
-    stds = reshape(convert.(T, tfm.stds), (1 for _ = 2:N)..., N)
-    normalize!(itemdata(buf), means, stds)
+    normalize!(itemdata(buf), tfm.means, tfm.stds)
     return buf
 end
 
 
-function normalize!(a, means, stds)
+function normalize!(
+        a::AbstractArray{T, N},
+        means::SVector{M},
+        stds::SVector{M}) where {N, T, M}
+    means = reshape(convert.(T, means), (1 for _ = 2:N)..., M)
+    stds = reshape(convert.(T, stds), (1 for _ = 2:N)..., M)
     a .-= means
     a ./= stds
     return a
@@ -125,7 +130,12 @@ end
 
 normalize(a, means, stds) = normalize!(copy(a), means, stds)
 
-function denormalize!(a, means, stds)
+function denormalize!(
+        a::AbstractArray{T, N},
+        means::SVector{M},
+        stds::SVector{M}) where {N, T, M}
+    means = reshape(convert.(T, means), (1 for _ = 2:N)..., M)
+    stds = reshape(convert.(T, stds), (1 for _ = 2:N)..., M)
     a .*= stds
     a .+= means
     return a

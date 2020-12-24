@@ -110,10 +110,10 @@ end
 </code></pre>
 <p>The inplace version <code>project!</code> is quite similar. Note <code>indices</code> are not needed
 as they are implicitly given by the buffer.</p>
-<pre><code class="language-julia">function project!(bufimage::Image, P, image::Image, indices)
+<pre><code class="language-julia">function project!(bufimage::Image, P, image::Image{N, T}, indices) where {N, T}
     warp!(
         itemdata(bufimage),
-        box_extrapolation(itemdata(image)),
+        box_extrapolation(itemdata(image), zero(T)),
         inv(P),
     )
     return Image(itemdata(bufimage), P.(getbounds(image)))

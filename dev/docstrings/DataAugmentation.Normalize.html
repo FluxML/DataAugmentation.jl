@@ -49,7 +49,7 @@ image = Image(rand(RGB, 20, 20, 20))
 tfms = ImageToTensor() |&gt; Normalize((0.1, -0.2, -0.1), (1,1,1.))
 apply(tfms, image)
 </code></pre>
-<pre><code class="plaintext cell-output cell-result" class="language-plaintext">LoadError(&quot;string&quot;, 4, DimensionMismatch(&quot;parent has 3 elements, which is incompatible with size (1, 1, 1, 4)&quot;))</code></pre>
+<pre><code class="plaintext cell-output cell-result" class="language-plaintext">ArrayItem{4, Float32}() of size (20, 20, 20, 3)</code></pre>
 </div>
 </div>
 </article>
