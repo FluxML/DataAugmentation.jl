@@ -24,8 +24,19 @@ Default to `apply(tfm, item)` (non-mutating version).
 """
 apply!(buf, tfm::Transform, items; randstate = getrandstate(tfm)) = apply(tfm, items, randstate = randstate)
 apply!(buf, tfm::Transform, item::Item; randstate = getrandstate(tfm)) = apply(tfm, item, randstate = randstate)
+
+
+# Applying transforms inplace to tuples of items works fine when they always have the same
+# length. When you have a varying number of items however, (e.g. different number of
+# bounding boxes per sample) the number of items doesn't match up with the buffer and
+# we fall back to regular `apply`.
+
 function apply!(bufs::Tuple, tfm::Transform, items::Tuple; randstate = getrandstate(tfm))
-    return map((item, buf) -> apply!(buf, tfm, item; randstate = randstate), items, bufs)
+    if length(bufs) == length(items)
+        return map((item, buf) -> apply!(buf, tfm, item; randstate = randstate), items, bufs)
+    else
+        return apply(tfm, items; randstate = randstate)
+    end
 end
 
 
