@@ -78,7 +78,7 @@ function apply!(
     bounds = getbounds(item)
     P = getprojection(tfm, bounds; randstate = randstate)
     indices = cropindices(tfm, P, bounds; randstate = randstate)
-    return project!(bufitem, P, item, bounds)
+    return project!(bufitem, P, item, indices)
 end
 
 

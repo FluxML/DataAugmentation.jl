@@ -80,10 +80,10 @@ end
 # The inplace version `project!` is quite similar. Note `indices` are not needed
 # as they are implicitly given by the buffer.
 
-function project!(bufimage::Image, P, image::Image, indices)
+function project!(bufimage::Image, P, image::Image{N, T}, indices) where {N, T}
     warp!(
         itemdata(bufimage),
-        box_extrapolation(itemdata(image)),
+        box_extrapolation(itemdata(image), zero(T)),
         inv(P),
     )
     return Image(itemdata(bufimage), P.(getbounds(image)))
