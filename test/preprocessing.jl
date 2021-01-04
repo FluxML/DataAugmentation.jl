@@ -5,15 +5,15 @@ include("./imports.jl")
 @testset ExtendedTestSet "Normalize" begin
     @testset ExtendedTestSet "normalize" begin
         image = rand(Float32, 10, 10, 3)
-        means = rand(Float32, 1, 1, 3)
-        stds = rand(Float32, 1, 1, 3)
+        means = SVector{3}(rand(Float32, 1, 1, 3))
+        stds = SVector{3}(rand(Float32, 1, 1, 3))
         @test denormalize(normalize(copy(image), means, stds), means, stds) ≈ image
     end
 
     @testset ExtendedTestSet "Normalize" begin
         item = ArrayItem(zeros(10, 10, 3))
-        means = ones(1, 1, 3)
-        stds = ones(1, 1, 3)
+        means =  SVector{3}(ones(1, 1, 3))
+        stds =  SVector{3}(ones(1, 1, 3))
         tfm = Normalize(means, stds)
         @test itemdata(apply(tfm, item)) ≈ -1 .* ones(10, 10, 3)
     end
