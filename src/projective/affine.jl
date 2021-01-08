@@ -55,34 +55,67 @@ end
 
 """
     Rotate(γ)
+    Rotate(γs)
 
-Rotate 2D spatial data by angle γ around the center.
+Rotate 2D spatial data counter-clockwise by angle γ around the
+center. If you pass in a vector of angles, one will be
+randomly selected.
+
+## Examples
+
+```julia
+tfm = Rotate(10)
+```
+
+```julia
+tfm = Rotate(-10:10)
+```
 """
-struct Rotate <: ProjectiveTransform
-    γ
+struct Rotate{T} <: ProjectiveTransform
+    γ::T
 end
 
 
-function getprojection(rotate::Rotate, bounds; randstate = nothing)
+getrandstate(r::Rotate{<:Real}) = r.γ
+getrandstate(r::Rotate{<:AbstractVector}) = rand(r.γ)
+
+function getprojection(rotate::Rotate, bounds; randstate = getrandstate(rotate))
+    γ = randstate
     middlepoint = sum(bounds) ./ length(bounds)
-    r = rotate.γ / 360 * 2pi
+    r = γ / 360 * 2pi
     return recenter(RotMatrix(r), middlepoint)
 end
 
 
 """
     Reflect(γ)
+    Reflect(γs)
 
 Reflect 2D spatial data by angle γ around the center.
+If you pass in a vector of angles, one will be
+randomly selected.
+
+## Examples
+
+```julia
+tfm = Reflect(10)
+```
+
+```julia
+tfm = Reflect(-10:10)
+```
 """
-struct Reflect <: ProjectiveTransform
-    γ
+struct Reflect{T} <: ProjectiveTransform
+    γ::T
 end
 
+getrandstate(r::Reflect{<:Real}) = r.γ
+getrandstate(r::Reflect{<:AbstractVector}) = rand(r.γ)
 
 function getprojection(reflect::Reflect, bounds; randstate = nothing)
+    γ = randstate
     middlepoint = sum(bounds) ./ length(bounds)
-    r = reflect.γ / 360 * 2pi
+    r = γ / 360 * 2pi
     return recenter(reflectionmatrix(r), middlepoint)
 end
 
@@ -121,6 +154,7 @@ function apply(::PinOrigin, item::Union{Image, MaskMulti, MaskBinary}; randstate
 end
 
 # `PinOrigin` should not compose with a cropped transform otherwise the pinning won't work.
+# This overwrites the default composition.
 
 compose(cropped::CroppedProjectiveTransform, pin::PinOrigin) = Sequence(cropped, pin)
 
