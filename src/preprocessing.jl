@@ -137,6 +137,21 @@ function apply(tfm::NormalizeIntensity, item::Image; randstate = nothing)
     return Image(array)
 end
 
+# ### ['ToBinary']
+"""
+    ToBinary()
+Thresholds the pixels in an image/array to be 0 or 1
+"""
+
+struct ToBinary <: Transform end
+	
+function apply(tfm::ToBinary, item::Image; randstate = nothing)
+    array = itemdata(item)
+    array[array .>= 0.5] .= 1
+    array[array .< 0.5] .= 0
+    return Image(array)
+end
+
 # ### [`ImageToTensor`]
 
 """

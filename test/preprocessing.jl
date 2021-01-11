@@ -35,6 +35,15 @@ end
     end
 end
 
+@testset ExtendedTestSet "ToBinary" begin
+    @testset ExtendedTestSet "ToBinary" begin
+    item = Image(Float32.([0.1, 0.2, 0.8, 0.9]))
+    ground_truth = [0, 0, 1, 1]
+    tfm = ToBinary()
+    @test itemdata(apply(tfm, item)) ≈ ground_truth
+    end
+end
+
 @testset ExtendedTestSet "ToEltype" begin
     tfm = ToEltype(RGB)
     data = rand(RGB, 10, 10)
