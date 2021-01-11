@@ -26,6 +26,13 @@ end
         tfm = NormalizeIntensity()
         @test itemdata(apply(tfm, item)) ≈ ground_truth
     end
+
+    @testset ExtendedTestSet "NormalizeIntensity" begin
+    item = Image(Float32.(collect(1:5)))
+    ground_truth = [-1.2649, -0.6325, 0, 0.6325, 1.2649]
+    tfm = NormalizeIntensity()
+    @test itemdata(apply(tfm, item)) ≈ ground_truth
+    end
 end
 
 @testset ExtendedTestSet "ToEltype" begin

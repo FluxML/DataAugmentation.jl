@@ -128,6 +128,15 @@ function apply(tfm::NormalizeIntensity, item::ArrayItem; randstate = nothing)
     return ArrayItem(array)
 end
 
+function apply(tfm::NormalizeIntensity, item::Image; randstate = nothing)
+    array = itemdata(item)
+    slices = ones(Bool, size(array))
+    means = mean(array[slices])
+    stds = std(array[slices])
+    array[slices] = (array[slices] .- means) / stds
+    return Image(array)
+end
+
 # ### [`ImageToTensor`]
 
 """
