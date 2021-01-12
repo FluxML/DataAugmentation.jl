@@ -147,8 +147,8 @@ struct ToBinary <: Transform end
 	
 function apply(tfm::ToBinary, item::Image; randstate = nothing)
     array = itemdata(item)
-    array[array .>= 0.5] .= 1
-    array[array .< 0.5] .= 0
+    array[array .>= 0.5] .= 1.0
+    array[array .< 0.5] .= 0.0
     return Image(array)
 end
 
