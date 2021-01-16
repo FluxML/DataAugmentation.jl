@@ -86,6 +86,8 @@ struct BufferedThreadsafe
     end
 end
 
+Base.show(io::IO, bt::BufferedThreadsafe) = print(io, "BufferedThreadsafe($(bt.buffereds[1].tfm))")
+
 
 function apply(bufferedt::BufferedThreadsafe, items; kwargs...)
     bufferedthread = bufferedt.buffereds[Threads.threadid()]
