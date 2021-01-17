@@ -48,19 +48,19 @@ end
     @testset ExtendedTestSet "AddChannel" begin
     item = Image(rand(Float32, 20, 20, 20, 2))
     tfm = AddChannel()
-    @test size(itemdata(apply(tfm, item))) == (20, 20, 20, 1, 2)
+    @test size(itemdata(apply(tfm, item))) == (20, 20, 20, 2, 1)
     end
 
     @testset ExtendedTestSet "AddChannel" begin
     item = Image(rand(Float32, 20, 2))
     tfm = AddChannel()
-    @test size(itemdata(apply(tfm, item))) == (20, 1, 2)
+    @test size(itemdata(apply(tfm, item))) == (20, 2, 1)
     end
 
     @testset ExtendedTestSet "AddChannel" begin
     item = MaskBinary(rand(Bool, 20, 2))
     tfm = AddChannel()
-    @test size(itemdata(apply(tfm, item))) == (20, 1, 2)
+    @test size(itemdata(apply(tfm, item))) == (20, 2, 1)
     end
 end
 

@@ -161,13 +161,13 @@ struct AddChannel <: Transform end
 
 function apply(tfm::AddChannel, item::Image; randstate = nothing)
     array = itemdata(item)
-    array = reshape(array, size(array)[1:end-1]..., 1, :)
+    array = reshape(array, size(array)..., 1)
     return Image(array)
 end
 
 function apply(tfm::AddChannel, item::MaskBinary; randstate = nothing)
     array = itemdata(item)
-    array = reshape(array, size(array)[1:end-1]..., 1, :)
+    array = reshape(array, size(array)..., 1)
     return Image(array)
 end
 
