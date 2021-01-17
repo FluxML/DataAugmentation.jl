@@ -56,6 +56,12 @@ end
     tfm = AddChannel()
     @test size(itemdata(apply(tfm, item))) == (20, 1, 2)
     end
+
+    @testset ExtendedTestSet "AddChannel" begin
+    item = MaskBinary(rand(Bool, 20, 2))
+    tfm = AddChannel()
+    @test size(itemdata(apply(tfm, item))) == (20, 1, 2)
+    end
 end
 
 @testset ExtendedTestSet "ToEltype" begin
