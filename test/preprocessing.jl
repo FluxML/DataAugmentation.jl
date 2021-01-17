@@ -44,6 +44,14 @@ end
     end
 end
 
+@testset ExtendedTestSet "AddChannel" begin
+    @testset ExtendedTestSet "AddChannel" begin
+    item = Image(rand(Float32, 20, 20, 20, 2))
+    tfm = AddChannel()
+    @test size(itemdata(apply(tfm, item))) == (20, 20, 20, 1, 2)
+    end
+end
+
 @testset ExtendedTestSet "ToEltype" begin
     tfm = ToEltype(RGB)
     data = rand(RGB, 10, 10)

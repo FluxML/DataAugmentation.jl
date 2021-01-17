@@ -152,6 +152,19 @@ function apply(tfm::ToBinary, item::Image; randstate = nothing)
     return Image(array)
 end
 
+# ### ['AddChannel']
+"""
+    AddChannel()
+Adds a channel for 3D grayscale images
+"""
+struct AddChannel <: Transform end
+
+function apply(tfm::AddChannel, item::Image; randstate = nothing)
+    array = itemdata(item)
+    array = reshape(array, size(array)[1:end-1]..., 1, :)
+    return Image(array)
+end
+
 # ### [`ImageToTensor`]
 
 """
