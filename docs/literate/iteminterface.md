@@ -1,8 +1,5 @@
 # Item interface
 
-{style="opacity:60%;"}
-*[`base.jl`](../../src/base.jl)*
-
 As described previously, items are simply containers for data: an [`Image`](#) represents an image, and [`Keypoints`](#) some keypoints.
 
 ### Why do I need to wrap my data in an item?
