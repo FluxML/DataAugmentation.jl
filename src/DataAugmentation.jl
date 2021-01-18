@@ -13,6 +13,7 @@ using Parameters
 using Rotations
 using Setfield
 using StaticArrays
+using Statistics
 
 
 include("./base.jl")
@@ -44,6 +45,7 @@ export Item,
     ToEltype,
     ImageToTensor,
     Normalize,
+    NormalizeIntensity,
     MaskMulti,
     MaskBinary,
     BoundingBox,

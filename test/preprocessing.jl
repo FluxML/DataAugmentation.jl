@@ -19,6 +19,15 @@ include("./imports.jl")
     end
 end
 
+@testset ExtendedTestSet "NormalizeIntensity" begin
+    @testset ExtendedTestSet "NormalizeIntensity" begin
+        item = ArrayItem(Float32.(collect(1:5)))
+        ground_truth = [-1.2649, -0.6325, 0, 0.6325, 1.2649]
+        tfm = NormalizeIntensity()
+        @test itemdata(apply(tfm, item)) ≈ ground_truth
+    end
+end
+
 @testset ExtendedTestSet "ToEltype" begin
     tfm = ToEltype(RGB)
     data = rand(RGB, 10, 10)
