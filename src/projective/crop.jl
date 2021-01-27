@@ -74,13 +74,13 @@ function cropindices(
         cropped::CroppedProjectiveTransform{PT, PadDivisible},
         P,
         bounds;
-        randstate = getrandstate(cropped)) where {PT, C<:Crop}
+        randstate = getrandstate(cropped)) where {PT}
     tfmstate, cropstate = randstate
     bounds_ = P.(bounds)
     ranges = boundsranges(bounds_)
 
     sz = length.(ranges)
-    pad = cropped.crop.by .- (length.(ranges) .%  cropped.crop.by)
+    pad = cropped.crop.by .- (length.(ranges) .%  cropped.crop.by) .- (1, 1)
 
     indices = UnitRange.(getindex.(ranges, 1), sz .+ pad)
     return indices
