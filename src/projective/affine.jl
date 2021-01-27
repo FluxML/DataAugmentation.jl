@@ -144,6 +144,7 @@ at one.
 struct PinOrigin <: ProjectiveTransform end
 
 function getprojection(::PinOrigin, bounds; randstate = nothing)
+    # TODO: translate by actual minimum x and y coordinates
     return Translation(-bounds[1])
 end
 
@@ -151,6 +152,12 @@ function apply(::PinOrigin, item::Union{Image, MaskMulti, MaskBinary}; randstate
     item = @set item.data = parent(itemdata(item))
     item = @set item.bounds = makebounds(size(itemdata(item)))
     return item
+end
+
+function apply!(buf::AbstractItem, ::PinOrigin, item::Union{Image, MaskMulti, MaskBinary}; randstate = nothing)
+    item = @set item.data = parent(itemdata(item))
+    copyitemdata!(buf, item)
+    return buf
 end
 
 # `PinOrigin` should not compose with a cropped transform otherwise the pinning won't work.
