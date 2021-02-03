@@ -7,8 +7,13 @@
     <meta name="keywords" content="" />
     <title>DataAugmentation.jl</title>
     <link rel="stylesheet" href="..&#x2F;normalize.css" />
+    <link rel="stylesheet" href="https:&#x2F;&#x2F;cdn.jsdelivr.net&#x2F;npm&#x2F;katex@0.12.0&#x2F;dist&#x2F;katex.min.css" />
     <link rel="stylesheet" href="..&#x2F;tabulator_simple.min.css" />
-    <link rel="stylesheet" href="..&#x2F;lorenzo.css" />
+    <link rel="stylesheet" href="..&#x2F;publish.css" />
+    <link rel="stylesheet" href="..&#x2F;default.min.css" />
+    <link rel="stylesheet" href="..&#x2F;custom.css" />
+    <script src="https:&#x2F;&#x2F;cdn.jsdelivr.net&#x2F;npm&#x2F;katex@0.12.0&#x2F;dist&#x2F;katex.min.js"></script>
+    <script src="https:&#x2F;&#x2F;cdn.jsdelivr.net&#x2F;npm&#x2F;katex@0.12.0&#x2F;dist&#x2F;contrib&#x2F;auto-render.min.js"></script>
     <script src="..&#x2F;versions.js"></script>
     <script src="..&#x2F;lunr.js"></script>
     <script src="..&#x2F;highlight.min.js"></script>
@@ -17,17 +22,6 @@
     <script src="..&#x2F;julia-repl.min.js"></script>
     <script src="..&#x2F;publish.js"></script>
     
-<link href="https://fonts.googleapis.com/css2?family=Source+Serif+Pro&display=swap" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Lora:wght@700&display=swap" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Lora:wght@500&display=swap" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Lora:ital@1&family=Source+Sans+Pro:wght@700&display=swap" rel="stylesheet">
-    <!-- 
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css" integrity="sha384-AfEj0r4/OFrOo5t7NnNe46zW/tFgW6x/bCJG8FqQCEo3+Aro6EYUG4+cU+KJWu/X" crossorigin="anonymous">
-    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.js" integrity="sha384-g7c+Jr9ZivxKLnZTDUhnkOnsh30B4H0rpLUpJ4jAIKs4fnJI+sEnkvrMWph2EDg4" crossorigin="anonymous"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/contrib/auto-render.min.js" integrity="sha384-mll67QQFJfxn0IYznZYonOWZ644AWYC+Pt2cHqMaRhXVrursRwvLnLaebdGIlYNa" crossorigin="anonymous"
-        onload="renderMathInElement(document.body);"></script>
-        -->
-
 </head>
 <body>
     <main id="page">
@@ -59,7 +53,7 @@
 </ul>
 <h2 id="referencedocstringsmd"><a href="../#referencedocstringsmd" class="anchor"></a><a href="../docstrings.html">Reference</a></h2>
 </div>
-        <article><div class='docs' id='MaskBinary'>
+        <article id="content"><div class='docs' id='MaskBinary'>
 <p><code>public</code> <code>MaskBinary</code> — <code>parametric type</code></p>
 <div class='doc' id='1'>
 <pre><code>MaskBinary(a)
@@ -73,7 +67,7 @@ mask = MaskBinary(rand(Bool, 100, 100))
 <pre><code class="plaintext cell-output cell-result" class="language-plaintext">MaskBinary{2}() with size (100, 100)</code></pre>
 <pre><code cell="MaskMulti" class="language-julia">showitem(mask)
 </code></pre>
-<img src="data:image/png;base64,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" alt="" /></div>
+<img src="data:image/png;base64,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" alt="" /></div>
 </div>
 </article>
         <div id="page-navigation">
@@ -85,5 +79,17 @@ mask = MaskBinary(rand(Bool, 100, 100))
         </footer>
     </main>
     <script>hljs.initHighlightingOnLoad();</script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            renderMathInElement(document.body, {
+                delimiters: [
+                    {left: "$$", right: "$$", display: true},
+                    {left: "$", right: "$", display: false},
+                    {left: "\\(", right: "\\)", display: false},
+                    {left: "\\[", right: "\\]", display: true}
+                ]
+            });
+        });
+    </script>
 </body>
 </html>

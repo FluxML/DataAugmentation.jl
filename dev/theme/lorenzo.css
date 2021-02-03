@@ -5,113 +5,86 @@
   font-family: 'VeraMono';
   src: URL('theme/fonts/VeraMono.ttf') format('truetype');
 }
+
 @font-face {
-  font-family: 'Charter';
-  src: URL('theme/fonts/Charter Regular.otf') format('opentype');
+  font-family: 'Lora';
+  src: URL('theme/fonts/Lora-Italic.ttf') format('truetype');
+  font-style: italic;
+}
+
+@font-face {
+  font-family: 'EB Garamond';
+  src: URL('theme/fonts/EBGaramond-Regular.ttf') format('truetype');
   font-style: normal;
 }
 
 @font-face {
-  font-family: 'Charter';
-  src: URL('theme/fonts/Charter Bold.otf') format('opentype');
-  font-weight: bold;
-}
-
-@font-face {
-  font-family: 'Charter';
-  src: URL('theme/fonts/Charter Italic.otf') format('opentype');
+  font-family: 'EB Garamond';
+  src: URL('theme/fonts/EBGaramond-Italic.ttf') format('truetype');
   font-style: italic;
 }
 
-
 :root {
-    /* width of the main article for desktop screens */
-    --content-width: 100ch;
-    /* width of the sidebar table of contents on desktop screens */
-    --toc-width: 240px;
-    /* width of margin notes */
+    --content-width: 760px;
     --margin-width: 240px;
 }
 
-/* Positioning, widths, margins and padding for article content */
-
-#page {
-    max-width: calc(var(--content-width) + var(--toc-width) + 16px);
-    margin-left: auto;
-    margin-right: auto;
-}
+/* # Article container */
 
 article {
     max-width: var(--content-width);
-    min-height: 420px;
+    margin-left: auto;
+    margin-right: auto;
     margin-top: 24px;
-    margin-left: var(--toc-width);
 }
 
-article > p {
-    margin-block-start: 22px;
-    margin-block-end: 22px;
+article  p, ul, h1, h2, h3, h4, h5 {
+    max-width: 829;
 }
 
-article > img {
+img {
     max-width: var(--content-width);
 }
 
-article > h2 {
-    margin-top: 32px;
-}
 
-article > h3 {
-    margin-top: 28px;
-    margin-bottom: 8px;
-}
+/* fonts */
 
-article > hr {
-    margin-top: 50px;
-    margin-bottom: 50px;
-    max-width: 200px;
-    color: #aaa;
-}
-
-
-/* Typography */
-
-article p, article li, article td, article th {
+p, li, td, th {
     color: #111111;
-    font-family: 'Charter', 'Source Serif Pro', serif;
+    font-family: 'EB Garamond', serif;
     font-style: normal;
     font-weight: normal;
-    font-size: 18px;
+    font-size: 20px;
     line-height: 24px;
 }
 
-
-article h1, article h2, article h3, article h4, article h5 {
-    font-family: 'Charter', serif;
-    font-style: italic;
+h1 {
+    font-family: 'EB Garamond', serif;
+    font-weight: normal;
+    font-size: 40px;
     color: #333;
 }
 
-article > h1 {
-    font-size: 26px;
+h2 {
+    margin-top: 48px;
+    font-size: 30px;
 }
 
-article > h2 {
-    font-size: 22px;
-}
 
-article > h3 {
-    font-size: 20px;
+h2, h3, h4, h5 {
+    font-family: Lora, sans-serif;
+    font-style: italic;
+    font-weight: normal;
+    color: #333;
 }
-
 
 code {
-    font-family: 'VeraMono', monospace;
+    font-family: 'VeraMono';
     font-style: normal;
-    font-size: 15px;
+    font-size: 14px;
     padding: 2px;
     border-radius: 2px;
-    background-color: #f3f3f3;
+    background-color: #f8f8f8;
     color: #222;
 }
 
@@ -121,12 +94,28 @@ pre > code {
     line-height: 125%;
     border-radius: 0px;
     padding: 8px;
-    background-color: #f3f3f3;
+    background-color: #f9f9f9;
 }
 
+h3 code {
+    font-size: 20px;
+}
+
+h2 code {
+    font-size: 24px;
+}
+
+a > code {
+    color: black;
+    text-decoration: underline;
+}
+
+h3 a > code {
+    text-decoration: none
+}
 
 code.cell-output {
-    color: #111;
+    color: #444;
     background-color: #ffffff;
 }
 
@@ -136,100 +125,45 @@ pre {
 
 /* Tables */
 
-article > table {
-    margin: 16px 16px;
+table {
+    margin: 32px 16px;
     overflow-x: auto;
     display: block;
 }
-article > th + th , article > td + td{
+th + th , td + td{
     padding-left: 12px;
 }
 
-article > th {
+th {
     font-style: italic;
     padding-bottom: 8px;
     margin-bottom: 8px;
 }
 
-article > li > * {
+li > * {
     margin-top: 8px;
     margin-bottom: 8px;
 }
 
 .marginnote {
     float: right;
-    font-size: 13px;
+    font-size: 14px;
     width: var(--margin-width);
     clear: right;
-    margin-left: calc(var(--content-width) + 90px);
+    margin-top: 0.25rem;
+    margin-bottom: 0;
+    margin-left: calc(var(--content-width) + 20px);
     line-height: 1.3;
     vertical-align: baseline;
     position: absolute;
-    margin-top: 25px;
-}
-
-/*
-Admonitions
-*/
-
-.admonition {
-    margin: 32px 16px;
-    border-left: 8px solid #aaa;
-    padding: 0.5px 1px;
-}
-
-.admonition-title {
-    font-weight: bold;
-}
-
-.admonition > * {
-    margin-left: 16px;
-    margin-right: 8px;
-}
-
-
-.admonition.info {
-    border-left: 8px solid rgb(135, 206, 235);
-}
-/*
-Footnotes
-*/
-
-a.footnote {
-    vertical-align: super;
-    font-size: 0.5em;
-    margin-left: 2px;
-}
-
-div.footnote {
-    margin: 16px 16px;
-    border-top: 1px solid #aaa;
-    border-bottom: 1px solid #aaa;
-}
-
-div.footnote > p {
-    margin: 8px;
-    display: inline;
-}
-
-div.footnote > p.footnote-title {
-    display: inline;
-}
-
-/* Project name */
-
-#projectname {
-    width: calc(var(--toc-width) - 32px);
-    float: left;
-    text-align: right;
-    margin-right: 16px;
-    padding-right: 16px;
-    font-size: 22px;
 }
 
 /* # Menu container */
 
 .menu {
+    max-width: var(--content-width);
+    margin-left: auto;
+    margin-right: auto;
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -237,32 +171,26 @@ div.footnote > p.footnote-title {
     height: 40px;
 }
 
-#menu-toggler {
-    cursor: pointer;
-    margin-left: 8px;
-    margin-right: 4px;
-}
 #search-input {
     border: 1px solid #ddd;
-    border-radius: 12px;
-    font-size: 17px;
-    margin: 0px;
+    border-radius: 4px;
+    font-size: 19px;
+    margin: 0px 8px;
     flex-grow: 1;
     padding: 4px 8px;
-    padding-top: 5px;
 }
 
 #version-selector {
     border: 1px solid #ddd;
     padding: 4px;
-    margin-left: 8px;
-    border-radius: 412px;
+    border-radius: 4px;
 }
 
 #page-navigation {
     max-width: var(--content-width);
-    margin-left: var(--toc-width);
+    margin-left: auto;
     margin-top: 48px;
+    margin-right: auto;
 }
 #page-navigation > a {
     color: #aaa;
@@ -277,71 +205,26 @@ div.footnote > p.footnote-title {
 
 /* # Table of contents container */
 
-#toc {
-    width: calc(var(--toc-width) - 32px);
-    display: block;
-    float: left;
-    margin-top: 76px;
-    border-right: 1px solid #ddd;
-    margin-right: 16px;
-    padding-right: 16px;
+nav#toc {
+    margin-top: 24px;
+    max-width: var(--content-width);
+    margin-left: auto;
+    margin-right: auto;
 }
 
-#toc:not(:hover) {
-    opacity: 60%;
-}
-
-#toc * {
-    font-family: Charter, serif;
-    font-size: 16px;
-    font-weight: normal;
-    font-style: normal;
-    text-align: right;
-}
-
-#toc ul {
-    list-style-type: none;
-    margin-block-start: 2px;
-    margin-block-end: 2px;
-    padding-inline-start: 4px;
-}
-
-#toc li * {
-    font-size: 14px;
-    line-height: 20px;
-}
-
-#toc h1, #toc h2, #toc h3 {
-    font-style: italic;
-    margin-block-start: 8px;
-    margin-block-end: 4px;
-}
-
-#toc h1 a:link, #toc h2 a:link, #toc h3 a:link {
-    font-style: italic;
-}
-
-#toc h1, #toc h2 {
-    font-size: 17px;
-}
-
-#toc h3 {
-    font-size: 15px;
-}
 
 .katex {
     font-size: 15px;
 }
 
 footer {
-    margin-left: var(--toc-width);
+    margin-left: auto;
+    margin-right: auto;
     margin-top: 32px;
     margin-bottom: 16px;
-    text-align: center;
     color: #aaa;
     width: 300px;
 }
-
 @media (max-width: 1260px) {
     .marginnote {
         float: none;
@@ -352,12 +235,9 @@ footer {
 }
 
 @media (max-width: 760px) {
-    #page {
-        width: 100%;
-    }
     article {
-        margin-left: 12px;
-        margin-right: 12px;
+        margin-left: 8px;
+        margin-right: 8px;
     }
     .marginnote {
         float: none;
@@ -372,60 +252,51 @@ footer {
         margin-right: 8px;
         padding-right: 0px;
     }
-
-    #toc {
-        width: 90%;
-        margin: 16px 5%;
-        border: none;
-    }
-    #toc * {
-        text-align: left;
-    }
-
-    #toc:not(:hover) {
-        opacity: 100%;
-    }
-
-    footer, #page-navigation {
-        margin-left: auto;
-        margin-right: auto;
-    }
 }
 
-@media (min-width: 800px) {
-    #menu-toggler {
-        display: none;
-    }
-}
+/* Links
 
-/* Link styling */
+from https://github.com/edwardtufte/tufte-css/blob/gh-pages/tufte.css
 
-a {
-    text-decoration: none;
-} 
+*/
 
-a:link {
-    color: rgb(0, 126, 0);
-}
+/* Links: replica
 
+/* Links: replicate underline that clears descenders */
+a:link,
 a:visited {
-    color: rgb(0, 97, 0);
+    color: inherit;
 }
 
-a:hover {
-    font-weight: bold;
+.no-tufte-underline:link {
+    background: unset;
+    text-shadow: unset;
 }
 
-a:not(:hover) > code {
-    color:inherit;
-    font-weight: bold;
+a:link, .tufte-underline, .hover-tufte-underline:hover {
+    text-decoration: none;
+    background: -webkit-linear-gradient(#fffff8, #fffff8), -webkit-linear-gradient(#fffff8, #fffff8), -webkit-linear-gradient(currentColor, currentColor);
+    background: linear-gradient(#fffff8, #fffff8), linear-gradient(#fffff8, #fffff8), linear-gradient(currentColor, currentColor);
+    -webkit-background-size: 0.05em 1px, 0.05em 1px, 1px 1px;
+    -moz-background-size: 0.05em 1px, 0.05em 1px, 1px 1px;
+    background-size: 0.05em 1px, 0.05em 1px, 1px 1px;
+    background-repeat: no-repeat, no-repeat, repeat-x;
+    text-shadow: 0.03em 0 #fffff8, -0.03em 0 #fffff8, 0 0.03em #fffff8, 0 -0.03em #fffff8, 0.06em 0 #fffff8, -0.06em 0 #fffff8, 0.09em 0 #fffff8, -0.09em 0 #fffff8, 0.12em 0 #fffff8, -0.12em 0 #fffff8, 0.15em 0 #fffff8, -0.15em 0 #fffff8;
+    background-position: 0% 93%, 100% 93%, 0% 93%;
 }
 
-a:hover > code {
-    color:inherit;
-    font-weight: bold;
+@media screen and (-webkit-min-device-pixel-ratio: 0) {
+    a:link, .tufte-underline, .hover-tufte-underline:hover {
+        background-position-y: 87%, 87%, 87%;
+    }
 }
-/* Code styling
+
+a:link::selection,
+a:link::-moz-selection {
+    text-shadow: 0.03em 0 #b4d5fe, -0.03em 0 #b4d5fe, 0 0.03em #b4d5fe, 0 -0.03em #b4d5fe, 0.06em 0 #b4d5fe, -0.06em 0 #b4d5fe, 0.09em 0 #b4d5fe, -0.09em 0 #b4d5fe, 0.12em 0 #b4d5fe, -0.12em 0 #b4d5fe, 0.15em 0 #b4d5fe, -0.15em 0 #b4d5fe;
+    background: #b4d5fe;
+}
+/* code styling
 
 From https://github.com/highlightjs/highlight.js/blob/master/src/styles/atom-one-light.css
 */
@@ -439,6 +310,7 @@ From https://github.com/highlightjs/highlight.js/blob/master/src/styles/atom-one
 .hljs-formula {
   color: #666;
 }
+/*
 
 
 
@@ -499,3 +371,4 @@ From https://github.com/highlightjs/highlight.js/blob/master/src/styles/atom-one
 .hljs-link {
   text-decoration: underline;
 }
+*/
