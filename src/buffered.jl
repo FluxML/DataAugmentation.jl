@@ -23,7 +23,6 @@ Applies `tfm` to `item`, mutating the preallocated `buffer`.
 Default to `apply(tfm, item)` (non-mutating version).
 """
 apply!(buf, tfm::Transform, items; randstate = getrandstate(tfm)) = apply(tfm, items, randstate = randstate)
-apply!(buf, tfm::Transform, item::Item; randstate = getrandstate(tfm)) = apply(tfm, item, randstate = randstate)
 
 
 # Applying transforms inplace to tuples of items works fine when they always have the same
@@ -45,14 +44,16 @@ end
 mutable struct Buffered{T<:Transform} <: Transform
     tfm::T
     buffer
-    Buffered(tfm::T, buffer = nothing) where T = new{T}(tfm, buffer)
+    _T::Union{Type, Nothing}
+    Buffered(tfm::T, buffer = nothing) where T = new{T}(tfm, buffer, nothing)
 end
 
 getrandstate(buffered::Buffered) = getrandstate(buffered.tfm)
 
-function apply(buffered::Buffered, items::Tuple; randstate = getrandstate(buffered))
-    if isnothing(buffered.buffer)
+function apply(buffered::Buffered, items::T; randstate = getrandstate(buffered)) where T<:Tuple
+    if isnothing(buffered.buffer) || buffered._T != T
         buffered.buffer = makebuffer(buffered.tfm, items)
+        buffered._T = T
     end
     titems = apply!(buffered.buffer, buffered.tfm, items, randstate = randstate)
     return titems
@@ -66,7 +67,7 @@ function apply!(buf::Tuple, buffered::Buffered, items::Tuple; randstate = getran
     if isnothing(buffered.buffer)
         buffered.buffer = makebuffer(buffered.tfm, items)
     end
-    buffered.buffer = apply!(buffered.buffer, buffered.tfm, items; randstate = randstate)
+    apply!(buffered.buffer, buffered.tfm, items; randstate = randstate)
     copyitemdata!(buf, buffered.buffer)
     return buf
 end
@@ -86,6 +87,8 @@ struct BufferedThreadsafe
     end
 end
 
+Base.show(io::IO, bt::BufferedThreadsafe) = print(io, "BufferedThreadsafe($(bt.buffereds[1].tfm))")
+
 
 function apply(bufferedt::BufferedThreadsafe, items; kwargs...)
     bufferedthread = bufferedt.buffereds[Threads.threadid()]
@@ -101,6 +104,6 @@ end
 
 # Utils
 
-copyitemdata!(buf::I, item::I) where I<:Item = copy!(itemdata(buf), itemdata(item))
-copyitemdata!(bufs::T, items::T) where T<:Tuple = (copyitemdata!.(bufs, items); bufs)
-copyitemdata!(bufs::T, items::T) where T<:AbstractVector = (copyitemdata!.(bufs, items); bufs)
+copyitemdata!(buf::I, item::I) where I<:Item = (copy!(itemdata(buf), itemdata(item)); return buf)
+copyitemdata!(bufs::T, items::T) where T<:Tuple = ((copyitemdata!.(bufs, items); bufs); return bufs)
+copyitemdata!(bufs::T, items::T) where T<:AbstractVector = ((copyitemdata!.(bufs, items); bufs); return bufs)
