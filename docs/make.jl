@@ -5,7 +5,7 @@ using DataAugmentation
 
 artifactsfile = download("https://raw.githubusercontent.com/darsnack/flux-theme/main/Artifacts.toml", joinpath(@__DIR__, "Artifacts.toml"))
 Publish.Themes.default() = artifact"flux-theme"
-
+rm(joinpath(@__DIR__, "Artifacts.toml"))
 
 p = Publish.Project(DataAugmentation)
 rm("dev", recursive = true, force = true)
