@@ -142,6 +142,8 @@ Supports `apply!`.
 
 {cell=ImageToTensor}
 ```julia
+using DataAugmentation, Images
+
 image = Image(rand(RGB, 50, 50))
 tfm = ImageToTensor()
 apply(tfm, image)

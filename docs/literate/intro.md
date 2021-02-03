@@ -12,10 +12,6 @@ tfm = CenterResizeCrop((128, 128))
 apply(tfm, item)
 ```
 
-!!! info "A note on this documentation"
-
-    The documentation is composed of prose affixed with links to commented source code. The prose introduces concepts and motivates the chosen abstractions while the accompanying source files contain the implementation. You are encouraged to reference the source files for better understanding and documentation of implementation details.
-
 ## Requirements
 
 The above example is simple, but there are more requirements of data augmentation pipelines that this library adresses. They serve as a motivation to the interface I've arrived at for defining transformations.

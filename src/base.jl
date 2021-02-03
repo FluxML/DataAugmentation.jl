@@ -99,7 +99,7 @@ but smarter behavior can be implemented.
 For example, `MapElem(f) |> MapElem(g) == MapElem(g ∘ f)`.
 """
 function compose end
-compose(tfm) = tfm
+compose(tfm::Transform) = tfm
 compose(tfms...) = compose(compose(tfms[1], tfms[2]), tfms[3:end]...)
 Base.:(|>)(tfm1::Transform, tfm2::Transform) = compose(tfm1, tfm2)
 
