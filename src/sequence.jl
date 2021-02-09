@@ -49,12 +49,18 @@ end
 
 
 function apply!(buffers::Tuple, pipeline::Sequence, items::Tuple; randstate = getrandstate(pipeline))
+    @assert length(buffers) == length(pipeline.transforms)
+    @assert length(buffers[1]) == length(items)
     for (tfm, buffer, r) in zip(pipeline.transforms, buffers, randstate)
         items = apply!(buffer, tfm, items; randstate = r)
     end
     return items
 end
 
-function apply!(buffer::I, pipeline::Sequence, item::I; randstate = getrandstate(pipeline)) where {I<:Item}
-    return apply!((buffer,), pipeline, (item,); randstate = randstate) |> only
+function apply!(buffers, pipeline::Sequence, item::AbstractItem; randstate = getrandstate(pipeline))
+    @assert length(buffers) == length(pipeline.transforms)
+    for (tfm, buffer, r) in zip(pipeline.transforms, buffers, randstate)
+        item = apply!(buffer, tfm, item; randstate = r)
+    end
+    return item
 end

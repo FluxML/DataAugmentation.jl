@@ -149,7 +149,7 @@ end
         @test_nowarn apply(tfms, items)
     end
 
-    @testset ExtendedTestSet "2D" begin
+    @testset ExtendedTestSet "3D" begin
         sz = (50, 50, 50)
         items = (
             Image(rand(RGB, sz)),

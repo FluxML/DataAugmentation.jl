@@ -185,6 +185,8 @@ Supports `apply!`.
 
 {cell=ImageToTensor}
 ```julia
+using DataAugmentation, Images
+
 image = Image(rand(RGB, 50, 50))
 tfm = ImageToTensor()
 apply(tfm, image)
@@ -201,7 +203,7 @@ function apply(::ImageToTensor{T}, image::Image; randstate = nothing) where T
 end
 
 
-function apply!(buf::I, ::ImageToTensor, image::I; randstate = nothing) where {N, I<:Image{N}}
+function apply!(buf, ::ImageToTensor, image::Image; randstate = nothing)
     imagetotensor!(buf.data, image.data)
     return buf
 end

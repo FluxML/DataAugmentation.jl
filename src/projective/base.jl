@@ -46,7 +46,11 @@ Store result in `bufitem`. Inplace version of [`project`](#).
 
 Default implementation falls back to `project`.
 """
-project!(bufitem, P, item, indices) = project(P, item, indices)
+function project!(bufitem, P, item, indices)
+    titem = project(P, item, indices)
+    copyitemdata!(bufitem, titem)
+    return bufitem
+end
 
 
 """
@@ -71,14 +75,15 @@ end
 # is applied for this to work.
 
 function apply!(
-        bufitem,
+        bufitem::AbstractItem,
         tfm::ProjectiveTransform,
-        item::Item;
+        item::AbstractItem;
         randstate = getrandstate(tfm))
     bounds = getbounds(item)
     P = getprojection(tfm, bounds; randstate = randstate)
     indices = cropindices(tfm, P, bounds; randstate = randstate)
-    return project!(bufitem, P, item, indices)
+    project!(bufitem, P, item, indices)
+    return bufitem
 end
 
 
