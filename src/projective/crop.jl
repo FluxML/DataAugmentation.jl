@@ -80,7 +80,7 @@ function cropindices(
     ranges = boundsranges(bounds_)
 
     sz = length.(ranges)
-    pad = cropped.crop.by .- (length.(ranges) .%  cropped.crop.by) .- (1, 1)
+    pad = (cropped.crop.by .- (sz .% cropped.crop.by)) .% cropped.crop.by
 
     indices = UnitRange.(getindex.(ranges, 1), sz .+ pad)
     return indices
