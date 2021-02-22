@@ -114,7 +114,7 @@ denormalize(a, means, stds) = denormalize!(copy(a), means, stds)
 """
     NormalizeIntensity()
 
-Normalizes the pixels of an array based on calculated mean and std. 
+Normalizes the pixels of an array based on calculated mean and std.
 """
 
 struct NormalizeIntensity <: Transform end
@@ -182,6 +182,49 @@ function imagetotensor!(buf, image::AbstractArray{<:AbstractRGB, N}) where N
 end
 tensortoimage(a::AbstractArray{T, 3}) where T = colorview(RGB, permuteddimsview(a, (3, 1, 2)))
 tensortoimage(a::AbstractArray{T, 2}) where T = colorview(Gray, a)
+
+
+# OneHot encoding
+
+"""
+    OneHot([T = Float32])
+
+One-hot encodes a `MaskMulti` with `n` classes and size `sz` into
+an array item of size `(sz..., n)` with element type `T`. Supports [`apply!`].
+
+```julia
+item = MaskMulti(rand(1:4, 100, 100), 1:4)
+apply(OneHot(), item)
+```
+"""
+struct OneHot{T} <: Transform end
+OneHot() = OneHot{Float32}()
+
+function apply(tfm::OneHot{T}, item::MaskMulti; randstate = nothing) where T
+    mask = itemdata(item)
+    a = zeros(T, size(mask)..., length(item.classes))
+    for I in CartesianIndices(mask)
+        a[I, mask[I]] = one(T)
+    end
+
+    return ArrayItem(a)
+end
+
+
+function apply!(buf, tfm::OneHot{T}, item::MaskMulti; randstate = nothing) where T
+    mask = itemdata(item)
+    a = itemdata(buf)
+    @show a[1:6]
+    fill!(a, zero(T))
+    @show a[1:6]
+
+    for I in CartesianIndices(mask)
+        a[I, mask[I]] = one(T)
+    end
+
+    return buf
+end
+
 
 function onehot(T, x::Int, n::Int)
     v = fill(zero(T), n)
