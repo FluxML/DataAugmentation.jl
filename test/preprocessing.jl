@@ -55,6 +55,22 @@ end
     end
 end
 
+@testset ExtendedTestSet "OneHot" begin
+    tfm = OneHot()
+    mask = rand(1:4, 10, 10)
+    item = MaskMulti(mask, 1:4)
+    @test_nowarn apply(tfm, item)
+    aitem = apply(tfm, item)
+    @test size(itemdata(aitem)) == (10, 10, 4)
+
+    item2 = MaskMulti(rand(1:3, 10, 10), 1:4)
+    buf = itemdata(aitem)
+    bufcopy = copy(buf)
+    apply!(aitem, tfm, item2)
+    @test itemdata(item) == itemdata(item2) || itemdata(aitem) != bufcopy
+
+end
+
 @testset ExtendedTestSet "Image pipeline" begin
     image = Image(rand(RGB, 150, 150))
 
