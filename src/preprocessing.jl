@@ -214,9 +214,7 @@ end
 function apply!(buf, tfm::OneHot{T}, item::MaskMulti; randstate = nothing) where T
     mask = itemdata(item)
     a = itemdata(buf)
-    @show a[1:6]
     fill!(a, zero(T))
-    @show a[1:6]
 
     for I in CartesianIndices(mask)
         a[I, mask[I]] = one(T)

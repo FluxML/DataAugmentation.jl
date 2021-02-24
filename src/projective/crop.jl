@@ -13,6 +13,8 @@ struct Crop{N, F<:CropFrom} <: AbstractCrop
     from::F
 end
 
+Crop(sz) = Crop(sz, FromOrigin())
+
 
 
 function apply(crop::Crop, item::Item; randstate = getrandstate(crop))
