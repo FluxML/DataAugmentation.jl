@@ -137,7 +137,7 @@ end
             Image(rand(RGB, sz)),
             Keypoints(rand(SVector{2, Float32}, 50), sz),
             MaskBinary(rand(Bool, sz)),
-            MaskMulti(rand(UInt8, sz)),
+            MaskMulti(rand(1:8, sz)),
         )
 
         tfms = compose(
@@ -155,7 +155,7 @@ end
             Image(rand(RGB, sz)),
             Keypoints(rand(SVector{3, Float32}, 50), sz),
             MaskBinary(rand(Bool, sz)),
-            MaskMulti(rand(UInt8, sz)),
+            MaskMulti(rand(1:8, sz)),
         )
 
         tfms = compose(
