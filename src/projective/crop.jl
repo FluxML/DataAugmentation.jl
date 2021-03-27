@@ -13,6 +13,8 @@ struct Crop{N, F<:CropFrom} <: AbstractCrop
     from::F
 end
 
+Crop(sz) = Crop(sz, FromOrigin())
+
 
 
 function apply(crop::Crop, item::Item; randstate = getrandstate(crop))
@@ -80,7 +82,7 @@ function cropindices(
     ranges = boundsranges(bounds_)
 
     sz = length.(ranges)
-    pad = cropped.crop.by .- (length.(ranges) .%  cropped.crop.by) .- (1, 1)
+    pad = (cropped.crop.by .- (sz .% cropped.crop.by)) .% cropped.crop.by
 
     indices = UnitRange.(getindex.(ranges, 1), sz .+ pad)
     return indices

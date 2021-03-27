@@ -16,16 +16,21 @@ mask = MaskMulti(rand(1:3, 100, 100))
 showitem(mask)
 ```
 """
-struct MaskMulti{N, T, B} <: AbstractArrayItem{N, T}
+struct MaskMulti{N, T<:Integer, U, B} <: AbstractArrayItem{N, T}
     data::AbstractArray{T, N}
-    classes::AbstractVector{T}
+    classes::AbstractVector{U}
     bounds::AbstractArray{<:SVector{N, B}, N}
 end
 
 
-function MaskMulti(a::AbstractArray, classes = unique(a), bounds = makebounds(size(a)))
-    return MaskMulti(a, classes = bounds)
+function MaskMulti(a::AbstractArray, classes = unique(a))
+    bounds = makebounds(size(a))
+    minimum(a) >= 1 || error("Class values must start at 1")
+    return MaskMulti(a, classes, bounds)
 end
+
+MaskMulti(a::AbstractArray{<:Gray{T}}, args...) where T = MaskMulti(reinterpret(T, a), args...)
+MaskMulti(a::AbstractArray{<:Normed{T}}, args...) where T = MaskMulti(reinterpret(T, a), args...)
 
 Base.show(io::IO, mask::MaskMulti{N, T}) where {N, T} =
     print(io, "MaskMulti{$N, $T}() with size $(size(itemdata(mask))) and $(length(mask.classes)) classes")
@@ -125,9 +130,10 @@ end
 
 function mask_extrapolation(
         mask::AbstractArray{T};
+        t = T,
         degree = Constant(),
         boundary = Flat()) where T
-    itp = interpolate(T, T, mask, BSpline(degree))
+    itp = interpolate(t, t, mask, BSpline(degree))
     etp = extrapolate(itp, Flat())
     return etp
 end
