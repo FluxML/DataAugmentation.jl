@@ -8,6 +8,7 @@ using Images: Colorant, permuteddimsview
 using ImageTransformations
 using ImageTransformations: center, _center, box_extrapolation, warp!
 using Interpolations
+using OffsetArrays: OffsetArray
 using LinearAlgebra: I
 using Parameters
 using Rotations
