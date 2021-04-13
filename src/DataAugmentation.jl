@@ -2,6 +2,7 @@ module DataAugmentation
 
 using ColorBlendModes
 using CoordinateTransformations
+using Distributions: Sampleable, Uniform
 using ImageDraw
 using Images
 using Images: Colorant, permuteddimsview
@@ -32,6 +33,8 @@ include("./projective/compose.jl")
 include("./projective/crop.jl")
 include("./projective/affine.jl")
 include("./preprocessing.jl")
+include("./colortransforms.jl")
+
 
 export Item,
     Transform,
