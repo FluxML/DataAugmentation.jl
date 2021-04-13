@@ -19,10 +19,20 @@ function getprojection(scale::ScaleRatio, bounds; randstate = nothing)
 end
 
 """
-    ScaleKeepAspect(minlengths)
+    ScaleKeepAspect(minlengths) <: ProjectiveTransform
 
-Projective transformation that scales the shortest side of `item`
-to `minlengths`, keeping the original aspect ratio.
+Scales the shortest side of `item` to `minlengths`, keeping the
+original aspect ratio.
+
+## Examples
+
+{cell=ScaleKeepAspect}
+```julia
+using DataAugmentation, TestImages
+image = testimage("lighthouse")
+tfm = ScaleKeepAspect((200, 200))
+apply(tfm, Image(image)) |> showitem
+```
 """
 struct ScaleKeepAspect{N} <: ProjectiveTransform
     minlengths::NTuple{N, Int}
