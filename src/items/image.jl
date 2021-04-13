@@ -54,6 +54,14 @@ function showitem(image::Image{2, <:Colorant})
 end
 
 
+function showitem!(img, image::Image{2, <:Colorant})
+    for i in CartesianIndices(itemdata(image))
+        if checkbounds(Bool, img, i)
+            img[i] = itemdata(image)[i]
+        end
+    end
+end
+
 function showitem(image::Image{2, <:AbstractFloat})
     return colorview(Gray, image.data)
 end

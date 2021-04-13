@@ -132,8 +132,7 @@ Base.show(io::IO, item::BoundingBox{N, T}) where {N, T} =
     print(io, "BoundingBox{$N, $T}()")
 
 
-function showitem(bbox::BoundingBox{2})
-    img = zeros(RGBA{N0f8}, boundsranges(getbounds(bbox)))
+function showitem!(img, bbox::BoundingBox{2})
     ul, br = itemdata(bbox)
     points = [
         ul,
