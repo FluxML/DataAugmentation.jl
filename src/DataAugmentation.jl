@@ -2,6 +2,7 @@ module DataAugmentation
 
 using ColorBlendModes
 using CoordinateTransformations
+using Distributions: Sampleable, Uniform
 using ImageDraw
 using Images
 using Images: Colorant, permuteddimsview
@@ -21,7 +22,7 @@ include("./base.jl")
 include("./wrapper.jl")
 include("./buffered.jl")
 include("./sequence.jl")
-include("./utils/draw.jl")
+include("./visualization.jl")
 include("./items/arrayitem.jl")
 include("./projective/base.jl")
 include("./items/image.jl")
@@ -32,6 +33,8 @@ include("./projective/compose.jl")
 include("./projective/crop.jl")
 include("./projective/affine.jl")
 include("./preprocessing.jl")
+include("./colortransforms.jl")
+
 
 export Item,
     Transform,
@@ -68,11 +71,13 @@ export Item,
     FlipX,
     FlipY,
     PinOrigin,
+    AdjustBrightness,
+    AdjustContrast,
     apply!,
     PadDivisible,
     ResizePadDivisible,
     onehot,
-    showitem
+    showitems
 
 
 end # module

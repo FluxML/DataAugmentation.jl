@@ -67,9 +67,11 @@ end
     Rotate(γ)
     Rotate(γs)
 
-Rotate 2D spatial data counter-clockwise by angle γ around the
-center. If you pass in a vector of angles, one will be
-randomly selected.
+Rotate 2D spatial data around the center by an angle chosen at
+uniformly from [-γ, γ], an angle given in degrees.
+
+You can also pass any `Distributions.Sampleable` from which the
+angle is selected.
 
 ## Examples
 
@@ -77,19 +79,15 @@ randomly selected.
 tfm = Rotate(10)
 ```
 
-```julia
-tfm = Rotate(-10:10)
-```
 """
-struct Rotate{T} <: ProjectiveTransform
-    γ::T
+struct Rotate{S<:Sampleable} <: ProjectiveTransform
+    dist::S
 end
+Rotate(γ) = Rotate(Uniform(-abs(γ), abs(γ)))
 
+getrandstate(tfm::Rotate) = rand(tfm.dist)
 
-getrandstate(r::Rotate{<:Real}) = r.γ
-getrandstate(r::Rotate{<:AbstractVector}) = rand(r.γ)
-
-function getprojection(rotate::Rotate, bounds; randstate = getrandstate(rotate))
+function getprojection(tfm::Rotate, bounds; randstate = getrandstate(tfm))
     γ = randstate
     middlepoint = sum(bounds) ./ length(bounds)
     r = γ / 360 * 2pi
@@ -99,34 +97,32 @@ end
 
 """
     Reflect(γ)
-    Reflect(γs)
+    Reflect(distribution)
 
-Reflect 2D spatial data by angle γ around the center.
-If you pass in a vector of angles, one will be
-randomly selected.
+Reflect 2D spatial data around the center by an angle chosen at
+uniformly from [-γ, γ], an angle given in degrees.
+
+You can also pass any `Distributions.Sampleable` from which the
+angle is selected.
 
 ## Examples
 
 ```julia
 tfm = Reflect(10)
 ```
-
-```julia
-tfm = Reflect(-10:10)
-```
 """
-struct Reflect{T} <: ProjectiveTransform
-    γ::T
+struct Reflect{S<:Sampleable} <: ProjectiveTransform
+    dist::S
 end
+Reflect(γ) = Reflect(Uniform(-abs(γ), abs(γ)))
 
-getrandstate(r::Reflect{<:Real}) = r.γ
-getrandstate(r::Reflect{<:AbstractVector}) = rand(r.γ)
+getrandstate(tfm::Reflect) = rand(tfm.dist)
 
-function getprojection(reflect::Reflect, bounds; randstate = nothing)
+function getprojection(tfm::Reflect, bounds; randstate = getrandstate(tfm))
     γ = randstate
-    middlepoint = sum(bounds) ./ length(bounds)
+    midpoint = sum(bounds) ./ length(bounds)
     r = γ / 360 * 2pi
-    return recenter(reflectionmatrix(r), middlepoint)
+    return recenter(reflectionmatrix(r), midpoint)
 end
 
 

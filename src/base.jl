@@ -24,15 +24,11 @@ abstract type Item <: AbstractItem end
 
 
 """
-    showitem(item)
+    showitem!(item)
 
 Visualize `item`. Should return an image.
 """
-function showitem end
-
-function showitem(items::Tuple)
-    return blend.(showitem.(items)...)
-end
+function showitem! end
 
 
 """

@@ -17,7 +17,7 @@ item = Keypoints(points, (100, 100))
 
 {cell=Keypoints}
 ```julia
-showitem(item)
+showitems(item)
 ```
 
 """
@@ -47,10 +47,9 @@ function project(P, keypoints::Keypoints{N, T}, indices) where {N, T}
 end
 
 
-function showitem(keypoints::Keypoints{N}) where N
-    img = zeros(RGBA{N0f8}, boundsranges(getbounds(keypoints)))
+function showitem!(img, keypoints::Keypoints{N}) where N
     for point in filter(!isnothing, keypoints.data)
-        drawkeypoint!(img, point, RGBA(1, 0, 0, 1))
+        showkeypoint!(img, point, RGBA(1, 0, 0, 1))
     end
     return img
 end
@@ -77,7 +76,7 @@ item = Polygon(points, (100, 100))
 
 {cell=Polygon}
 ```julia
-showitem(item)
+showitems(item)
 ```
 """
 struct Polygon{N, T, S, M} <: ItemWrapper{Keypoints{N, T, S, M}}
@@ -91,9 +90,8 @@ Base.show(io::IO, item::Polygon{N, T, M}) where {N, T, M} =
     print(io, "Polygon{$N, $T}() with $(length(item.item.data)) elements")
 
 
-function showitem(polygon::Polygon)
-    img = zeros(RGBA{N0f8}, boundranges(getbounds(polygon)))
-    drawpolygon!(img, itemdata(polygon), RGBA(1, 0, 0, 1))
+function showitem!(img, polygon::Polygon)
+    showpolygon!(img, itemdata(polygon), RGBA(1, 0, 0, 1))
     return img
 end
 
@@ -115,7 +113,7 @@ item = BoundingBox(points, (100, 100))
 
 {cell=BoundingBox}
 ```julia
-showitem(item)
+showitems(item)
 ```
 """
 struct BoundingBox{N, T, S} <: ItemWrapper{Keypoints{N, T, S, 1}}
@@ -132,8 +130,7 @@ Base.show(io::IO, item::BoundingBox{N, T}) where {N, T} =
     print(io, "BoundingBox{$N, $T}()")
 
 
-function showitem(bbox::BoundingBox{2})
-    img = zeros(RGBA{N0f8}, boundsranges(getbounds(bbox)))
+function showitem!(img, bbox::BoundingBox{2})
     ul, br = itemdata(bbox)
     points = [
         ul,
@@ -141,7 +138,7 @@ function showitem(bbox::BoundingBox{2})
         br,
         SVector(ul[1], br[2]),
     ]
-    drawpolygon!(img, points, RGBA(1, 0, 0, 1))
+    showpolygon!(img, points, RGBA(1, 0, 0, 1))
     return img
 end
 

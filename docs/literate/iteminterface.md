@@ -24,4 +24,4 @@ The only function that is expected to be implemented is [`itemdata`](#), which s
 
 For some items, it also makes sense to implement the following:
 
-- [`showitem`](#)`(item::I)` creates a visual representation of an item. Should return something that can be shown as an image.
+- [`showitem!`](#)`(img, item::I)` creates a visual representation of an item on top of `img`.
