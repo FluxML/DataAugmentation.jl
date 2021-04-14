@@ -1,13 +1,7 @@
-using Publish
+using Pollen
 using DataAugmentation
-using Pkg.Artifacts
+using FilePathsBase
 
-
-Publish.Themes.default() = artifact"flux-theme"
-
-p = Publish.Project(DataAugmentation)
-
-rm("dev", recursive = true, force = true)
-rm(p.env["version"], recursive = true, force = true)
-
-deploy(DataAugmentation; root = "/DataAugmentation.jl", force = true, label = "dev")
+Pkg.add(PackageSpec(; url = "https://github.com/lorenzoh/Pollen.jl", rev="main"))
+project = Pollen.documentationproject(DataAugmentation)
+Pollen.fullbuild(project, Pollen.FileBuilder(Pollen.HTML(), p"dev/"))

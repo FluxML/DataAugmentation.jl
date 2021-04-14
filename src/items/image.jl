@@ -55,7 +55,7 @@ function showitem!(img, image::Image{2, <:Colorant})
 end
 
 function showitem!(img, image::Image{2, <:AbstractFloat})
-    return showitem!(img, colorview(Gray, itemdata(image)))
+    return showimage!(img, colorview(Gray, itemdata(image)))
 end
 
 

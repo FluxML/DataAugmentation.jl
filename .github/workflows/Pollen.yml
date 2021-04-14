@@ -7,7 +7,7 @@ on:
 
 jobs:
   publish:
-    name: "Publish Documentation (dev)"
+    name: "Pollen Documentation (dev)"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2

@@ -9,8 +9,7 @@ apply!(buffer, tfm, item)
 
 However, for some transformations, a different buffer is needed. [`Sequence`](#), for example, needs to reuse all intermediate results. That is why the buffer creation can be customized:
 
-- [`makebuffer`](#)`(tfm, item)` creates a buffer `buf` that can be used
-  in an `apply!` call: `apply!(buf, tfm, item)`.
+- [`makebuffer`](#)`(tfm, item)` creates a buffer `buf` that can be used in an `apply!` call: `apply!(buf, tfm, item)`.
 
 ---
 

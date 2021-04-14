@@ -10,14 +10,16 @@ using DataAugmentation
 ```
 
 1. Import the library:
+    {cell=main}
     ```julia
     using DataAugmentation  # Image, CenterResizeCrop, apply, showitem
+    using TestImages: testimage
     ```
 
 2. Load your data
 
     ```julia
-    image = testimage("lighthouse")   # from TestImages.jl
+    image = testimage("lighthouse")
     ```
 
     {cell=main style="display:none;"}
