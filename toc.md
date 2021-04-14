@@ -10,6 +10,6 @@
         - [Interface](docs/literate/projective/interface.md)
         - [Spatial data](docs/literate/projective/data.md)
         - [Usage](docs/literate/projective/usage.md)
-        - [Gallery](docs/literate/projective/gallery.jl)
+        - [Gallery](docs/literate/projective/gallery.md)
     - [Preprocessing](docs/literate/preprocessing.md)
 - [Reference](docstrings.md)

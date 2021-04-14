@@ -3,8 +3,8 @@ using Pkg
 using Pollen
 using DataAugmentation
 
-project = Pollen.documentationproject(DataAugmentation, executecode=true)
-push!(project.rewriters, Pollen.PackageWatcher([DataAugmentation]))
-server = Server(project)
+p = Pollen.documentationproject(DataAugmentation, executecode=true)
+push!(p.rewriters, Pollen.PackageWatcher([DataAugmentation]))
+server = Server(p)
 mode = ServeFilesLazy()
 runserver(server, mode)
