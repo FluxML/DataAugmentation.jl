@@ -1,4 +1,5 @@
 - User guide (TODO)
+    - [Quickstart](docs/literate/quickstart.md)
 - Library
     - [Introduction](docs/literate/intro.md)
     - [Item interface](docs/literate/iteminterface.md)
