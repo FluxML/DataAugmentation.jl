@@ -13,7 +13,7 @@ mask = MaskMulti(rand(1:3, 100, 100))
 ```
 {cell=MaskMulti}
 ```julia
-showitem(mask)
+showitems(mask)
 ```
 """
 struct MaskMulti{N, T<:Integer, U, B} <: AbstractArrayItem{N, T}
@@ -61,11 +61,12 @@ function project!(bufmask::MaskMulti, P, mask::MaskMulti, indices)
 end
 
 
-function showitem(mask::MaskMulti)
+function showitem!(img, mask::MaskMulti)
     colors = distinguishable_colors(length(mask.classes))
-    map(itemdata(mask)) do val
+    maskimg = map(itemdata(mask)) do val
         colors[findfirst(==(val), mask.classes)]
     end
+    showimage!(img, maskimg)
 end
 
 
@@ -86,7 +87,7 @@ mask = MaskBinary(rand(Bool, 100, 100))
 ```
 {cell=MaskMulti}
 ```julia
-showitem(mask)
+showitems(mask)
 ```
 """
 struct MaskBinary{N, B} <: AbstractArrayItem{N, Bool}
@@ -122,8 +123,8 @@ function project!(bufmask::MaskBinary, P, mask::MaskBinary, indices)
     return MaskBinary(itemdata(bufmask), P.(getbounds(mask)))
 end
 
-function showitem(mask::MaskBinary)
-    return colorview(Gray, itemdata(mask))
+function showitem!(img, mask::MaskBinary)
+    showimage!(img, colorview(Gray, itemdata(mask)))
 end
 # ## Helpers
 
