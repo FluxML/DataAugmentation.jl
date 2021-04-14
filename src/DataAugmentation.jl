@@ -21,7 +21,7 @@ include("./base.jl")
 include("./wrapper.jl")
 include("./buffered.jl")
 include("./sequence.jl")
-include("./utils/draw.jl")
+include("./visualization.jl")
 include("./items/arrayitem.jl")
 include("./projective/base.jl")
 include("./items/image.jl")
@@ -72,7 +72,7 @@ export Item,
     PadDivisible,
     ResizePadDivisible,
     onehot,
-    showitem
+    showitems
 
 
 end # module
