@@ -12,4 +12,4 @@
         - [Usage](docs/literate/projective/usage.md)
         - [Gallery](docs/literate/projective/gallery.md)
     - [Preprocessing](docs/literate/preprocessing.md)
-- [Reference](docstrings.md)
+- [Reference](REFERENCE)

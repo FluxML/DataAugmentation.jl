@@ -31,7 +31,7 @@ original aspect ratio.
 using DataAugmentation, TestImages
 image = testimage("lighthouse")
 tfm = ScaleKeepAspect((200, 200))
-apply(tfm, Image(image)) |> showitem
+apply(tfm, Image(image)) |> showitems
 ```
 """
 struct ScaleKeepAspect{N} <: ProjectiveTransform

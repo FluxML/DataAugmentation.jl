@@ -63,7 +63,7 @@ slightly different locations:
 {cell=main}
 ```julia
 tfm = RandomResizeCrop((128, 128))
-showitem((
+showitems((
     apply(tfm, image),
     apply(tfm, bbox)
 ))
