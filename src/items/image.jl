@@ -20,7 +20,7 @@ using DataAugmentation, Images
 
 imagedata = rand(RGB, 100, 100)
 item = Image(imagedata)
-showitem(item)
+showitems(item)
 ```
 
 If `T` is not a color, the image will be interpreted as grayscale:
@@ -29,7 +29,7 @@ If `T` is not a color, the image will be interpreted as grayscale:
 ```julia
 imagedata = rand(Float32, 100, 100)
 item = Image(imagedata)
-showitem(item)
+showitems(item)
 ```
 
 """
@@ -50,18 +50,9 @@ Base.show(io::IO, item::Image{N,T}) where {N,T} =
     print(io, "Image{$N, $T}() with size $(size(itemdata(item)))")
 
 
-function showitem(image::Image{2, <:Colorant})
-    return image.data
-end
-
-function showitem(image::Image{2, <:AbstractFloat})
-    return colorview(Gray, image.data)
-end
-
 function showitem!(img, image::Image{2, <:Colorant})
     showimage!(img, itemdata(image))
 end
-
 
 function showitem!(img, image::Image{2, <:AbstractFloat})
     return showitem!(img, colorview(Gray, itemdata(image)))

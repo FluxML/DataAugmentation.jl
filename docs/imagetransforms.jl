@@ -35,10 +35,10 @@ apply(tfm, image) |> itemdata
 points = SVector{2, Float32}[SVector(23., 120.), SVector(120., 150.)]
 bbox = BoundingBox(points, size(imagedata))
 
-# [`showitem`](#) visualizes the two items:
+# [`showitems`](#) visualizes the two items:
 # {cell=main}
 
-showitem((image, bbox))
+showitems((image, bbox))
 
 # If we apply transformations like translation and cropping
 # to the image, then the same transformations have to be applied to the bounding
@@ -51,7 +51,7 @@ showitem((image, bbox))
 # {cell=main}
 
 tfm = RandomResizeCrop((128, 128))
-showitem((
+showitems((
     apply(tfm, image),
     apply(tfm, bbox)
 ))
@@ -61,7 +61,7 @@ showitem((
 #
 # {cell=main}
 
-apply(tfm, (image, bbox)) |> showitem
+apply(tfm, (image, bbox)) |> showitems
 
 #
 # ## Gallery
@@ -69,7 +69,7 @@ apply(tfm, (image, bbox)) |> showitem
 
 function showtransform(tfm, item, n = 8; ncol = 4)
     return mosaicview(
-        [showitem(apply(tfm, item)) for _ in 1:n],
+        [showitems(apply(tfm, item)) for _ in 1:n],
         fillvalue = RGBA(1, 1, 1, 0),
         npad = 8,
         rowmajor = true,
@@ -78,7 +78,7 @@ end
 
 function showtransforms(tfms, item; ncol = length(tfms))
     return mosaicview(
-        [showitem(apply(tfm, item)) for tfm in tfms],
+        [showitems(apply(tfm, item)) for tfm in tfms],
         fillvalue = RGBA(1, 1, 1, 0),
         npad = 8,
         rowmajor = true,

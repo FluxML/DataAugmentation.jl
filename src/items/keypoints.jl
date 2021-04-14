@@ -17,7 +17,7 @@ item = Keypoints(points, (100, 100))
 
 {cell=Keypoints}
 ```julia
-showitem(item)
+showitems(item)
 ```
 
 """
@@ -76,7 +76,7 @@ item = Polygon(points, (100, 100))
 
 {cell=Polygon}
 ```julia
-showitem(item)
+showitems(item)
 ```
 """
 struct Polygon{N, T, S, M} <: ItemWrapper{Keypoints{N, T, S, M}}
@@ -113,7 +113,7 @@ item = BoundingBox(points, (100, 100))
 
 {cell=BoundingBox}
 ```julia
-showitem(item)
+showitems(item)
 ```
 """
 struct BoundingBox{N, T, S} <: ItemWrapper{Keypoints{N, T, S, 1}}

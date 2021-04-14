@@ -21,6 +21,8 @@ function showitems(items; C=RGBA{N0f8}, showbounds = false)
 end
 
 
+showitems(item::AbstractItem; kwargs...) = showitems((item,); kwargs...)
+
 ## Visualization utilities
 
 function showimage!(dst, img)
