@@ -1,7 +1,7 @@
 using Pollen
 using DataAugmentation
+using FilePathsBase
 
-project = Pollen.docmentationproject(DataAugmentation)
-
-
-Pollen.fullbuild(project, Pollen.FileBuilder(Pollen.HTML()), Path("dev/"))
+Pkg.add(PackageSpec(; url = "https://github.com/lorenzoh/Pollen.jl", rev="main"))
+project = Pollen.documentationproject(DataAugmentation)
+Pollen.fullbuild(project, Pollen.FileBuilder(Pollen.HTML(), p"dev/"))
