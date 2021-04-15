@@ -36,10 +36,7 @@ image = Image(imagedata)
 apply(tfm, image) |> itemdata
 ```
 
-Now let's say we want to train a light house detector and have a bounding box
-for the light house. We can use the [`BoundingBox`](#) item to represent it.
-It takes the two corners of the bounding rectangle as the first argument. As
-the second argument we have to pass the size of the corresponding image.
+Now let's say we want to train a light house detector and have a bounding box for the light house. We can use the [`BoundingBox`](#) item to represent it. It takes the two corners of the bounding rectangle as the first argument. As the second argument we have to pass the size of the corresponding image.
 
 {cell=main}
 ```julia
@@ -52,13 +49,9 @@ bbox = BoundingBox(points, size(imagedata))
 ```julia
 showitems((image, bbox))
 ```
-If we apply transformations like translation and cropping
-to the image, then the same transformations have to be applied to the bounding
-box. Otherwise, the bounding box will no longer match up with the light house.
+If we apply transformations like translation and cropping to the image, then the same transformations have to be applied to the bounding box. Otherwise, the bounding box will no longer match up with the light house.
 
-Another problem can occur with stochastic transformations like [`RandomResizeCrop`](#).
-If we apply it separately to the image and the bounding box, they will be cropped from
-slightly different locations:
+Another problem can occur with stochastic transformations like [`RandomResizeCrop`](#). If we apply it separately to the image and the bounding box, they will be cropped from slightly different locations:
 
 {cell=main}
 ```julia
@@ -68,22 +61,18 @@ showitems((
     apply(tfm, bbox)
 ))
 ```
-Instead, pass a tuple of the items to a single `apply` call so the same
-random state will be used for both image and bounding box:
+Instead, pass a tuple of the items to a single `apply` call so the same random state will be used for both image and bounding box:
 
 {cell=main}
 ```julia
 apply(tfm, (image, bbox)) |> showitems
 ```
+
 !!! info "3D Projective dimensions"
 
-    We'll use a 2-dimensional [`Image`](#) and [`BoundingBox`](#) here, but you can apply
-    most projective transformations to any spatial item (including [`Keypoints`](#),
-    [`MaskBinary`](#) and [`MaskMulti`](#)) in 3 dimensions.
-
-    Of course, you have to create a 3-dimensional transformation, i.e.
-    `CenterCrop((128, 128, 128))` instead of `CenterCrop((128, 128))`.
-
+    We'll use a 2-dimensional [`Image`](#) and [`BoundingBox`](#) here, but you can apply most projective transformations to any spatial item (including [`Keypoints`](#), [`MaskBinary`](#) and [`MaskMulti`](#)) in 3 dimensions.
+    
+    Of course, you have to create a 3-dimensional transformation, i.e. `CenterCrop((128, 128, 128))` instead of `CenterCrop((128, 128))`.
 
 ## Gallery
 {cell=main style="display:none;" result=false}
@@ -110,8 +99,7 @@ end
 
 ### [`RandomResizeCrop`](#)`(sz)`
 
-Resizes the sides so that one of them is no longer than `sz` and
-crops a region of size `sz` *from a random location*.
+Resizes the sides so that one of them is no longer than `sz` and crops a region of size `sz` *from a random location*.
 
 {cell=main result=false}
 ```julia
@@ -125,8 +113,7 @@ o = showtransform(tfm, (image, bbox), 6, ncol=6)
 
 ### [`CenterResizeCrop`](#)
 
-Resizes the sides so that one of them is no longer than `sz` and
-crops a region of size `sz` *from the center*.
+Resizes the sides so that one of them is no longer than `sz` and crops a region of size `sz` *from the center*.
 
 {cell=main result=false}
 ```julia
@@ -162,8 +149,7 @@ o = showtransforms(tfms, (image, bbox))
 
 ### [`FlipX`](#), [`FlipY`](#), [`Reflect`](#)
 
-Flip the data on the horizontally and vertically, respectively. More generally, reflect
-around an angle from the x-axis.
+Flip the data on the horizontally and vertically, respectively. More generally, reflect around an angle from the x-axis.
 
 {cell=main result=false}
 ```julia
