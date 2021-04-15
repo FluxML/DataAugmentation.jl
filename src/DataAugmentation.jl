@@ -12,6 +12,7 @@ using Interpolations
 using OffsetArrays: OffsetArray
 using LinearAlgebra: I
 using Parameters
+using Random
 using Rotations
 using Setfield
 using StaticArrays
@@ -32,6 +33,7 @@ include("./projective/bounds.jl")
 include("./projective/compose.jl")
 include("./projective/crop.jl")
 include("./projective/affine.jl")
+include("./projective/warp.jl")
 include("./preprocessing.jl")
 include("./colortransforms.jl")
 
@@ -68,6 +70,7 @@ export Item,
     OneHot,
     apply,
     Reflect,
+    WarpAffine,
     FlipX,
     FlipY,
     PinOrigin,
