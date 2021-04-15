@@ -91,6 +91,8 @@ end
 
 
 compose(tfm::ProjectiveTransform, crop::AbstractCrop) = CroppedProjectiveTransform(tfm, crop)
+compose(tfm::ProjectiveTransform, crop::CroppedProjectiveTransform) =
+    CroppedProjectiveTransform(tfm |> crop.tfm, crop.crop)
 
 
 

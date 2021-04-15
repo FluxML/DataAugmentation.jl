@@ -64,6 +64,26 @@ end
 
 
 """
+    Zoom(scales = (1, 1.2)) <: ProjectiveTransform
+    Zoom(distribution)
+
+Zoom into an item by a factor chosen from the interval `scales`
+or `distribution`.
+"""
+struct Zoom{D<:Sampleable} <: ProjectiveTransform
+    dist::D
+end
+
+Zoom(scales::NTuple{2, T} = (1., 1.2)) where T = Zoom(Uniform(scales[1], scales[2]))
+
+getrandstate(tfm::Zoom) = rand(tfm.dist)
+
+function getprojection(tfm::Zoom, bounds::AbstractArray{<:SVector{N}}; randstate = getrandstate(tfm)) where N
+    ratio = randstate
+    return scaleprojection(ntuple(_ -> ratio, N))
+end
+
+"""
     Rotate(γ)
     Rotate(γs)
 
