@@ -102,6 +102,13 @@ include("../imports.jl")
 
     end
 
+    @testset ExtendedTestSet "Rotate" begin
+        tfm = Zoom((0.1, 2.))
+        image = Image(rand(RGB, 50, 50))
+        @test_nowarn apply(tfm, image)
+
+    end
+
     @testset ExtendedTestSet "Reflect" begin
         tfm = Reflect(10)
         image = Image(rand(RGB, 50, 50))

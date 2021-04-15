@@ -91,7 +91,13 @@ end
 
 
 compose(tfm::ProjectiveTransform, crop::AbstractCrop) = CroppedProjectiveTransform(tfm, crop)
+compose(tfm::ProjectiveTransform, crop::CroppedProjectiveTransform) =
+    CroppedProjectiveTransform(tfm |> crop.tfm, crop.crop)
 
+function compose(composed::ComposedProjectiveTransform, cropped::CroppedProjectiveTransform)
+    return CroppedProjectiveTransform(composed |> cropped.tfm, cropped.crop)
+
+end
 
 
 """

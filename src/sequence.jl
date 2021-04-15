@@ -11,11 +11,12 @@ after each other.
 
 You should not use this explicitly. Instead use [`compose`](#).
 """
-struct Sequence{T<:Tuple where N} <: Transform
+struct Sequence{T<:Tuple} <: Transform
     transforms::T
 end
 
 Sequence(tfms...) = Sequence{typeof(tfms)}(tfms)
+Sequence(tfm::Transform) = tfm
 
 getrandstate(seq::Sequence) = getrandstate.(seq.transforms)
 
@@ -23,6 +24,7 @@ getrandstate(seq::Sequence) = getrandstate.(seq.transforms)
 compose(tfm1::Transform, tfm2::Transform) = Sequence(tfm1, tfm2)
 compose(seq::Sequence, tfm::Transform) = Sequence(seq.transforms..., tfm)
 compose(seq::Sequence, ::Identity) = seq
+compose(tfm::Transform, seq::Sequence) = compose(tfm, seq.transforms...)
 
 
 function apply(seq::Sequence, items::Tuple; randstate = getrandstate(seq))
