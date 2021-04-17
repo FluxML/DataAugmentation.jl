@@ -2,7 +2,7 @@ module DataAugmentation
 
 using ColorBlendModes
 using CoordinateTransformations
-using Distributions: Sampleable, Uniform
+using Distributions: Sampleable, Uniform, Categorical
 using ImageDraw
 using Images
 using Images: Colorant, permuteddimsview
@@ -34,6 +34,7 @@ include("./projective/compose.jl")
 include("./projective/crop.jl")
 include("./projective/affine.jl")
 include("./projective/warp.jl")
+include("./oneof.jl")
 include("./preprocessing.jl")
 include("./colortransforms.jl")
 
@@ -69,6 +70,8 @@ export Item,
     BufferedThreadsafe,
     OneHot,
     Zoom,
+    OneOf,
+    Maybe,
     apply,
     Reflect,
     WarpAffine,
