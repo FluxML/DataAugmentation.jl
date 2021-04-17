@@ -34,6 +34,11 @@ function showimage!(dst, img)
 end
 
 
+function showgrid(items; fillvalue = RGBA{N0f8}(0.,0.,0.,0.), kwargs...)
+    imgs = [showitems(item) for item in items]
+    mosaicview(imgs; fillvalue = fillvalue, kwargs...)
+end
+
 showbounds(bounds) = showbounds!(zeros(RGBA{N0f8}, boundssize(bounds)), bounds)
 
 function showbounds!(img, bounds::AbstractArray{<:SVector{2}})

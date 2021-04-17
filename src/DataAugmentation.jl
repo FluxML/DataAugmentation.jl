@@ -9,6 +9,7 @@ using Images: Colorant, permuteddimsview
 using ImageTransformations
 using ImageTransformations: center, _center, box_extrapolation, warp!
 using Interpolations
+using MosaicViews: mosaicview
 using OffsetArrays: OffsetArray
 using LinearAlgebra: I
 using Parameters
@@ -84,7 +85,8 @@ export Item,
     PadDivisible,
     ResizePadDivisible,
     onehot,
-    showitems
+    showitems,
+    showgrid
 
 
 end # module

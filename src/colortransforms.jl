@@ -9,13 +9,16 @@ from `f ∈ [1-δ, 1+δ]` by multiplying each color channel by `f`.
 You can also pass any `Distributions.Sampleable` from which the
 factor is selected.
 
+## Example
+
 {cell=AdjustBrightness}
 ```julia
 using DataAugmentation, TestImages
 
-img = testimage("lighthouse")
+item = Image(testimage("lighthouse"))
 tfm = AdjustBrightness(0.2)
-apply(tfm, Image(img)) |> showitem
+titems = [apply(tfm, item) for _ in 1:8]
+showgrid(titems; ncol = 4, npad = 16)
 ```
 """
 struct AdjustBrightness{S<:Sampleable} <: Transform
@@ -67,13 +70,16 @@ of the image.
 You can also pass any `Distributions.Sampleable` from which the
 factor is selected.
 
+## Example
+
 {cell=AdjustBrightness}
 ```julia
 using DataAugmentation, TestImages
 
-img = testimage("lighthouse")
+item = Image(testimage("lighthouse"))
 tfm = AdjustContrast(0.2)
-apply(tfm, Image(img)) |> showitem
+titems = [apply(tfm, item) for _ in 1:8]
+showgrid(titems; ncol = 4, npad = 16)
 ```
 """
 struct AdjustContrast{S<:Sampleable} <: Transform
