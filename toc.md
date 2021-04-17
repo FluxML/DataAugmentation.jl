@@ -12,4 +12,6 @@
         - [Usage](docs/literate/projective/usage.md)
         - [Gallery](docs/literate/projective/gallery.md)
     - [Preprocessing](docs/literate/preprocessing.md)
+    - [Stochastic transformations](docs/literate/stochastic.md)
+    - [Color transformations](docs/literate/colortransforms.md)
 - [Reference](REFERENCE)

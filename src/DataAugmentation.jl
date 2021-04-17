@@ -2,13 +2,14 @@ module DataAugmentation
 
 using ColorBlendModes
 using CoordinateTransformations
-using Distributions: Sampleable, Uniform
+using Distributions: Sampleable, Uniform, Categorical
 using ImageDraw
 using Images
 using Images: Colorant, permuteddimsview
 using ImageTransformations
 using ImageTransformations: center, _center, box_extrapolation, warp!
 using Interpolations
+using MosaicViews: mosaicview
 using OffsetArrays: OffsetArray
 using LinearAlgebra: I
 using Parameters
@@ -34,6 +35,7 @@ include("./projective/compose.jl")
 include("./projective/crop.jl")
 include("./projective/affine.jl")
 include("./projective/warp.jl")
+include("./oneof.jl")
 include("./preprocessing.jl")
 include("./colortransforms.jl")
 
@@ -69,6 +71,8 @@ export Item,
     BufferedThreadsafe,
     OneHot,
     Zoom,
+    OneOf,
+    Maybe,
     apply,
     Reflect,
     WarpAffine,
@@ -81,7 +85,8 @@ export Item,
     PadDivisible,
     ResizePadDivisible,
     onehot,
-    showitems
+    showitems,
+    showgrid
 
 
 end # module

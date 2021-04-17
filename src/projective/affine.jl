@@ -131,17 +131,14 @@ angle is selected.
 tfm = Reflect(10)
 ```
 """
-struct Reflect{S<:Sampleable} <: ProjectiveTransform
-    dist::S
+struct Reflect <: ProjectiveTransform
+    γ
 end
-Reflect(γ) = Reflect(Uniform(-abs(γ), abs(γ)))
 
-getrandstate(tfm::Reflect) = rand(tfm.dist)
 
 function getprojection(tfm::Reflect, bounds; randstate = getrandstate(tfm))
-    γ = randstate
     midpoint = sum(bounds) ./ length(bounds)
-    r = γ / 360 * 2pi
+    r = tfm.γ / 360 * 2pi
     return recenter(reflectionmatrix(r), midpoint)
 end
 
