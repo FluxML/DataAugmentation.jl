@@ -83,12 +83,11 @@ end
 # as they are implicitly given by the buffer.
 
 function project!(bufimage::Image, P, image::Image{N, T}, indices) where {N, T}
-    # Update index offsets so the correct portion of the image is warped
-    buf = OffsetArray(itemdata(bufimage), indices)
-    warp!(
-        buf,
+    a = OffsetArray(parent(itemdata(bufimage)), indices)
+    res = warp!(
+        a,
         box_extrapolation(itemdata(image), zero(T)),
         inv(P),
     )
-    return Image(buf, P.(getbounds(image)))
+    return Image(res, P.(getbounds(image)))
 end
