@@ -14,5 +14,6 @@ include("./imports.jl")
     include("items/keypoints.jl")
     include("items/mask.jl")
     include("preprocessing.jl")
+    include("oneof.jl")
     include("visualization.jl")
 end
