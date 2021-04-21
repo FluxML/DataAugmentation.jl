@@ -75,7 +75,7 @@ getbounds(image::Image) = image.bounds
 function project(P, image::Image{N, T}, indices) where {N, T}
     ## Transform the bounds along with the image
     bounds_ = P.(getbounds(image))
-    data_ = warp(itemdata(image), inv(P), indices, zero(T))
+    data_ = warp(itemdata(image), inv(P), indices, Interpolations.Reflect())
     return Image(data_, makebounds(indices))
 end
 
@@ -86,7 +86,7 @@ function project!(bufimage::Image, P, image::Image{N, T}, indices) where {N, T}
     a = OffsetArray(parent(itemdata(bufimage)), indices)
     res = warp!(
         a,
-        box_extrapolation(itemdata(image), zero(T)),
+        box_extrapolation(itemdata(image), Interpolations.Reflect()),
         inv(P),
     )
     return Image(res, P.(getbounds(image)))
