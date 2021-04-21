@@ -36,3 +36,10 @@ end
     buf = makebuffer(tfm, (item,))
     @test_nowarn apply!(buf, tfm, (item,))
 end
+
+
+@testset ExtendedTestSet "Sequence" begin
+    tfm = Maybe(AdjustBrightness(0.1), .75) |> Maybe(AdjustContrast(0.1), .75)
+    item = DataAugmentation.Image(rand(RGB{Float32}, 10, 10))
+    @test_nowarn apply(tfm, item)
+end
