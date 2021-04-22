@@ -50,7 +50,7 @@ end
 
 getrandstate(buffered::Buffered) = getrandstate(buffered.tfm)
 
-function apply(buffered::Buffered, items::T; randstate = getrandstate(buffered)) where T<:Tuple
+function apply(buffered::Buffered, items::T; randstate = getrandstate(buffered)) where T
     if isnothing(buffered.buffer) || buffered._T != T
         buffered.buffer = makebuffer(buffered.tfm, items)
         buffered._T = T
@@ -59,8 +59,6 @@ function apply(buffered::Buffered, items::T; randstate = getrandstate(buffered))
     return titems
 end
 
-apply(buffered::Buffered, item::Item; randstate = getrandstate(buffered)) =
-    apply(buffered, (item,); randstate = randstate) |> only
 
 
 function apply!(buf, buffered::Buffered, items; randstate = getrandstate(buffered))
