@@ -40,30 +40,20 @@ apply(seq::Sequence, item::Item; randstate = getrandstate(seq)) =
     apply(seq, (item,); randstate = randstate) |> only
 
 
-makebuffer(pipeline::Sequence, item::Item) = only.(makebuffer(pipeline, (item,)))
-function makebuffer(pipeline::Sequence, items::Tuple)
+function makebuffer(pipeline::Sequence, items)
     buffers = []
     for tfm in pipeline.transforms
         push!(buffers, makebuffer(tfm, items))
         items = apply(tfm, items)
     end
-    return Tuple(buffers)
+    return buffers
 end
 
 
-function apply!(buffers::Tuple, pipeline::Sequence, items::Tuple; randstate = getrandstate(pipeline))
+function apply!(buffers, pipeline::Sequence, items; randstate = getrandstate(pipeline))
     @assert length(buffers) == length(pipeline.transforms)
-    @assert length(buffers[1]) == length(items)
     for (tfm, buffer, r) in zip(pipeline.transforms, buffers, randstate)
         items = apply!(buffer, tfm, items; randstate = r)
     end
     return items
-end
-
-function apply!(buffers, pipeline::Sequence, item::AbstractItem; randstate = getrandstate(pipeline))
-    @assert length(buffers) == length(pipeline.transforms)
-    for (tfm, buffer, r) in zip(pipeline.transforms, buffers, randstate)
-        item = apply!(buffer, tfm, item; randstate = r)
-    end
-    return item
 end

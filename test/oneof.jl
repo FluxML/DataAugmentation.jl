@@ -24,6 +24,22 @@ end
     @test_nowarn DataAugmentation.getprojection(oneof, getbounds(item); randstate = getrandstate(oneof))
     @test apply(oneof, item; randstate = (1, getrandstate(tfm))) isa Image
     @test apply(oneof, item; randstate = (2, nothing)) isa Image
+end
 
 
+@testset ExtendedTestSet "Sequence(oneofs...)" begin
+    item = ArrayItem(rand(10, 10))
+    tfm = Maybe(MapElem(x -> x + 1)) |> Maybe(MapElem(x -> x + 1))
+    @test_nowarn apply(tfm, item)
+    buf = makebuffer(tfm, item)
+    @test_nowarn apply!(buf, tfm, item)
+    buf = makebuffer(tfm, (item,))
+    @test_nowarn apply!(buf, tfm, (item,))
+end
+
+
+@testset ExtendedTestSet "Sequence" begin
+    tfm = Maybe(AdjustBrightness(0.1), .75) |> Maybe(AdjustContrast(0.1), .75)
+    item = DataAugmentation.Image(rand(RGB{Float32}, 10, 10))
+    @test_nowarn apply(tfm, item)
 end
