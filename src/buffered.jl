@@ -63,19 +63,13 @@ apply(buffered::Buffered, item::Item; randstate = getrandstate(buffered)) =
     apply(buffered, (item,); randstate = randstate) |> only
 
 
-function apply!(buf::Tuple, buffered::Buffered, items::Tuple; randstate = getrandstate(buffered))
+function apply!(buf, buffered::Buffered, items; randstate = getrandstate(buffered))
     if isnothing(buffered.buffer)
         buffered.buffer = makebuffer(buffered.tfm, items)
     end
-    apply!(buffered.buffer, buffered.tfm, items; randstate = randstate)
-    copyitemdata!(buf, buffered.buffer)
+    res = apply!(buffered.buffer, buffered.tfm, items; randstate = randstate)
+    copyitemdata!(buf, res)
     return buf
-end
-
-function apply!(buf::I, buffered::Buffered, item::I; randstate = getrandstate(buffered)) where {I<:Item}
-    bufs, items = (buf,), (item,)
-    titems = apply!(bufs, buffered, items; randstate = randstate)
-    return only(titems)
 end
 
 
