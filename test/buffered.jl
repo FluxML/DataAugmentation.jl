@@ -89,10 +89,10 @@ end
     # buffer should change
     buf = deepcopy(tb.buffer)
     @test_nowarn apply(tbt, newitem())
-    @test !(buf[1].data ≈ tb.buffer[1].data)
+    @test !(buf.data ≈ tb.buffer.data)
 
     # inplace version
     buf2 = deepcopy(buf)
-    @test_nowarn apply!(buf2, tbt, newitem())
-    @test !(buf2[1].data ≈ tb.buffer[1].data)
+    @test_nowarn apply!(buf, tbt, newitem())
+    @test !(buf2.data ≈ tb.buffer.data)
 end
