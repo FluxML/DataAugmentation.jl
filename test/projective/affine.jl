@@ -99,7 +99,9 @@ include("../imports.jl")
         tfm = Rotate(10)
         image = Image(rand(RGB, 50, 50))
         @test_nowarn apply(tfm, image)
-
+        P = DataAugmentation.getprojection(tfm, getbounds(image))
+        @test P isa AffineMap
+        @test P.linear.mat[1] isa Float32
     end
 
     @testset ExtendedTestSet "Rotate" begin
@@ -144,7 +146,7 @@ end
             Image(rand(RGB, sz)),
             Keypoints(rand(SVector{2, Float32}, 50), sz),
             MaskBinary(rand(Bool, sz)),
-            MaskMulti(rand(1:8, sz)),
+            MaskMulti(UInt8.(rand(1:8, sz)), 1:8),
         )
 
         tfms = compose(
@@ -152,8 +154,12 @@ end
             FlipX(), FlipY(),
             ScaleRatio((.8, .8)),
             RandomResizeCrop((50, 50)),
+            WarpAffine(0.1),
+            Zoom((1., 1.2))
         )
         @test_nowarn apply(tfms, items)
+        titems = apply(tfms, items)
+        @test all(typeof.(titems) == typeof.(items))
     end
 
     @testset ExtendedTestSet "3D" begin
@@ -170,5 +176,7 @@ end
             RandomResizeCrop((25, 25, 25)),
         )
         @test_nowarn apply(tfms, items)
+        titems = apply(tfms, items)
+        @test all(typeof.(titems) == typeof.(items))
     end
 end
