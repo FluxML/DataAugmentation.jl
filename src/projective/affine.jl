@@ -107,11 +107,14 @@ Rotate(γ) = Rotate(Uniform(-abs(γ), abs(γ)))
 
 getrandstate(tfm::Rotate) = rand(tfm.dist)
 
-function getprojection(tfm::Rotate, bounds; randstate = getrandstate(tfm))
+function getprojection(
+        tfm::Rotate,
+        bounds::AbstractArray{<:SVector{N, T}};
+        randstate = getrandstate(tfm)) where {N, T}
     γ = randstate
     middlepoint = sum(bounds) ./ length(bounds)
     r = γ / 360 * 2pi
-    return recenter(RotMatrix(r), middlepoint)
+    return recenter(RotMatrix(convert(T, r)), middlepoint)
 end
 
 

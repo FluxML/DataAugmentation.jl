@@ -42,5 +42,5 @@ function threepointwarpaffine(
     c = (X \ Y)'
     A = SMatrix{2, 2, V}(c[:, 1:2])
     b = SVector{2, V}(c[:, 3])
-    AffineMap(A, b)
+    return AffineMap(A, b)
 end

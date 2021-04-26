@@ -49,6 +49,7 @@ Default implementation falls back to `project`.
 function project!(bufitem, P, item, indices)
     titem = project(P, item, indices)
     copyitemdata!(bufitem, titem)
+
     return bufitem
 end
 
@@ -82,8 +83,8 @@ function apply!(
     bounds = getbounds(item)
     P = getprojection(tfm, bounds; randstate = randstate)
     indices = cropindices(tfm, P, bounds; randstate = randstate)
-    project!(bufitem, P, item, indices)
-    return bufitem
+    res = project!(bufitem, P, item, indices)
+    return res
 end
 
 
