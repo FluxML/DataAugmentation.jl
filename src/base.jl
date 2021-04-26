@@ -73,11 +73,7 @@ getrandstate(::Transform) = nothing
 Apply `tfm` to an `item` or a tuple `items`.
 
 """
-apply(tfm::Transform, items) = apply(tfm, items; randstate = getrandstate(tfm))
-
-
-
-function apply(tfm::Transform, items::Tuple; randstate = getrandstate(tfm))
+function apply(tfm::Transform, items; randstate = getrandstate(tfm))
     map(item -> apply(tfm, item; randstate = randstate), items)
 end
 
