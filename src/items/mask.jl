@@ -42,10 +42,11 @@ getbounds(mask::MaskMulti) = mask.bounds
 function project(P, mask::MaskMulti, indices)
     a = itemdata(mask)
     etp = mask_extrapolation(a)
+    res = warp(etp, inv(P), indices)
     return MaskMulti(
-        warp(etp, inv(P), indices),
+        res,
         mask.classes,
-        P.(mask.bounds)
+        makebounds(indices)
     )
 end
 
@@ -53,12 +54,16 @@ end
 function project!(bufmask::MaskMulti, P, mask::MaskMulti, indices)
     a = OffsetArray(parent(itemdata(bufmask)), indices)
     bounds_ = P.(getbounds(mask))
-    res = warp!(
+    warp!(
         a,
         mask_extrapolation(itemdata(mask)),
         inv(P),
     )
-    return MaskMulti(a, mask.classes, P.(getbounds(mask)))
+    return MaskMulti(
+        a,
+        mask.classes,
+        makebounds(indices)
+    )
 end
 
 
@@ -109,7 +114,7 @@ function project(P, mask::MaskBinary, indices)
     etp = mask_extrapolation(itemdata(mask))
     return MaskBinary(
         warp(etp, inv(P), indices),
-        P.(getbounds(mask)),
+        makebounds(indices),
     )
 end
 
@@ -122,7 +127,10 @@ function project!(bufmask::MaskBinary, P, mask::MaskBinary, indices)
         mask_extrapolation(itemdata(mask)),
         inv(P),
     )
-    return MaskBinary(res, P.(getbounds(mask)))
+    return MaskBinary(
+        a,
+        makebounds(indices)
+    )
 end
 
 function showitem!(img, mask::MaskBinary)
