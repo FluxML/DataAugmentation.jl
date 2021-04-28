@@ -1,7 +1,7 @@
 name = "DataAugmentation"
 uuid = "88a5189c-e7ff-4f85-ac6b-e6158070f02e"
 authors = ["lorenzoh <lorenz.ohly@gmail.com>"]
-version = "0.1.8"
+version = "0.2.0"
 
 [deps]
 ColorBlendModes = "60508b50-96e1-4007-9d6c-f475c410f16b"
@@ -20,6 +20,7 @@ Rotations = "6038ab10-8711-5258-84ad-4b1120ba62dc"
 Setfield = "efcf1570-3423-57d1-acb7-fd33fddbac46"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [compat]
 ColorBlendModes = "0.2"
