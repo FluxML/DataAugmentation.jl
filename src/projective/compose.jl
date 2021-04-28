@@ -43,16 +43,12 @@ function getprojection(
     P = CoordinateTransformations.IdentityTransformation()
     for (tfm, r) in zip(composed.tfms, randstate)
         P_tfm = getprojection(tfm, bounds; randstate = r)
-        bounds = P_tfm.(bounds)
+        bounds = projectionbounds(tfm, P_tfm, bounds; randstate = r)
         P = P_tfm ∘ P
     end
-
     return P
 end
 
-# To work nicely with crops, [`cropindices`](#) simply defers to the
-# last transform:
-
-function cropindices(composed::ComposedProjectiveTransform, P, bounds; randstate = getrandstate(composed))
-    cropindices(composed.tfms[end], P, bounds; randstate = randstate[end])
+function projectionbounds(composed::ComposedProjectiveTransform, P, bounds; randstate = getrandstate(composed))
+    return transformbounds(bounds, P)
 end

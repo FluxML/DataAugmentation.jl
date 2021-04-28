@@ -30,7 +30,7 @@ apply!(buf, tfm::Transform, items; randstate = getrandstate(tfm)) = apply(tfm, i
 # bounding boxes per sample) the number of items doesn't match up with the buffer and
 # we fall back to regular `apply`.
 
-function apply!(bufs::Tuple, tfm::Transform, items::Tuple; randstate = getrandstate(tfm))
+function apply!(bufs::Union{Tuple, AbstractVector}, tfm::Transform, items::Union{Tuple, AbstractVector}; randstate = getrandstate(tfm))
     if length(bufs) == length(items)
         return map((item, buf) -> apply!(buf, tfm, item; randstate = randstate), items, bufs)
     else
@@ -71,7 +71,7 @@ function apply!(buf, buffered::Buffered, items; randstate = getrandstate(buffere
 end
 
 
-struct BufferedThreadsafe
+struct BufferedThreadsafe <: Transform
     buffereds::Vector{Buffered}
     function BufferedThreadsafe(tfm; n = Threads.nthreads())
         @assert n >= 1

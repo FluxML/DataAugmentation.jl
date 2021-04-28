@@ -21,7 +21,7 @@ function getrandstate(oneof::OneOf)
 end
 
 
-function apply(oneof::OneOf, item::AbstractItem; randstate = getrandstate(oneof))
+function apply(oneof::OneOf, item::Item; randstate = getrandstate(oneof))
     i, tfmrandstate = randstate
     return apply(oneof.tfms[i], item; randstate = tfmrandstate)
 end
@@ -31,7 +31,7 @@ function makebuffer(oneof::OneOf, items)
     return Tuple([makebuffer(tfm, items) for tfm in oneof.tfms])
 end
 
-function apply!(bufs, oneof::OneOf, item::AbstractItem; randstate = getrandstate(tfm))
+function apply!(bufs, oneof::OneOf, item::Item; randstate = getrandstate(oneof))
     i, tfmrandstate = randstate
     buf = bufs[i]
     return apply!(buf, oneof.tfms[i], item; randstate = tfmrandstate)

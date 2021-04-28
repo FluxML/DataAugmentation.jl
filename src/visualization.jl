@@ -4,8 +4,8 @@
 Visualize `items`.
 """
 function showitems(items; C=RGBA{N0f8}, showbounds = false)
-    rs = boundingranges([DataAugmentation.getbounds(item) for item in items]...)
-    a = OffsetArray(zeros(C, length.(rs)...), rs...)
+    bounds = boundsof([getbounds(item) for item in items])
+    a = OffsetArray(zeros(C, length.(bounds.rs)...), bounds.rs...)
 
     for item in items
         showitem!(a, item)
@@ -39,14 +39,17 @@ function showgrid(items; fillvalue = RGBA{N0f8}(0.,0.,0.,0.), kwargs...)
     mosaicview(imgs; fillvalue = fillvalue, kwargs...)
 end
 
-showbounds(bounds) = showbounds!(zeros(RGBA{N0f8}, boundssize(bounds)), bounds)
+showbounds(bounds) = showbounds!(zeros(RGBA{N0f8}, sum.(bounds.rs)), bounds)
 
-function showbounds!(img, bounds::AbstractArray{<:SVector{2}})
+function showbounds!(img, bounds::Bounds{2})
+    ry, rx = bounds.rs
+    miny, maxy = extrema(ry)
+    minx, maxx = extrema(rx)
     points = [
-        bounds[1] + SVector(1, 1),
-        bounds[2] + SVector(0, 1),
-        bounds[4] + SVector(0, 0),
-        bounds[3] + SVector(1, 0),
+        SVector(miny, minx),
+        SVector(miny, maxx),
+        SVector(maxy, maxx),
+        SVector(maxy, minx),
     ]
     showpolygon!(img, points, RGBA(0, 0, 0, 1))
     return img
@@ -72,12 +75,9 @@ end
 
 Find bounding index ranges for points `ps`.
 """
-function boundingranges(ps::Vararg{AbstractArray{<:SVector{N}}}) where N
-    ranges = UnitRange[]
-    for i ∈ 1:N
-        min, max = extrema((p[i] for p in Iterators.flatten(ps)))
-        r = floor(Int, min):ceil(Int, max)
-        push!(ranges, r)
+function boundsof(boundss::AbstractVector{<:Bounds{N}}) where N
+    rs = map(1:N) do i
+        minimum((minimum(bs.rs[i]) for bs in boundss)):maximum((maximum(bs.rs[i]) for bs in boundss))
     end
-    return ranges
+    return Bounds(Tuple(rs))
 end

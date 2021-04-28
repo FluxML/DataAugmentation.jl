@@ -7,7 +7,8 @@ using CoordinateTransformations
 
 
 using DataAugmentation: Item, Transform, getrandstate, itemdata, setdata, ComposedProjectiveTransform,
-    cropindices, makebounds, getprojection, boundsextrema, boundsranges, boundssize, offsetcropindices,
+    projectionbounds, getprojection, offsetcropbounds,
     CroppedProjectiveTransform, getbounds, project, project!, makebuffer, imagetotensor, imagetotensor!,
     normalize, normalize!, tensortoimage, denormalize, denormalize!
+using DataAugmentation: testitem, testapply, testapply!, testprojective
 import DataAugmentation: apply, compose

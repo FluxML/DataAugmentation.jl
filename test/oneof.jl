@@ -6,6 +6,8 @@ include("imports.jl")
     tfm = OneOf([MapElem(x -> x + 1), MapElem(x -> x - 1)])
     @test apply(tfm, item; randstate = (1, nothing)).data ≈ item.data .+ 1
     @test apply(tfm, item; randstate = (2, nothing)).data ≈ item.data .- 1
+    testapply(tfm, ArrayItem)
+    testapply!(tfm, ArrayItem)
 end
 
 @testset ExtendedTestSet "Maybe" begin
@@ -13,6 +15,7 @@ end
     tfm = Maybe(MapElem(x -> x + 1))
     @test apply(tfm, item; randstate = (1, nothing)).data ≈ item.data .+ 1
     @test apply(tfm, item; randstate = (2, nothing)).data ≈ item.data
+    testapply(tfm, ArrayItem)
 end
 
 
@@ -30,16 +33,14 @@ end
 @testset ExtendedTestSet "Sequence(oneofs...)" begin
     item = ArrayItem(rand(10, 10))
     tfm = Maybe(MapElem(x -> x + 1)) |> Maybe(MapElem(x -> x + 1))
-    @test_nowarn apply(tfm, item)
-    buf = makebuffer(tfm, item)
-    @test_nowarn apply!(buf, tfm, item)
-    buf = makebuffer(tfm, (item,))
-    @test_nowarn apply!(buf, tfm, (item,))
+    testapply(tfm, ArrayItem)
+    testapply!(tfm, ArrayItem)
 end
 
 
 @testset ExtendedTestSet "Sequence" begin
     tfm = Maybe(AdjustBrightness(0.1), .75) |> Maybe(AdjustContrast(0.1), .75)
     item = DataAugmentation.Image(rand(RGB{Float32}, 10, 10))
-    @test_nowarn apply(tfm, item)
+    testapply(tfm, Image)
+    testapply!(tfm, Image)
 end

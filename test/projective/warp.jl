@@ -6,7 +6,7 @@ include("../imports.jl")
     image = Image(rand(RGB, 50, 50))
 
     @test_nowarn apply(tfm, image)
-    @test boundssize(getbounds(apply(tfm, image))) != (50, 500)
+    @test sum.(getbounds(apply(tfm, image)).rs) != (50, 500)
     buf = apply(tfm, image)
     ctfm = tfm |> CenterCrop((50, 50))
     @test_nowarn apply(ctfm, image)

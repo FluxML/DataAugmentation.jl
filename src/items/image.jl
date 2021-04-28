@@ -33,21 +33,20 @@ showitems(item)
 ```
 
 """
-struct Image{N,T,B} <: AbstractArrayItem{N,T}
+struct Image{N,T} <: AbstractArrayItem{N,T}
     data::AbstractArray{T,N}
-    bounds::AbstractArray{<:SVector{N,B},N}
+    bounds::Bounds{N}
 end
 
-Image(data) = Image(data, size(data))
+Image(data) = Image(data, Bounds(axes(data)))
 
 function Image(data::AbstractArray{T,N}, sz::NTuple{N,Int}) where {T,N}
-    bounds = makebounds(sz)
-    return Image(data, bounds)
+    return Image(data, Bounds(sz))
 end
 
 
 Base.show(io::IO, item::Image{N,T}) where {N,T} =
-    print(io, "Image{$N, $T}() with size $(size(itemdata(item)))")
+    print(io, "Image{$N, $T}() with bounds $(item.bounds)")
 
 
 function showitem!(img, image::Image{2, <:Colorant})
@@ -72,22 +71,25 @@ getbounds(image::Image) = image.bounds
 # We have to pass the inverse of the projection `P` as it uses backward
 # mode warping.
 
-function project(P, image::Image{N, T}, indices) where {N, T}
-    ## Transform the bounds along with the image
-    bounds_ = P.(getbounds(image))
-    data_ = warp(itemdata(image), inv(P), indices, zero(T))
-    return Image(data_, makebounds(indices))
+function project(P, image::Image{N, T}, bounds::Bounds) where {N, T}
+    # TODO: make interpolation scheme and boundary conditions configurable
+    data_ = warp(
+        itemdata(image),
+        inv(P),
+        bounds.rs,
+        zero(T))
+    return Image(data_, bounds)
 end
 
 # The inplace version `project!` is quite similar. Note `indices` are not needed
 # as they are implicitly given by the buffer.
 
-function project!(bufimage::Image, P, image::Image{N, T}, indices) where {N, T}
-    a = OffsetArray(parent(itemdata(bufimage)), indices)
+function project!(bufimage::Image, P, image::Image{N, T}, bounds::Bounds{N}) where {N, T}
+    a = OffsetArray(parent(itemdata(bufimage)), bounds.rs)
     res = warp!(
         a,
         box_extrapolation(itemdata(image), zero(T)),
         inv(P),
     )
-    return Image(res, P.(getbounds(image)))
+    return Image(res, bounds)
 end

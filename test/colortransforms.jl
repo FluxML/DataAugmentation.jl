@@ -7,6 +7,8 @@ include("imports.jl")
     @test_nowarn apply(tfm, item)
     titem = apply(tfm, item)
     @test eltype(itemdata(titem)) == RGB{N0f8}
+    testapply(tfm, Image)
+    testapply!(tfm, Image)
 end
 
 @testset ExtendedTestSet "`AdjustBrightness`" begin
@@ -15,4 +17,7 @@ end
     @test_nowarn apply(tfm, item)
     titem = apply(tfm, item)
     @test eltype(itemdata(titem)) == RGB{N0f8}
+
+    testapply(tfm, Image)
+    testapply!(tfm, Image)
 end

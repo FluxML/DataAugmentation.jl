@@ -7,7 +7,7 @@ include("../imports.jl")
 
     @test_nowarn apply(tfm, mask)
     tmask = apply(tfm, mask)
-    @test boundsranges(tmask.bounds) == (21:52, 11:42)
+    @test tmask.bounds.rs == (21:52, 11:42)
 
     @test_nowarn apply!(tmask, tfm, mask)
 end
