@@ -50,7 +50,15 @@ function makebuffer(pipeline::Sequence, items)
 end
 
 
-function apply!(buffers, pipeline::Sequence, items; randstate = getrandstate(pipeline))
+function apply!(buffers::Item, pipeline::Sequence, items::Item; randstate = getrandstate(pipeline))
+    @assert length(buffers) == length(pipeline.transforms)
+    for (tfm, buffer, r) in zip(pipeline.transforms, buffers, randstate)
+        items = apply!(buffer, tfm, items; randstate = r)
+    end
+    return items
+end
+
+function apply!(buffers::Vector, pipeline::Sequence, items::Vector; randstate = getrandstate(pipeline))
     @assert length(buffers) == length(pipeline.transforms)
     for (tfm, buffer, r) in zip(pipeline.transforms, buffers, randstate)
         items = apply!(buffer, tfm, items; randstate = r)
