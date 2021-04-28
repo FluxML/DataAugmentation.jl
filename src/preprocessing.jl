@@ -201,7 +201,7 @@ struct OneHot{T} <: Transform end
 OneHot() = OneHot{Float32}()
 
 function apply(tfm::OneHot{T}, item::MaskMulti; randstate = nothing) where T
-    mask = itemdata(item)
+    mask = parent(itemdata(item))
     a = zeros(T, size(mask)..., length(item.classes))
     for I in CartesianIndices(mask)
         a[I, mask[I]] = one(T)
@@ -212,7 +212,7 @@ end
 
 
 function apply!(buf, tfm::OneHot{T}, item::MaskMulti; randstate = nothing) where T
-    mask = itemdata(item)
+    mask = parent(itemdata(item))
     a = itemdata(buf)
     fill!(a, zero(T))
 
