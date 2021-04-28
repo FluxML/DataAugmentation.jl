@@ -23,12 +23,12 @@ showitems(item)
 """
 struct Keypoints{N, T, S<:Union{SVector{N, T}, Nothing}, M} <: AbstractArrayItem{M, S}
     data::AbstractArray{S, M}
-    bounds::AbstractArray{<:SVector{N, Float32}, N}
+    bounds::Bounds{N}
 end
 
 
-function Keypoints(data::AbstractArray{S, M}, sz::NTuple{N, Int}) where {T, N, S<:Union{SVector{N, T}, Nothing}, M}
-    return Keypoints{N, T, S, M}(data, makebounds(sz, Float32))
+function Keypoints(data, sz::NTuple{N, Int}) where N
+    return Keypoints(data, Bounds(sz))
 end
 
 
@@ -39,10 +39,11 @@ Base.show(io::IO, item::Keypoints{N, T, M}) where {N, T, M} =
 getbounds(keypoints::Keypoints) = keypoints.bounds
 
 
-function project(P, keypoints::Keypoints{N, T}, indices) where {N, T}
+function project(P, keypoints::Keypoints{N, T}, bounds::Bounds{N}) where {N, T}
+    # TODO: convert back to `T`?
     return Keypoints(
         map(fmap(P), keypoints.data),
-        makebounds(indices),
+        bounds,
     )
 end
 

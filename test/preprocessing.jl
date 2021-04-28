@@ -16,25 +16,30 @@ include("./imports.jl")
         stds =  SVector{3}(ones(1, 1, 3))
         tfm = Normalize(means, stds)
         @test itemdata(apply(tfm, item)) ≈ -1 .* ones(10, 10, 3)
+        testapply(tfm, item)
+        item1 = ArrayItem(rand(10, 10, 3))
+        item2 = ArrayItem(rand(10, 10, 3))
+        testapply!(tfm, item1, item2)
     end
 end
 
 @testset ExtendedTestSet "NormalizeIntensity" begin
-    @testset ExtendedTestSet "NormalizeIntensity" begin
-        item = ArrayItem(Float32.(collect(1:5)))
-        ground_truth = [-1.2649, -0.6325, 0, 0.6325, 1.2649]
-        tfm = NormalizeIntensity()
-        @test itemdata(apply(tfm, item)) ≈ ground_truth
-    end
+    item = ArrayItem(Float32.(collect(1:5)))
+    ground_truth = [-1.2649, -0.6325, 0, 0.6325, 1.2649]
+    tfm = NormalizeIntensity()
+    @test itemdata(apply(tfm, item)) ≈ ground_truth
 end
 
 @testset ExtendedTestSet "ToEltype" begin
-    tfm = ToEltype(RGB)
     data = rand(RGB, 10, 10)
     imagergb = Image(data)
     imagegray = Image((Gray.(data)))
     @test itemdata(apply(ToEltype(Gray), imagegray)) === itemdata(imagegray)
     @test itemdata(apply(ToEltype(Gray), imagergb)) ≈ itemdata(imagegray)
+
+    tfm = ToEltype(Gray)
+    testapply(tfm, Image)
+    testapply!(tfm, Image)
 end
 
 
@@ -52,39 +57,42 @@ end
         @test_nowarn apply(tfm, image)
         a = itemdata(apply(tfm, image))
         @test size(a) == (10, 10, 3)
+        testapply(tfm, Image)
+        testapply!(tfm, Image)
     end
 end
 
 @testset ExtendedTestSet "OneHot" begin
     tfm = OneHot()
     mask = rand(1:4, 10, 10)
-    item = MaskMulti(mask, 1:4)
-    @test_nowarn apply(tfm, item)
-    aitem = apply(tfm, item)
+    item1 = MaskMulti(mask, 1:4)
+    item2 = MaskMulti(rand(1:3, 10, 10), 1:4)
+    @test_nowarn apply(tfm, item1)
+    aitem = apply(tfm, item1)
     @test size(itemdata(aitem)) == (10, 10, 4)
 
-    item2 = MaskMulti(rand(1:3, 10, 10), 1:4)
-    buf = itemdata(aitem)
-    bufcopy = copy(buf)
-    apply!(aitem, tfm, item2)
-    @test itemdata(item) == itemdata(item2) || itemdata(aitem) != bufcopy
+    testapply(tfm, item1)
+    testapply!(tfm, item1, item2)
 
 end
 
 @testset ExtendedTestSet "Image pipeline" begin
-    image = Image(rand(RGB, 150, 150))
+    item1 = Image(rand(RGB, 64, 64))
+    item2 = Image(rand(RGB, 64, 64))
 
     tfm = compose(
         ToEltype(RGB),
-        RandomResizeCrop((128, 64)),
+        RandomResizeCrop((32, 48)),
         ImageToTensor(),
         Normalize([0, 0, 0], [1, 1, 1])
     )
 
-    @test_nowarn apply(tfm, image)
 
-    res = apply(tfm, image)
+    res = apply(tfm, item1)
     a = itemdata(res)
-    @test size(a) == (128, 64, 3)
+    @test size(a) == (32, 48, 3)
     @test eltype(a) == Float32
+
+    testapply(tfm, item1)
+    testapply!(tfm, item1, item2)
 end

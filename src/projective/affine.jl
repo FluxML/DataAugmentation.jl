@@ -40,8 +40,21 @@ end
 
 
 function getprojection(scale::ScaleKeepAspect{N}, bounds; randstate = nothing) where N
-    ratio = maximum(scale.minlengths ./ boundssize(bounds))
-    return scaleprojection(Tuple(ratio for _ in 1:N))
+    ratio = maximum(scale.minlengths ./ length.(bounds.rs))
+    upperleft = SVector{N, Float32}(minimum.(bounds.rs)) .- 1
+    P = scaleprojection(Tuple(ratio for _ in 1:N))
+    if upperleft != SVector(0, 0)
+        P = P  ∘ Translation(-upperleft)
+    end
+    return P
+end
+
+function projectionbounds(tfm::ScaleKeepAspect{N}, P, bounds::Bounds{N}; randstate = nothing) where N
+    origsz = length.(bounds.rs)
+    ratio = maximum(tfm.minlengths ./ origsz)
+    sz = round.(Int, ratio .* origsz)
+    bounds_ = transformbounds(bounds, P)
+    return offsetcropbounds(sz, bounds_, ntuple(_ -> 1., N))
 end
 
 """
@@ -57,11 +70,21 @@ struct ScaleFixed{N} <: ProjectiveTransform
 end
 
 
-function getprojection(scale::ScaleFixed{N}, bounds; randstate = nothing) where N
-    ratios = scale.sizes ./ boundssize(bounds)
-    return scaleprojection(ratios)
+function getprojection(scale::ScaleFixed, bounds; randstate = nothing)
+    ratios = scale.sizes ./ length.(bounds.rs)
+    upperleft = SVector{2, Float32}(minimum.(bounds.rs)) .- 1
+    P = scaleprojection(ratios)
+    if upperleft != SVector(0, 0)
+        P = P  ∘ Translation(-upperleft)
+    end
+    return P
 end
 
+
+function projectionbounds(tfm::ScaleFixed{N}, P, bounds::Bounds{N}; randstate = nothing) where N
+    bounds_ = transformbounds(bounds, P)
+    return offsetcropbounds(tfm.sizes, bounds_, (1., 1.))
+end
 
 """
     Zoom(scales = (1, 1.2)) <: ProjectiveTransform
@@ -78,7 +101,7 @@ Zoom(scales::NTuple{2, T} = (1., 1.2)) where T = Zoom(Uniform(scales[1], scales[
 
 getrandstate(tfm::Zoom) = rand(tfm.dist)
 
-function getprojection(tfm::Zoom, bounds::AbstractArray{<:SVector{N}}; randstate = getrandstate(tfm)) where N
+function getprojection(tfm::Zoom, bounds::Bounds{N}; randstate = getrandstate(tfm)) where N
     ratio = randstate
     return scaleprojection(ntuple(_ -> ratio, N))
 end
@@ -109,12 +132,12 @@ getrandstate(tfm::Rotate) = rand(tfm.dist)
 
 function getprojection(
         tfm::Rotate,
-        bounds::AbstractArray{<:SVector{N, T}};
-        randstate = getrandstate(tfm)) where {N, T}
+        bounds::Bounds{2};
+        randstate = getrandstate(tfm))
     γ = randstate
-    middlepoint = sum(bounds) ./ length(bounds)
+    middlepoint = SVector{2, Float32}(mean.(bounds.rs))
     r = γ / 360 * 2pi
-    return recenter(RotMatrix(convert(T, r)), middlepoint)
+    return recenter(RotMatrix(convert(Float32, r)), middlepoint)
 end
 
 
@@ -140,16 +163,32 @@ end
 
 
 function getprojection(tfm::Reflect, bounds; randstate = getrandstate(tfm))
-    midpoint = sum(bounds) ./ length(bounds)
     r = tfm.γ / 360 * 2pi
-    return recenter(reflectionmatrix(r), midpoint)
+    return centered(LinearMap(reflectionmatrix(r)), bounds)
+end
+
+"""
+    centered(P, bounds)
+
+Transform `P` so that is applied around the center of `bounds`
+instead of the origin
+"""
+function centered(P, bounds::Bounds{2})
+    upperleft = minimum.(bounds.rs)
+    bottomright = maximum.(bounds.rs)
+
+    midpoint = SVector{2, Float32}((bottomright .- upperleft) ./ 2) .+ SVector{2, Float32}(.5, .5)
+    return recenter(P, midpoint)
 end
 
 
 FlipX() = Reflect(180)
 FlipY() = Reflect(90)
 
-reflectionmatrix(r) = SMatrix{2, 2, Float32}(cos(2r), sin(2r), sin(2r), -cos(2r))
+function reflectionmatrix(r)
+    A = SMatrix{2, 2, Float32}(cos(2r), sin(2r), sin(2r), -cos(2r))
+    return round.(A; digits = 12)
+end
 
 
 """
@@ -171,12 +210,12 @@ struct PinOrigin <: ProjectiveTransform end
 
 function getprojection(::PinOrigin, bounds; randstate = nothing)
     # TODO: translate by actual minimum x and y coordinates
-    return Translation(-bounds[1])
+    return Translation((-SVector{2, Float32}(minimum.(bounds.rs))) .+ 1)
 end
 
 function apply(::PinOrigin, item::Union{Image, MaskMulti, MaskBinary}; randstate = nothing)
     item = @set item.data = parent(itemdata(item))
-    item = @set item.bounds = makebounds(size(itemdata(item)))
+    item = @set item.bounds = Bounds(size(itemdata(item)))
     return item
 end
 

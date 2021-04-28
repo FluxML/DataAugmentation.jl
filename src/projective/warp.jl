@@ -14,13 +14,14 @@ getrandstate(::WarpAffine) = abs(rand(Int))
 
 function getprojection(
         tfm::WarpAffine,
-        bounds::AbstractArray{SVector{2, T}};
-        randstate = getrandstate(tfm)) where T
+        bounds::Bounds{2};
+        randstate = getrandstate(tfm))
+    T = Float32
     rng = Random.seed!(Random.MersenneTwister(), randstate)
-    scale = sqrt(prod(boundssize(bounds)))
+    scale = sqrt(prod(sum.(bounds.rs)))
 
-    srcps = shuffle(bounds)[1:3]
-    offsets = rand(SVector{2, T}, 3)
+    srcps = shuffle(rng, SVector{2, T}.(corners(bounds)))[1:3]
+    offsets = rand(rng, SVector{2, T}, 3)
 	offsets = map(v -> (v .* (2one(T)) .- one(T)) .* convert(T, scale * tfm.σ), offsets)
 	return threepointwarpaffine(srcps, srcps .+ offsets)
 end
@@ -43,4 +44,9 @@ function threepointwarpaffine(
     A = SMatrix{2, 2, V}(c[:, 1:2])
     b = SVector{2, V}(c[:, 3])
     return AffineMap(A, b)
+end
+
+
+function corners(bounds::Bounds)
+    (Tuple(x) for x in ImageTransformations.CornerIterator(CartesianIndices(bounds.rs)))
 end

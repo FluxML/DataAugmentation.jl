@@ -7,6 +7,8 @@ struct TestItem <: Item
     data::Any
 end
 
+DataAugmentation.testitem(::Type{TestItem}) = TestItem(0)
+
 struct Add <: Transform
     n::Int
 end
@@ -19,6 +21,7 @@ compose(add1::Add, add2::Add) = Add(add1.n + add2.n)
 # Now we can perform some sanity checks for the basic interface.
 
 @testset ExtendedTestSet "Basic interface" begin
+    testapply(Add(0), TestItem)
     tfm = Add(0)
     item = TestItem(10)
 
@@ -45,6 +48,8 @@ end
 
 @testset ExtendedTestSet "`Sequence`" begin
     seq = Sequence(Add(10), Add(10))
+    testapply(seq, TestItem)
+
     @test apply(seq, TestItem(10)) == TestItem(30)
     @test apply(seq, (TestItem(10),)) == (TestItem(30),)
 end

@@ -61,31 +61,31 @@ function getprojection(
 end
 
 
-function cropindices(
+function projectionbounds(
         cropped::CroppedProjectiveTransform{PT, C},
         P,
         bounds;
         randstate = getrandstate(cropped)) where {PT, C<:Crop}
     tfmstate, cropstate = randstate
-    bounds_ = P.(bounds)
-    return offsetcropindices(cropped.crop.size, boundsranges(bounds_), cropstate)
+    bounds_ = projectionbounds(cropped.tfm, P, bounds; randstate = tfmstate)
+    return offsetcropbounds(cropped.crop.size, bounds_, cropstate)
 end
 
 
-function cropindices(
+function projectionbounds(
         cropped::CroppedProjectiveTransform{PT, PadDivisible},
         P,
         bounds;
         randstate = getrandstate(cropped)) where {PT}
     tfmstate, cropstate = randstate
-    bounds_ = P.(bounds)
-    ranges = boundsranges(bounds_)
+    bounds_ = projectionbounds(cropped.tfm, P, bounds; randstate = tfmstate)
+    ranges = bounds_.rs
 
     sz = length.(ranges)
     pad = (cropped.crop.by .- (sz .% cropped.crop.by)) .% cropped.crop.by
 
     indices = UnitRange.(getindex.(ranges, 1), sz .+ pad)
-    return indices
+    return Bounds(indices)
 end
 
 
@@ -101,23 +101,24 @@ end
 
 
 """
-    offsetcropindices(sz, indices, offsets)
+    offsetcropbounds(sz, bounds, offsets)
 
-Calculate indices for a crop of size `sz` out of `indices`.
-Input and output indices are represented as tuples of ranges.
+Calculate offset bounds for a crop of size `sz`.
 
 For every dimension i where `sz[i] < length(indices[i])`, offsets
 the crop by `offsets[i]` times the difference between the two.
 """
-function offsetcropindices(
+function offsetcropbounds(
         sz::NTuple{N, Int},
-        indices::NTuple{N, <:AbstractRange},
+        bounds::Bounds{N},
         offsets::NTuple{N, <:Number}) where N
+    indices = bounds.rs
     mins = getindex.(indices, 1)
     diffs = length.(indices) .- sz
 
     startindices = floor.(Int, mins .+ (diffs .* offsets))
     endindices = startindices .+ sz .- 1
 
-    return UnitRange.(startindices, endindices)
+    bs = Bounds(UnitRange.(startindices, endindices))
+    return bs
 end

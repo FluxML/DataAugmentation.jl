@@ -7,7 +7,7 @@ include("../imports.jl")
 
     @test_nowarn apply(tfm, image)
     timage = apply(tfm, image)
-    @test boundsranges(timage.bounds) == (21:52, 11:42)
+    @test timage.bounds.rs == (21:52, 11:42)
 
     @test_nowarn apply!(timage, tfm, image)
 

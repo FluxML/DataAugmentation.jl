@@ -16,15 +16,15 @@ mask = MaskMulti(rand(1:3, 100, 100))
 showitems(mask)
 ```
 """
-struct MaskMulti{N, T<:Integer, U, B} <: AbstractArrayItem{N, T}
+struct MaskMulti{N, T<:Integer, U} <: AbstractArrayItem{N, T}
     data::AbstractArray{T, N}
     classes::AbstractVector{U}
-    bounds::AbstractArray{<:SVector{N, B}, N}
+    bounds::Bounds{N}
 end
 
 
 function MaskMulti(a::AbstractArray, classes = unique(a))
-    bounds = makebounds(size(a))
+    bounds = Bounds(size(a))
     minimum(a) >= 1 || error("Class values must start at 1")
     return MaskMulti(a, classes, bounds)
 end
@@ -39,21 +39,20 @@ Base.show(io::IO, mask::MaskMulti{N, T}) where {N, T} =
 getbounds(mask::MaskMulti) = mask.bounds
 
 
-function project(P, mask::MaskMulti, indices)
+function project(P, mask::MaskMulti, bounds::Bounds)
     a = itemdata(mask)
     etp = mask_extrapolation(a)
-    res = warp(etp, inv(P), indices)
+    res = warp(etp, inv(P), bounds.rs)
     return MaskMulti(
         res,
         mask.classes,
-        makebounds(indices)
+        bounds
     )
 end
 
 
-function project!(bufmask::MaskMulti, P, mask::MaskMulti, indices)
-    a = OffsetArray(parent(itemdata(bufmask)), indices)
-    bounds_ = P.(getbounds(mask))
+function project!(bufmask::MaskMulti, P, mask::MaskMulti, bounds)
+    a = OffsetArray(parent(itemdata(bufmask)), bounds.rs)
     warp!(
         a,
         mask_extrapolation(itemdata(mask)),
@@ -62,7 +61,7 @@ function project!(bufmask::MaskMulti, P, mask::MaskMulti, indices)
     return MaskMulti(
         a,
         mask.classes,
-        makebounds(indices)
+        bounds
     )
 end
 
@@ -96,12 +95,12 @@ mask = MaskBinary(rand(Bool, 100, 100))
 showitems(mask)
 ```
 """
-struct MaskBinary{N, B} <: AbstractArrayItem{N, Bool}
+struct MaskBinary{N} <: AbstractArrayItem{N, Bool}
     data::AbstractArray{Bool, N}
-    bounds::AbstractArray{<:SVector{N, B}, N}
+    bounds::Bounds{N}
 end
 
-function MaskBinary(a::AbstractArray{Bool, N}, bounds = makebounds(size(a))) where N
+function MaskBinary(a::AbstractArray{Bool, N}, bounds = Bounds(size(a))) where N
     return MaskBinary(a, bounds)
 end
 
@@ -110,18 +109,17 @@ Base.show(io::IO, mask::MaskBinary{N}) where {N} =
 
 getbounds(mask::MaskBinary) = mask.bounds
 
-function project(P, mask::MaskBinary, indices)
+function project(P, mask::MaskBinary, bounds::Bounds)
     etp = mask_extrapolation(itemdata(mask))
     return MaskBinary(
-        warp(etp, inv(P), indices),
-        makebounds(indices),
+        warp(etp, inv(P), bounds.rs),
+        bounds,
     )
 end
 
 
-function project!(bufmask::MaskBinary, P, mask::MaskBinary, indices)
-    bounds_ = P.(getbounds(mask))
-    a = OffsetArray(parent(itemdata(bufmask)), indices)
+function project!(bufmask::MaskBinary, P, mask::MaskBinary, bounds)
+    a = OffsetArray(parent(itemdata(bufmask)), bounds.rs)
     res = warp!(
         a,
         mask_extrapolation(itemdata(mask)),
@@ -129,7 +127,7 @@ function project!(bufmask::MaskBinary, P, mask::MaskBinary, indices)
     )
     return MaskBinary(
         a,
-        makebounds(indices)
+        bounds
     )
 end
 

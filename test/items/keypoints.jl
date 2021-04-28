@@ -6,7 +6,7 @@ include("../imports.jl")
     tfm = Project(Translation(20, 10))
 
     @test_nowarn apply(tfm, keypoints)
-    @test boundsranges(apply(tfm, keypoints).bounds) == (21:52, 11:42)
+    @test apply(tfm, keypoints).bounds.rs == (21:52, 11:42)
 
     @test_nowarn apply(tfm, Polygon(keypoints))
 end

@@ -7,22 +7,21 @@ include("../imports.jl")
     keypoints = Keypoints([SVector(1., 1)], (50, 50))
     image = Image(rand(RGB, 50, 50))
 
-    indices = boundsranges(getbounds(keypoints))
+    bounds = getbounds(keypoints)
 
     @testset ExtendedTestSet "Affine Keypoints" begin
         @test getprojection(tfm, getbounds(keypoints)) == P
-        @test_nowarn project(P, keypoints, indices)
+        @test_nowarn project(P, keypoints, bounds)
         tkeypoints = apply(tfm, keypoints)
         @test itemdata(tkeypoints) == [SVector(11, 11)]
-        @test getbounds(tkeypoints)[1] == SVector(10, 10)
+        testprojective(tfm)
     end
 
 
     @testset ExtendedTestSet "Affine Image" begin
-        @test_nowarn project(P, image, indices)
+        @test_nowarn project(P, image, bounds)
         timage = apply(tfm, image)
         @test itemdata(timage)[11, 11] ≈ itemdata(image)[1, 1]
-        @test getbounds(timage)[1] == SVector(10, 10)
     end
 
 
@@ -33,7 +32,7 @@ include("../imports.jl")
         tfmcropped = tfm |> CenterCrop((50, 50))
         @test_nowarn apply(tfmcropped, keypoints)
         tkeypoints = apply(tfmcropped, keypoints)
-        @test getbounds(tkeypoints)[1] == SVector(10, 10)
+        @test getbounds(tkeypoints).rs[1] |> first == 11
         @test itemdata(tkeypoints)[1] == SVector(11, 11)
     end
 
@@ -41,7 +40,7 @@ include("../imports.jl")
         tfmcropped = tfm |> PinOrigin() |> CenterCrop((50, 50))
         @test_nowarn apply(tfmcropped, keypoints)
         tkeypoints = apply(tfmcropped, keypoints)
-        @test getbounds(tkeypoints)[1] == SVector(0, 0)
+        @test getbounds(tkeypoints).rs[1] |> first == 1
     end
 
 
@@ -62,7 +61,7 @@ include("../imports.jl")
         kpbounds = getbounds(keypoints)
         tfm1 = ScaleKeepAspect((50, 50))
         @test getprojection(tfm1, imbounds) ≈ getprojection(ScaleRatio((1, 1)), imbounds)
-        @test getprojection(tfm1, kpbounds) ≈ getprojection(ScaleRatio((1, 1)), kpbounds,)
+        @test getprojection(tfm1, kpbounds) ≈ getprojection(ScaleRatio((1, 1)), kpbounds)
 
         tfm2 = ScaleKeepAspect((25, 25))
         @test getprojection(tfm2, imbounds) ≈ getprojection(ScaleRatio((1 / 2, 1 / 2)), imbounds)
@@ -80,8 +79,9 @@ include("../imports.jl")
             @test_nowarn apply(tfm, keypoints)
             timage = apply(tfm, image)
             tkeypoints = apply(tfm, keypoints)
-            @test boundsranges(getbounds(timage)) == (0:25, 0:25)
+            @test getbounds(timage).rs == (1:25, 1:25)
             @test getbounds(timage) == getbounds(tkeypoints)
+            testprojective(tfm)
 
         end
         @testset ExtendedTestSet "ScaleRatio" begin
@@ -90,8 +90,16 @@ include("../imports.jl")
             @test_nowarn apply(tfm, keypoints)
             timage = apply(tfm, image)
             tkeypoints = apply(tfm, keypoints)
-            @test boundsranges(getbounds(timage)) == (0:25, 0:25)
+            @test getbounds(timage).rs == (0:25, 0:25)
             @test getbounds(timage) == getbounds(tkeypoints)
+            testprojective(tfm)
+        end
+
+        @testset ExtendedTestSet "ScaleKeepAspect" begin
+            tfm = ScaleKeepAspect((32, 32))
+            img = rand(RGB{N0f8}, 64, 96)
+            @test apply(tfm, Image(img)) |> itemdata |> size == (32, 48)
+
         end
     end
 
@@ -108,14 +116,12 @@ include("../imports.jl")
         tfm = Zoom((0.1, 2.))
         image = Image(rand(RGB, 50, 50))
         @test_nowarn apply(tfm, image)
-
     end
+
 
     @testset ExtendedTestSet "Reflect" begin
         tfm = Reflect(10)
-        image = Image(rand(RGB, 50, 50))
-        @test_nowarn apply(tfm, image)
-
+        testprojective(tfm)
     end
 
     @testset ExtendedTestSet "CenterResizeCrop" begin
@@ -123,9 +129,8 @@ include("../imports.jl")
         keypoints = Keypoints([SVector(0., 0)], (50, 50))
         image = Image(rand(RGB, 50, 50))
         timage, tkeypoints = apply(tfm, (image, keypoints))
-
-        @test getbounds(timage) ≈ getbounds(tkeypoints)
-        @test boundsranges(getbounds(timage)) == (1:25, 1:40)
+        @test getbounds(timage).rs == (1:25, 1:40)
+        testprojective(Project(IdentityTransformation()) |> CenterCrop((12, 12)))
     end
 
     @testset ExtendedTestSet "CroppedAffine inplace" begin
@@ -136,30 +141,32 @@ include("../imports.jl")
 
         @test_nowarn apply!(buffer, tfm, image2)
     end
+
+    @testset ExtendedTestSet "`RandomCrop` correct indices" begin
+        # Flipping and cropping should be the same as reverse-indexing
+        # the flipped dimension
+        tfm = FlipX() |> RandomCrop((64, 64)) |> PinOrigin()
+        img = rand(RGB, 64, 64)
+        item = Image(img)
+        titem = apply(tfm, item)
+        timg = itemdata(titem)
+        rimg = img[:, end:-1:1]
+        @test titem.data == rimg
+    end
 end
 
 
 @testset ExtendedTestSet "Big pipeline" begin
     @testset ExtendedTestSet "2D" begin
-        sz = (100, 100)
-        items = (
-            Image(rand(RGB, sz)),
-            Keypoints(rand(SVector{2, Float32}, 50), sz),
-            MaskBinary(rand(Bool, sz)),
-            MaskMulti(UInt8.(rand(1:8, sz)), 1:8),
-        )
-
         tfms = compose(
             Rotate(10),
             FlipX(), FlipY(),
             ScaleRatio((.8, .8)),
-            RandomResizeCrop((50, 50)),
+            RandomCrop((10, 10)),
             WarpAffine(0.1),
             Zoom((1., 1.2))
         )
-        @test_nowarn apply(tfms, items)
-        titems = apply(tfms, items)
-        @test all(typeof.(titems) == typeof.(items))
+        testprojective(tfms)
     end
 
     @testset ExtendedTestSet "3D" begin
@@ -173,10 +180,12 @@ end
 
         tfms = compose(
             ScaleRatio((.8, .8, .8)),
-            RandomResizeCrop((25, 25, 25)),
+            ScaleKeepAspect((12, 10, 10)),
+            RandomCrop((10, 10, 10))
         )
-        @test_nowarn apply(tfms, items)
-        titems = apply(tfms, items)
-        @test all(typeof.(titems) == typeof.(items))
+        testprojective(tfms, items)
+
+        buf = makebuffer(tfms, items)
+        @test_nowarn apply!(buf, tfms, items)
     end
 end
