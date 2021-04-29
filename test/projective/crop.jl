@@ -25,6 +25,5 @@ end
     item = Image(img)
     tfm = ResizePadDivisible((32, 32), 4)
     titem = apply(tfm, item)
-    @show size(titem.data)
     @test size(titem.data) == (32, 48)
 end
