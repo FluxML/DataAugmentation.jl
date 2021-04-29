@@ -52,8 +52,8 @@ end
 
 function projectionbounds(tfm::ScaleKeepAspect{N}, P, bounds::Bounds{N}; randstate = nothing) where N
     origsz = length.(bounds.rs)
-    ratio = maximum((tfm.minlengths .+ 1) ./ origsz)
-    sz = floor.(Int, ratio .* origsz)
+    ratio = maximum((tfm.minlengths) ./ origsz)
+    sz = floor.(Int,ratio .* origsz)
     bounds_ = transformbounds(bounds, P)
     bs_ = offsetcropbounds(sz, bounds_, ntuple(_ -> 1., N))
     return bs_
