@@ -60,12 +60,9 @@ include("../imports.jl")
         imbounds = getbounds(image)
         kpbounds = getbounds(keypoints)
         tfm1 = ScaleKeepAspect((50, 50))
-        @test getprojection(tfm1, imbounds) ≈ getprojection(ScaleRatio((1, 1)), imbounds)
-        @test getprojection(tfm1, kpbounds) ≈ getprojection(ScaleRatio((1, 1)), kpbounds)
-
         tfm2 = ScaleKeepAspect((25, 25))
-        @test getprojection(tfm2, imbounds) ≈ getprojection(ScaleRatio((1 / 2, 1 / 2)), imbounds)
-        @test getprojection(tfm2, kpbounds) ≈ getprojection(ScaleRatio((1 / 2, 1 / 2)), kpbounds)
+        testprojective(tfm1)
+        testprojective(tfm2)
     end
 
 
@@ -79,7 +76,7 @@ include("../imports.jl")
             @test_nowarn apply(tfm, keypoints)
             timage = apply(tfm, image)
             tkeypoints = apply(tfm, keypoints)
-            @test getbounds(timage).rs == (1:25, 1:25)
+            @test length.(getbounds(timage).rs) == (25, 25)
             @test getbounds(timage) == getbounds(tkeypoints)
             testprojective(tfm)
 

@@ -40,21 +40,23 @@ end
 
 
 function getprojection(scale::ScaleKeepAspect{N}, bounds; randstate = nothing) where N
-    ratio = maximum(scale.minlengths ./ length.(bounds.rs))
+    # Offset `minlengths` by 1 to avoid black border on one side
+    ratio = maximum((scale.minlengths .+ 1) ./ length.(bounds.rs))
     upperleft = SVector{N, Float32}(minimum.(bounds.rs)) .- 1
     P = scaleprojection(Tuple(ratio for _ in 1:N))
     if upperleft != SVector(0, 0)
-        P = P  ∘ Translation(-upperleft)
+        P = P ∘ Translation(-upperleft)
     end
     return P
 end
 
 function projectionbounds(tfm::ScaleKeepAspect{N}, P, bounds::Bounds{N}; randstate = nothing) where N
     origsz = length.(bounds.rs)
-    ratio = maximum(tfm.minlengths ./ origsz)
-    sz = round.(Int, ratio .* origsz)
+    ratio = maximum((tfm.minlengths) ./ origsz)
+    sz = floor.(Int,ratio .* origsz)
     bounds_ = transformbounds(bounds, P)
-    return offsetcropbounds(sz, bounds_, ntuple(_ -> 1., N))
+    bs_ = offsetcropbounds(sz, bounds_, ntuple(_ -> 1., N))
+    return bs_
 end
 
 """
@@ -71,7 +73,7 @@ end
 
 
 function getprojection(scale::ScaleFixed, bounds; randstate = nothing)
-    ratios = scale.sizes ./ length.(bounds.rs)
+    ratios = (scale.sizes .+ 1) ./ length.(bounds.rs)
     upperleft = SVector{2, Float32}(minimum.(bounds.rs)) .- 1
     P = scaleprojection(ratios)
     if upperleft != SVector(0, 0)
@@ -209,11 +211,12 @@ at one.
 struct PinOrigin <: ProjectiveTransform end
 
 function getprojection(::PinOrigin, bounds; randstate = nothing)
-    # TODO: translate by actual minimum x and y coordinates
-    return Translation((-SVector{2, Float32}(minimum.(bounds.rs))) .+ 1)
+    p = (-SVector{2, Float32}(minimum.(bounds.rs))) .+ 1
+    P = Translation(p)
+    return P
 end
 
-function apply(::PinOrigin, item::Union{Image, MaskMulti, MaskBinary}; randstate = nothing)
+function apply(::PinOrigin, item::Union{<:Image, <:MaskMulti, <:MaskBinary}; randstate = nothing)
     item = @set item.data = parent(itemdata(item))
     item = @set item.bounds = Bounds(size(itemdata(item)))
     return item
@@ -229,6 +232,8 @@ end
 # This overwrites the default composition.
 
 compose(cropped::CroppedProjectiveTransform, pin::PinOrigin) = Sequence(cropped, pin)
+compose(cropped::ComposedProjectiveTransform, pin::PinOrigin) = Sequence(cropped, pin)
+compose(cropped::ProjectiveTransform, pin::PinOrigin) = Sequence(cropped, pin)
 
 # ## Resize crops
 

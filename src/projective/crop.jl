@@ -84,8 +84,10 @@ function projectionbounds(
     sz = length.(ranges)
     pad = (cropped.crop.by .- (sz .% cropped.crop.by)) .% cropped.crop.by
 
-    indices = UnitRange.(getindex.(ranges, 1), sz .+ pad)
-    return Bounds(indices)
+    start = minimum.(ranges)
+    end_ = start .+ sz .+ pad .- 1
+    rs = UnitRange.(start, end_)
+    return Bounds(rs)
 end
 
 
