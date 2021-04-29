@@ -18,11 +18,12 @@ function getprojection(
         randstate = getrandstate(tfm))
     T = Float32
     rng = Random.seed!(Random.MersenneTwister(), randstate)
-    scale = sqrt(prod(sum.(bounds.rs)))
+    scale = sqrt(prod(length.(bounds.rs)))
 
     srcps = shuffle(rng, SVector{2, T}.(corners(bounds)))[1:3]
     offsets = rand(rng, SVector{2, T}, 3)
 	offsets = map(v -> (v .* (2one(T)) .- one(T)) .* convert(T, scale * tfm.σ), offsets)
+
 	return threepointwarpaffine(srcps, srcps .+ offsets)
 end
 
