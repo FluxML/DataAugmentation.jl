@@ -15,6 +15,7 @@ Affine transformations are a subgroup of projective transformations that can be 
 - [`ScaleRatio`](#), [`ScaleKeepAspect`](#)
 - [`Rotate`](#)
 - [`FlipX`](#), [`FlipY`](#), [`Reflect`](#)
+- [`WarpAffine`](#)
 
 ## Crops
 
