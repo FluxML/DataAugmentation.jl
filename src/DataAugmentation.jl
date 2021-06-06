@@ -28,6 +28,7 @@ include("./sequence.jl")
 include("./items/arrayitem.jl")
 include("./projective/base.jl")
 include("./items/image.jl")
+include("./items/table.jl")
 include("./items/keypoints.jl")
 include("./items/mask.jl")
 include("./projective/compose.jl")
@@ -36,6 +37,7 @@ include("./projective/affine.jl")
 include("./projective/warp.jl")
 include("./oneof.jl")
 include("./preprocessing.jl")
+include("./rowtransforms.jl")
 include("./colortransforms.jl")
 include("testing.jl")
 include("./visualization.jl")
@@ -49,6 +51,7 @@ export Item,
     Sequence,
     Project,
     Image,
+    TabularItem,
     Keypoints,
     Polygon,
     ToEltype,
@@ -88,7 +91,8 @@ export Item,
     onehot,
     showitems,
     showgrid,
-    Bounds
+    Bounds,
+    getcategorypools
 
 
 end # module

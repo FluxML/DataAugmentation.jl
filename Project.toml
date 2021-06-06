@@ -4,6 +4,7 @@ authors = ["lorenzoh <lorenz.ohly@gmail.com>"]
 version = "0.2.3"
 
 [deps]
+CategoricalArrays = "324d7699-5711-5eae-9e2f-1d82baa6b597"
 ColorBlendModes = "60508b50-96e1-4007-9d6c-f475c410f16b"
 CoordinateTransformations = "150eb455-5306-5404-9cee-2592286d6298"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
