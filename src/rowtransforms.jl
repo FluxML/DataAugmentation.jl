@@ -16,40 +16,37 @@ end
 
 function DataAugmentation.apply(tfm::FillMissing, item::TabularItem; randstate=nothing)
 	x = (; zip(item.columns, [data for data in item.data])...)
-	itemx = TabularItem(x, item.columns, item.idxcolmap)
 	for idx in tfm.contidxs
-		if ismissing(itemx.data[itemx.idxcolmap[idx]])
-			itemx = Setfield.@set itemx.data[itemx.idxcolmap[idx]] = tfm.fmvals[idx]
+		if ismissing(x[item.idxcolmap[idx]])
+			Setfield.@set! x[item.idxcolmap[idx]] = tfm.fmvals[idx]
 		end
 	end
 	for idx in tfm.catidxs
-		if ismissing(itemx.data[itemx.idxcolmap[idx]])
-			itemx = Setfield.@set itemx.data[itemx.idxcolmap[idx]] = "missing"
+		if ismissing(x[item.idxcolmap[idx]])
+			Setfield.@set! x[item.idxcolmap[idx]] = "missing"
 		end
 	end
-	itemx
+	TabularItem(x, item.columns, item.idxcolmap)
 end
 
 function DataAugmentation.apply(tfm::NormalizeRow, item::TabularItem; randstate=nothing)
 	x = (; zip(item.columns, [data for data in item.data])...)
-	itemx = TabularItem(x, item.columns, item.idxcolmap)
 	for idx in tfm.normidxs
 		colmean, colstd = tfm.normstats[idx]
-		itemx = Setfield.@set itemx.data[itemx.idxcolmap[idx]] = (item.data[idx] - colmean)/colstd
+		Setfield.@set! x[item.idxcolmap[idx]] = (x[item.idxcolmap[idx]] - colmean)/colstd
 	end
-	itemx
+	TabularItem(x, item.columns, item.idxcolmap)
 end
 
 function DataAugmentation.apply(tfm::Categorify, item::TabularItem; randstate=nothing)
 	x = (; zip(item.columns, [data for data in item.data])...)
-	itemx = TabularItem(x, item.columns, item.idxcolmap)
 	for idx in tfm.categoryidxs
-		if ismissing(item.data[idx])
-			itemx = Setfield.@set itemx.data[itemx.idxcolmap[idx]] = "missing"
+		if ismissing(x[idx])
+			Setfield.@set! x[item.idxcolmap[idx]] = "missing"
 		end
-		itemx = Setfield.@set itemx.data[itemx.idxcolmap[idx]] = tfm.pooldict[idx].invindex[x[item.idxcolmap[idx]]]
+		Setfield.@set! x[item.idxcolmap[idx]] = tfm.pooldict[idx].invindex[x[item.idxcolmap[idx]]]
 	end
-	itemx
+	TabularItem(x, item.columns, item.idxcolmap)
 end
 
 function getcategorypools(catdict, catidxs)

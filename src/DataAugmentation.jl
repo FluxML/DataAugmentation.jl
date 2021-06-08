@@ -2,6 +2,7 @@ module DataAugmentation
 
 using ColorBlendModes
 using CoordinateTransformations
+using CategoricalArrays
 using Distributions: Sampleable, Uniform, Categorical
 using ImageDraw
 using Images
