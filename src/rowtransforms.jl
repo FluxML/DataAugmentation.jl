@@ -1,60 +1,60 @@
 struct NormalizeRow <: DataAugmentation.Transform
 	normstats
-	normidxs
+	normcols
 end
 
 struct Categorify <: DataAugmentation.Transform
 	pooldict
-	categoryidxs
+	categorycols
 end
 
 struct FillMissing <: DataAugmentation.Transform
 	fmvals
-	contidxs
-	catidxs
+	contcols
+	catcols
 end
 
 function DataAugmentation.apply(tfm::FillMissing, item::TabularItem; randstate=nothing)
 	x = (; zip(item.columns, [data for data in item.data])...)
-	for idx in tfm.contidxs
-		if ismissing(x[item.idxcolmap[idx]])
-			Setfield.@set! x[item.idxcolmap[idx]] = tfm.fmvals[idx]
+	for col in tfm.contcols
+		if ismissing(x[col])
+			Setfield.@set! x[col] = tfm.fmvals[col]
 		end
 	end
-	for idx in tfm.catidxs
-		if ismissing(x[item.idxcolmap[idx]])
-			Setfield.@set! x[item.idxcolmap[idx]] = "missing"
+	for col in tfm.catcols
+		if ismissing(x[col])
+			Setfield.@set! x[col] = "missing"
 		end
 	end
-	TabularItem(x, item.columns, item.idxcolmap)
+	TabularItem(x, item.columns)
 end
 
 function DataAugmentation.apply(tfm::NormalizeRow, item::TabularItem; randstate=nothing)
 	x = (; zip(item.columns, [data for data in item.data])...)
-	for idx in tfm.normidxs
-		colmean, colstd = tfm.normstats[idx]
-		Setfield.@set! x[item.idxcolmap[idx]] = (x[item.idxcolmap[idx]] - colmean)/colstd
+	for col in tfm.normcols
+		colmean, colstd = tfm.normstats[col]
+		Setfield.@set! x[col] = (x[col] - colmean)/colstd
 	end
-	TabularItem(x, item.columns, item.idxcolmap)
+	TabularItem(x, item.columns)
 end
 
 function DataAugmentation.apply(tfm::Categorify, item::TabularItem; randstate=nothing)
 	x = (; zip(item.columns, [data for data in item.data])...)
-	for idx in tfm.categoryidxs
-		if ismissing(x[idx])
-			Setfield.@set! x[item.idxcolmap[idx]] = "missing"
+	for col in tfm.categorycols
+		if ismissing(x[col])
+			Setfield.@set! x[col] = "missing"
 		end
-		Setfield.@set! x[item.idxcolmap[idx]] = tfm.pooldict[idx].invindex[x[item.idxcolmap[idx]]]
+		Setfield.@set! x[col] = tfm.pooldict[col].invindex[x[col]]
 	end
-	TabularItem(x, item.columns, item.idxcolmap)
+	TabularItem(x, item.columns)
 end
 
-function getcategorypools(catdict, catidxs)
+function getcategorypools(catdict, catcols)
 	pooldict = Dict()
-	for idx in catidxs
-		catarray = CategoricalArrays.categorical(catdict[idx])
+	for col in catcols
+		catarray = CategoricalArrays.categorical(catdict[col])
         CategoricalArrays.levels!(catarray, ["missing", CategoricalArrays.levels(catarray)...])
-        pooldict[idx] = catarray.pool
+        pooldict[col] = catarray.pool
 	end
 	pooldict
 end
