@@ -1,60 +1,50 @@
-struct NormalizeRow <: DataAugmentation.Transform
-	normstats
-	normcols
+struct NormalizeRow{T, S} <: DataAugmentation.Transform
+        normstats::T
+        normcols::S
 end
+NormalizeRow(normstats::T, normcols::S) where {T, S} = NormalizeRow{T, S}(normstats, normcols)
 
-struct Categorify <: DataAugmentation.Transform
-	pooldict
-	categorycols
+struct Categorify{T, S} <: DataAugmentation.Transform
+        catdict::T
+        categorycols::S
 end
+Categorify(catdict::T, categorycols::S) where {T, S} = Categorify{T, S}(catdict, categorycols)
 
-struct FillMissing <: DataAugmentation.Transform
-	fmvals
-	contcols
-	catcols
+struct FillMissing{T, S} <: DataAugmentation.Transform
+        fmvals::T
+        fmcols::S
 end
+FillMissing(fmvals::T, fmcols::S) where {T, S} = FillMissing{T, S}(fmvals, fmcols)
 
 function DataAugmentation.apply(tfm::FillMissing, item::TabularItem; randstate=nothing)
-	x = (; zip(item.columns, [data for data in item.data])...)
-	for col in tfm.contcols
-		if ismissing(x[col])
-			Setfield.@set! x[col] = tfm.fmvals[col]
-		end
-	end
-	for col in tfm.catcols
-		if ismissing(x[col])
-			Setfield.@set! x[col] = "missing"
-		end
-	end
-	TabularItem(x, item.columns)
+    x = [val for val in item.data]
+    for col in tfm.fmcols
+            idx = findfirst(col .== item.columns)
+            if ismissing(x[idx])
+                x[idx] = tfm.fmvals[col]
+            end
+    end
+    x = (; zip(item.columns, x)...)
+    TabularItem(x, item.columns)
 end
 
 function DataAugmentation.apply(tfm::NormalizeRow, item::TabularItem; randstate=nothing)
-	x = (; zip(item.columns, [data for data in item.data])...)
-	for col in tfm.normcols
-		colmean, colstd = tfm.normstats[col]
-		Setfield.@set! x[col] = (x[col] - colmean)/colstd
-	end
-	TabularItem(x, item.columns)
+    x = [val for val in item.data]
+    for col in tfm.normcols
+            idx = findfirst(col .== item.columns)
+            colmean, colstd = tfm.normstats[col]
+            x[idx] = (x[idx] - colmean)/colstd
+    end
+    x = (; zip(item.columns, x)...)
+    TabularItem(x, item.columns)
 end
 
 function DataAugmentation.apply(tfm::Categorify, item::TabularItem; randstate=nothing)
-	x = (; zip(item.columns, [data for data in item.data])...)
-	for col in tfm.categorycols
-		if ismissing(x[col])
-			Setfield.@set! x[col] = "missing"
-		end
-		Setfield.@set! x[col] = tfm.pooldict[col].invindex[x[col]]
-	end
-	TabularItem(x, item.columns)
-end
-
-function getcategorypools(catdict, catcols)
-	pooldict = Dict()
-	for col in catcols
-		catarray = CategoricalArrays.categorical(catdict[col])
-        CategoricalArrays.levels!(catarray, ["missing", CategoricalArrays.levels(catarray)...])
-        pooldict[col] = catarray.pool
-	end
-	pooldict
+    x = [val for val in item.data]
+    for col in tfm.categorycols
+        idx = findfirst(col .== item.columns)
+        x[idx] = ismissing(x[idx]) ? 1 : findfirst(skipmissing(x[idx] .== tfm.catdict[col])) + 1
+    end
+    x = (; zip(item.columns, x)...)
+    TabularItem(x, item.columns)
 end
