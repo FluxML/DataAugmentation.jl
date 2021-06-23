@@ -1,4 +1,4 @@
-struct TabularItem{T} <: DataAugmentation.Item
+struct TabularItem{T} <: Item
 	data::T
 	columns
 end
