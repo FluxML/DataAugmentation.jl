@@ -1,47 +1,50 @@
-struct NormalizeRow{T, S} <: DataAugmentation.Transform
-        normstats::T
-        normcols::S
+struct NormalizeRow{T, S} <: Transform
+    dict::T
+    cols::S
 end
 
-struct Categorify{T, S} <: DataAugmentation.Transform
-        catdict::T
-        categorycols::S
+struct FillMissing{T, S} <: Transform
+    dict::T
+    cols::S
 end
 
-struct FillMissing{T, S} <: DataAugmentation.Transform
-        fmvals::T
-        fmcols::S
-end
-
-function DataAugmentation.apply(tfm::FillMissing, item::TabularItem; randstate=nothing)
-    x = [val for val in item.data]
-    for col in tfm.fmcols
-            idx = findfirst(col .== item.columns)
-            if ismissing(x[idx])
-                x[idx] = tfm.fmvals[col]
-            end
+struct Categorify{T, S}
+    dict::T
+    cols::S
+    function Categorify{T, S}(dict::T, cols::S) where {T, S}
+        for (col, vals) in dict
+            dict[col] = append!([], [missing], collect(skipmissing(Set(vals))))
+        end
+        new{T, S}(dict, cols)
     end
-    x = (; zip(item.columns, x)...)
-    TabularItem(x, item.columns)
 end
 
-function DataAugmentation.apply(tfm::NormalizeRow, item::TabularItem; randstate=nothing)
-    x = [val for val in item.data]
-    for col in tfm.normcols
-            idx = findfirst(col .== item.columns)
-            colmean, colstd = tfm.normstats[col]
-            x[idx] = (x[idx] - colmean)/colstd
-    end
-    x = (; zip(item.columns, x)...)
-    TabularItem(x, item.columns)
+Categorify(dict::T, cols::S) where {T, S} = Categorify{T, S}(dict, cols)
+
+function apply(tfm::NormalizeRow, item; randstate=nothing)
+    x = NamedTuple(Iterators.map(item.columns, item.data) do col, val
+        if col in tfm.cols
+            colmean, colstd = tfm.dict[col]
+            val = (val - colmean)/colstd
+        end
+        (col, val)
+    end)
 end
 
-function DataAugmentation.apply(tfm::Categorify, item::TabularItem; randstate=nothing)
-    x = [val for val in item.data]
-    for col in tfm.categorycols
-        idx = findfirst(col .== item.columns)
-        x[idx] = ismissing(x[idx]) ? 1 : findfirst(skipmissing(x[idx] .== tfm.catdict[col])) + 1
-    end
-    x = (; zip(item.columns, x)...)
-    TabularItem(x, item.columns)
+function apply(tfm::FillMissing, item; randstate=nothing)
+    x = NamedTuple(Iterators.map(item.columns, item.data) do col, val
+        if col in tfm.cols && ismissing(val)
+            val = tfm.dict[col]
+        end
+        (col, val)
+    end)
+end
+
+function apply(tfm::Categorify, item; randstate=nothing)
+    x = NamedTuple(Iterators.map(item.columns, item.data) do col, val
+        if col in tfm.cols
+            val = ismissing(val) ? 1 : findfirst(val .== tfm.dict[col]) + 1
+        end
+        (col, val)
+    end)
 end
