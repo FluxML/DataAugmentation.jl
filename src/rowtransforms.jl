@@ -12,12 +12,13 @@ struct Categorify{T, S}
     dict::T
     cols::S
     function Categorify{T, S}(dict::T, cols::S) where {T, S}
-        newdict = Dict()
         for (col, vals) in dict
-            newdict[col] = DataStructures.SortedSet{Union{Missing, eltype(vals)}}(Base.Order.ReverseOrdering(), vals)
-            push!(newdict[col], missing)
+            if any(ismissing.(vals))
+                dict[col] = collect(skipmissing(vals))
+                @warn "There is a missing value present for category '$col' which will be removed from Categorify dict"
+            end
         end
-        new{typeof(newdict), S}(newdict, cols)
+        new{T, S}(dict, cols)
     end
 end
 
@@ -47,8 +48,7 @@ end
 function apply(tfm::Categorify, item::TabularItem; randstate=nothing)
     x = NamedTuple(Iterators.map(item.columns, item.data) do col, val
         if col in tfm.cols
-            val = ismissing(val) ? 1 : findfirst(val .== skipmissing(tfm.dict[col])) + 1
-            # val = findkey(tfm.dict[col], val).address
+            val = ismissing(val) ? 1 : findfirst(val .== tfm.dict[col]) + 1
         end
         (col, val)
     end)

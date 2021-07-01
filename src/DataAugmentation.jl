@@ -19,6 +19,7 @@ using Rotations
 using Setfield
 using StaticArrays
 using Statistics
+using DataStructures
 using Test: @test, @test_nowarn
 
 
