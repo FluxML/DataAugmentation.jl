@@ -13,8 +13,8 @@ struct Categorify{T, S}
     cols::S
     function Categorify{T, S}(dict::T, cols::S) where {T, S}
         for (col, vals) in dict
-            if any(ismissing.(vals))
-                dict[col] = collect(skipmissing(vals))
+            if any(ismissing, vals)
+                dict[col] = filter(!ismissing, vals)
                 @warn "There is a missing value present for category '$col' which will be removed from Categorify dict"
             end
         end
