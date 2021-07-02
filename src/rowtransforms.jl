@@ -8,7 +8,7 @@ struct FillMissing{T, S} <: Transform
     cols::S
 end
 
-struct Categorify{T, S}
+struct Categorify{T, S} <: Transform
     dict::T
     cols::S
     function Categorify{T, S}(dict::T, cols::S) where {T, S}

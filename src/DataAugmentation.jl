@@ -2,7 +2,6 @@ module DataAugmentation
 
 using ColorBlendModes
 using CoordinateTransformations
-using CategoricalArrays
 using Distributions: Sampleable, Uniform, Categorical
 using ImageDraw
 using Images
@@ -19,7 +18,6 @@ using Rotations
 using Setfield
 using StaticArrays
 using Statistics
-using DataStructures
 using Test: @test, @test_nowarn
 
 
