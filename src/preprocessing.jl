@@ -166,23 +166,58 @@ function apply!(buf, ::ImageToTensor, image::Image; randstate = nothing)
 end
 
 function imagetotensor(image::AbstractArray{C, N}, T = Float32) where {C<:Color, N}
-    T.(permuteddimsview(channelview(image), ((i for i in 2:N+1)..., 1)))
+    T.(permuteddimsview(_channelview(image), ((i for i in 2:N+1)..., 1)))
 end
 
+#=
 function imagetotensor(image::AbstractArray{C, N}, T = Float32) where {TC, C<:Color{TC, 1}, N}
-    return T.(channelview(image))
+    return T.(_channelview(image))
 end
+=#
 
 
-function imagetotensor!(buf, image::AbstractArray{<:AbstractRGB, N}) where N
+# TODO: relax color type constraint, implement for other colors
+# single-channel colors need a `channelview` that also expands the array
+function imagetotensor!(buf, image::AbstractArray{<:Color, N}) where N
     permutedims!(
         buf,
-        channelview(image),
-        (2, 3, 1))
+        _channelview(image),
+        (2:N+1..., 1))
 end
-tensortoimage(a::AbstractArray{T, 3}) where T = colorview(RGB, permuteddimsview(a, (3, 1, 2)))
-tensortoimage(a::AbstractArray{T, 2}) where T = colorview(Gray, a)
 
+function tensortoimage(a::AbstractArray)
+    nchannels = size(a)[end]
+    if nchannels == 3
+        return tensortoimage(RGB, a)
+    elseif nchannels == 1
+        return tensortoimage(Gray, a)
+    else
+        error("Found image tensor with $nchannels color channels. Pass in color type
+                explicitly.")
+    end
+end
+
+function tensortoimage(C::Type{<:Color}, a::AbstractArray{T, N}) where {T, N}
+    perm = (N, 1:N-1...)
+    return _colorview(C, permuteddimsview(a, perm))
+end
+
+
+function _channelview(img)
+    chview = channelview(img)
+    # for single-channel colors, expand the color dimension anyway
+    if size(img) == size(chview)
+        chview = reshape(chview, 1, size(chview)...)
+    end
+    return chview
+end
+
+function _colorview(C::Type{<:Color}, img) where T
+    if size(img, 1) == 1
+        img = reshape(img, size(img)[2:end])
+    end
+    return colorview(C, img)
+end
 
 # OneHot encoding
 
