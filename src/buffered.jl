@@ -79,6 +79,7 @@ struct BufferedThreadsafe <: Transform
     end
 end
 
+getrandstate(btfm::BufferedThreadsafe) = getrandstate(btfm.buffereds[1])
 Base.show(io::IO, bt::BufferedThreadsafe) = print(io, "BufferedThreadsafe($(bt.buffereds[1].tfm))")
 
 
