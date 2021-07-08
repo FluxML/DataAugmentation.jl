@@ -26,6 +26,7 @@ compose(seq::Sequence, tfm::Transform) = Sequence(seq.transforms..., tfm)
 compose(tfm::Transform, seq::Sequence) = compose(tfm, seq.transforms...)
 compose(::Identity, seq::Sequence) = seq
 compose(seq::Sequence, ::Identity) = seq
+compose(seq1::Sequence, seq2::Sequence) = compose(seq1.transforms..., seq2.transforms...)
 
 
 function apply(seq::Sequence, items::Tuple; randstate = getrandstate(seq))
