@@ -48,7 +48,7 @@ function getprojection(scale::ScaleKeepAspect{N}, bounds; randstate = nothing) w
     upperleft = SVector{N, Float32}(minimum.(bounds.rs)) .- 0.5
     P = scaleprojection(Tuple(ratio for _ in 1:N))
     if upperleft != SVector(0, 0)
-        P = P ∘ Translation((P(upperleft) .+ 0.5))
+        P = P ∘ Translation((Float32.(P(upperleft)) .+ 0.5f0))
     end
     return P
 end
