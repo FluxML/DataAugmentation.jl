@@ -3,6 +3,7 @@ module DataAugmentation
 using ColorBlendModes
 using CoordinateTransformations
 using Distributions: Sampleable, Uniform, Categorical
+using IndirectArrays: IndirectArray
 using ImageDraw
 using Images
 using Images: Colorant, permuteddimsview

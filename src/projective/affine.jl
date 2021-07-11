@@ -40,12 +40,15 @@ end
 
 
 function getprojection(scale::ScaleKeepAspect{N}, bounds; randstate = nothing) where N
+    # If no scaling needs to be done, return a noop transform
+    scale.minlengths == length.(bounds.rs) && return IdentityTransformation()
+
     # Offset `minlengths` by 1 to avoid black border on one side
     ratio = maximum((scale.minlengths .+ 1) ./ length.(bounds.rs))
-    upperleft = SVector{N, Float32}(minimum.(bounds.rs)) .- 1
+    upperleft = SVector{N, Float32}(minimum.(bounds.rs)) .- 0.5
     P = scaleprojection(Tuple(ratio for _ in 1:N))
     if upperleft != SVector(0, 0)
-        P = P ∘ Translation(-upperleft)
+        P = P ∘ Translation((Float32.(P(upperleft)) .+ 0.5f0))
     end
     return P
 end
@@ -55,7 +58,7 @@ function projectionbounds(tfm::ScaleKeepAspect{N}, P, bounds::Bounds{N}; randsta
     ratio = maximum((tfm.minlengths) ./ origsz)
     sz = floor.(Int,ratio .* origsz)
     bounds_ = transformbounds(bounds, P)
-    bs_ = offsetcropbounds(sz, bounds_, ntuple(_ -> 1., N))
+    bs_ = offsetcropbounds(sz, bounds_, ntuple(_ -> 0.5, N))
     return bs_
 end
 

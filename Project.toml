@@ -1,7 +1,7 @@
 name = "DataAugmentation"
 uuid = "88a5189c-e7ff-4f85-ac6b-e6158070f02e"
 authors = ["lorenzoh <lorenz.ohly@gmail.com>"]
-version = "0.2.3"
+version = "0.2.4"
 
 [deps]
 ColorBlendModes = "60508b50-96e1-4007-9d6c-f475c410f16b"
@@ -10,6 +10,7 @@ Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 ImageDraw = "4381153b-2b60-58ae-a1ba-fd683676385f"
 ImageTransformations = "02fcd773-0e25-5acc-982a-7f6622650795"
 Images = "916415d5-f1e6-5110-898d-aaa5f9f070e0"
+IndirectArrays = "9b13fd28-a010-5f03-acff-a1bbcff69959"
 Interpolations = "a98d9a8b-a2ab-59e6-89dd-64a1c18fca59"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 MosaicViews = "e94cdb99-869f-56ef-bcf0-1ae2bcbe0389"
