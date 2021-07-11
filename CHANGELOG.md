@@ -8,6 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.3]
+
+### Changed
+
+- `BufferedThreadsafe` now properly passes through explicit random state
+- `ScaleKeepAspect` no longer sometimes produces a black border
+- *fix* `Sequence |> Sequence` now has a method
+- `ToTensor` now works on different color types and N-dimensional arrays
+- `MaskMulti` now has a constructor for `IndirectArray`s
+
 ## [0.1.5] - 2021-04-17
 
 ### Added
