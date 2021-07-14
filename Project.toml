@@ -1,7 +1,7 @@
 name = "DataAugmentation"
 uuid = "88a5189c-e7ff-4f85-ac6b-e6158070f02e"
 authors = ["lorenzoh <lorenz.ohly@gmail.com>"]
-version = "0.2.3"
+version = "0.2.4"
 
 [deps]
 ColorBlendModes = "60508b50-96e1-4007-9d6c-f475c410f16b"
