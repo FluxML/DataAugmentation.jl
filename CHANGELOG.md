@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.4]
+
+### Changed
+
+- `Buffered` now stores a `Dict` of item type -> buffer, to alleviate the need to recreate
+  buffers if the buffered transform is applied to multiple items
+
 ## [0.2.3]
 
 ### Changed
