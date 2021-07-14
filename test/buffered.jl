@@ -45,42 +45,44 @@ end
 
 @testset ExtendedTestSet "`Buffered`" begin
     newitem() = ArrayItem(randn(5, 5))
+    T = typeof(newitem())
     # buffer should be created
     tb = Buffered(MapElem(x -> x + one(typeof(x))))
-    @test isnothing(tb.buffer)
+    @test !haskey(tb.buffers, T)
     @test_nowarn apply(tb, newitem())
-    @test !isnothing(tb.buffer)
+    @test haskey(tb.buffers, T)
 
     # buffer should change
-    buf = deepcopy(tb.buffer)
+    buf = deepcopy(tb.buffers[T])
     @test_nowarn apply(tb, newitem())
-    @test !(buf.data ≈ tb.buffer.data)
+    @test !(buf.data ≈ tb.buffers[T].data)
 
     # inplace version
     buf2 = deepcopy(buf)
     @test_nowarn apply!(buf, tb, newitem())
-    @test !(buf2.data ≈ tb.buffer.data)
+    @test !(buf2.data ≈ tb.buffers[T].data)
     testapply(Buffered(MapElem(x -> x + one(typeof(x)))), ArrayItem)
 end
 
 @testset ExtendedTestSet "`BufferedThreadsafe`" begin
     newitem() = ArrayItem(randn(5, 5))
+    T = typeof(newitem())
     # buffer should be created
     tbt = BufferedThreadsafe(MapElem(x -> x + 1))
     tb = tbt.buffereds[1]
-    @test isnothing(tb.buffer)
-    @test_nowarn apply(tbt, newitem())
-    @test !isnothing(tb.buffer)
+    @test !haskey(tb.buffers, T)
+    @test_nowarn apply(tb, newitem())
+    @test haskey(tb.buffers, T)
 
     # buffer should change
-    buf = deepcopy(tb.buffer)
-    @test_nowarn apply(tbt, newitem())
-    @test !(buf.data ≈ tb.buffer.data)
+    buf = deepcopy(tb.buffers[T])
+    @test_nowarn apply(tb, newitem())
+    @test !(buf.data ≈ tb.buffers[T].data)
 
     # inplace version
     buf2 = deepcopy(buf)
-    @test_nowarn apply!(buf, tbt, newitem())
-    @test !(buf2.data ≈ tb.buffer.data)
+    @test_nowarn apply!(buf, tb, newitem())
+    @test !(buf2.data ≈ tb.buffers[T].data)
 
     testapply(BufferedThreadsafe(MapElem(x -> x + one(typeof(x)))), ArrayItem)
 end

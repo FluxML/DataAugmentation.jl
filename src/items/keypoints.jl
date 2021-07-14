@@ -46,6 +46,13 @@ function project(P, keypoints::Keypoints{N, T}, bounds::Bounds{N}) where {N, T}
         bounds,
     )
 end
+function project!(buf, P, keypoints::Keypoints{N, T}, bounds::Bounds{N}) where {N, T}
+    # TODO: convert back to `T`?
+    return Keypoints(
+        map(fmap(P), keypoints.data),
+        bounds,
+    )
+end
 
 
 function showitem!(img, keypoints::Keypoints{N}) where N

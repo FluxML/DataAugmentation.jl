@@ -43,29 +43,31 @@ end
 
 mutable struct Buffered{T<:Transform} <: Transform
     tfm::T
-    buffer
-    _T::Union{Type, Nothing}
-    Buffered(tfm::T, buffer = nothing) where T = new{T}(tfm, buffer, nothing)
+    buffers::Dict
+    Buffered(tfm::T, buffer = nothing) where T = new{T}(tfm, Dict())
 end
 
 getrandstate(buffered::Buffered) = getrandstate(buffered.tfm)
 
 function apply(buffered::Buffered, items::T; randstate = getrandstate(buffered)) where T
-    if isnothing(buffered.buffer) || buffered._T != T
-        buffered.buffer = makebuffer(buffered.tfm, items)
-        buffered._T = T
+    buf = get(buffered.buffers, T, nothing)
+    if isnothing(buf)
+        buf = makebuffer(buffered.tfm, items)
+        buffered.buffers[T] = buf
     end
-    titems = apply!(buffered.buffer, buffered.tfm, items, randstate = randstate)
+
+    titems = apply!(buf, buffered.tfm, items, randstate = randstate)
     return titems
 end
 
 
-
-function apply!(buf, buffered::Buffered, items; randstate = getrandstate(buffered))
-    if isnothing(buffered.buffer)
-        buffered.buffer = makebuffer(buffered.tfm, items)
+function apply!(buf, buffered::Buffered, items::T; randstate = getrandstate(buffered)) where T
+    buf = get(buffered.buffers, T, nothing)
+    if isnothing(buf)
+        buf = makebuffer(buffered.tfm, items)
+        buffered.buffers[T] = buf
     end
-    res = apply!(buffered.buffer, buffered.tfm, items; randstate = randstate)
+    res = apply!(buf, buffered.tfm, items; randstate = randstate)
     copyitemdata!(buf, res)
     return buf
 end
