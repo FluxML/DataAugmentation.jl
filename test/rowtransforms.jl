@@ -26,8 +26,8 @@ end
     fmdict[:col1], fmdict[:col3] = col1_fmval, col3_fmval
 
     tfm1 = FillMissing(fmdict, cols_to_fill)
-    @test_nowarn apply(tfm, item)
-    titem = apply(tfm, item)
+    @test_nowarn apply(tfm1, item)
+    titem = apply(tfm1, item)
     @test titem.data[:col1] == (ismissing(item.data[:col1]) ? col1_fmval : item.data[:col1])
     @test titem.data[:col3] == (ismissing(item.data[:col3]) ? col3_fmval : item.data[:col3])
     @test ismissing(titem.data[:col2])
