@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.6]
+
+### Fixed
+
+- `CenterCrop` and co. now work properly on their own. (fixes [#52](https://github.com/lorenzoh/DataAugmentation.jl/issues/52))
+
 ## [0.2.5]
 
 ### Added
