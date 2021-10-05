@@ -20,6 +20,8 @@ include("./imports.jl")
         item1 = ArrayItem(rand(10, 10, 3))
         item2 = ArrayItem(rand(10, 10, 3))
         testapply!(tfm, item1, item2)
+        image = Image(zeros(RGB, 32, 32))
+        @test _channelview(itemdata(apply(tfm, item))) ≈ -1 .* ones(32, 32, 3)
     end
 end
 

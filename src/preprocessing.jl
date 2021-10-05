@@ -81,6 +81,12 @@ function apply!(
     return buf
 end
 
+function apply(tfm::Normalize, item::Image; randstate = nothing)
+    tensor = imagetotensor(itemdata(item))
+    output = normalize(tensor, tfm.means, tfm.stds)
+
+    return Image(tensortoimage(output), item.bounds)
+end
 
 function normalize!(
         a::AbstractArray{T, N},
