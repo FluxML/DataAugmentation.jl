@@ -6,7 +6,7 @@ using Distributions: Sampleable, Uniform, Categorical
 using IndirectArrays: IndirectArray
 using ImageDraw
 using Images
-using Images: Colorant, permuteddimsview
+using Images: Colorant
 using ImageTransformations
 using ImageTransformations: center, _center, box_extrapolation, warp!
 using Interpolations
