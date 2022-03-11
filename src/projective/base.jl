@@ -102,7 +102,7 @@ function apply(tfm::ProjectiveTransform, item::Item; randstate = getrandstate(tf
     bounds = getbounds(item)
     P = getprojection(tfm, bounds; randstate = randstate)
     bounds_ = projectionbounds(tfm, P, bounds; randstate = randstate)
-    return P isa IdentityTransformation ? item : project(P, item, bounds_)
+    return project(P, item, bounds_)
 end
 
 # For the buffered version, `project!` is used. Of course the size
