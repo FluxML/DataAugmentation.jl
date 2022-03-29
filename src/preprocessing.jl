@@ -166,7 +166,7 @@ function apply!(buf, ::ImageToTensor, image::Image; randstate = nothing)
 end
 
 function imagetotensor(image::AbstractArray{C, N}, T = Float32) where {C<:Color, N}
-    T.(permuteddimsview(_channelview(image), ((i for i in 2:N+1)..., 1)))
+    T.(PermutedDimsArray(_channelview(image), ((i for i in 2:N+1)..., 1)))
 end
 
 #=
@@ -199,7 +199,7 @@ end
 
 function tensortoimage(C::Type{<:Color}, a::AbstractArray{T, N}) where {T, N}
     perm = (N, 1:N-1...)
-    return _colorview(C, permuteddimsview(a, perm))
+    return _colorview(C, PermutedDimsArray(a, perm))
 end
 
 

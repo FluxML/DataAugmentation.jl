@@ -59,7 +59,7 @@ end
 function showkeypoint!(img, point::SVector{N}, C; sz = 3) where N
     I = CartesianIndex(Tuple(round.(Int, point)))
     offset = sz ÷ 2
-    Is = I-offset*one(CartesianIndex{N}):I+offset*one(CartesianIndex{N})
+    Is = I-offset*oneunit(CartesianIndex{N}):I+offset*oneunit(CartesianIndex{N})
     img[Is[[checkbounds(Bool, img, I) for I in Is]]] .= C
 end
 
