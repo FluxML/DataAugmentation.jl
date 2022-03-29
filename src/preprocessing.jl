@@ -169,12 +169,6 @@ function imagetotensor(image::AbstractArray{C, N}, T = Float32) where {C<:Color,
     T.(permuteddimsview(_channelview(image), ((i for i in 2:N+1)..., 1)))
 end
 
-#=
-function imagetotensor(image::AbstractArray{C, N}, T = Float32) where {TC, C<:Color{TC, 1}, N}
-    return T.(_channelview(image))
-end
-=#
-
 
 # TODO: relax color type constraint, implement for other colors
 # single-channel colors need a `channelview` that also expands the array

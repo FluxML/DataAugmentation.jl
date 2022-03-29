@@ -1,7 +1,3 @@
-# ## `base.jl`
-#
-# First, we define the abstract types for each concept.
-
 """
     abstract type AbstractItem
 
@@ -37,9 +33,6 @@ function showitem! end
 Abstract supertype for all transformations.
 """
 abstract type Transform end
-
-# Plus the default implementations of [`itemdata`](#) and
-# [`getrandstate`](#).
 
 """
     itemdata(item)

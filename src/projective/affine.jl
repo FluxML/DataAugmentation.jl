@@ -5,7 +5,10 @@
 function scaleprojection(ratios::NTuple{N}, T = Float32) where N
     a = zeros(Float32, N, N)
     a[I(N)] = SVector{N}(ratios)
-    return LinearMap(SArray{Tuple{N, N}}(a))
+    s = LinearMap(SArray{Tuple{N, N}}(a))
+    t1 = Translation(SVector{N}(ntuple(x -> convert(T, -0.5), N)))
+    t2 = Translation(SVector{N}(ntuple(x -> convert(T, 0.5), N)))
+    return t1 ∘ s ∘ t2
 end
 
 

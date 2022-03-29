@@ -77,7 +77,8 @@ function project(P, image::Image{N, T}, bounds::Bounds) where {N, T}
         itemdata(image),
         inv(P),
         bounds.rs,
-        zero(T))
+        Interpolations.Reflect())
+        #zero(T))
     return Image(data_, bounds)
 end
 
@@ -88,7 +89,7 @@ function project!(bufimage::Image, P, image::Image{N, T}, bounds::Bounds{N}) whe
     a = OffsetArray(parent(itemdata(bufimage)), bounds.rs)
     res = warp!(
         a,
-        box_extrapolation(itemdata(image), zero(T)),
+        box_extrapolation(itemdata(image), Interpolations.Reflect()),
         inv(P),
     )
     return Image(res, bounds)

@@ -30,7 +30,8 @@ function Base.show(io::IO, bounds::Bounds{N}) where N
     print(io, ")")
 end
 
-Bounds(sz::NTuple{N, <:Integer}) where N = Bounds(Tuple(1:n for n in sz))
+
+Bounds(sz::NTuple{N, <:Integer}) where N = Bounds(map(n -> 1:n, sz))
 Bounds(axes::NTuple{N, <:Base.OneTo}) where N = Bounds(convert.(UnitRange{Int}, axes))
 
 
