@@ -3,17 +3,19 @@ item = Image(testimage(&quot;lighthouse&quot;))
 tfm = Maybe(FlipX())
 titems = [apply(tfm, item) for _ in 1:8]
 showgrid(titems; ncol = 4, npad = 16)
-</code></pre><div class=coderesult >1040×3124 MosaicViews.MosaicView{ColorTypes.RGBA{FixedPointNumbers.Normed{UInt8,8}},4,Base.ReshapedArray{ColorTypes.RGBA{FixedPointNumbers.Normed{UInt8,8}},4,PaddedViews.PaddedView{ColorTypes.RGBA{FixedPointNumbers.Normed{UInt8,8}},3,Tuple{Base.OneTo{Int64},Base.OneTo{Int64},Base.OneTo{Int64}},StackViews.StackView{ColorTypes.RGBA{FixedPointNumbers.Normed{UInt8,8}},3,3,Array{OffsetArrays.OffsetArray{ColorTypes.RGBA{FixedPointNumbers.Normed{UInt8,8}},2,PaddedViews.PaddedView{ColorTypes.RGBA{FixedPointNumbers.Normed{UInt8,8}},2,Tuple{UnitRange{Int64},UnitRange{Int64}},OffsetArrays.OffsetArray{ColorTypes.RGBA{FixedPointNumbers.Normed{UInt8,8}},2,Array{ColorTypes.RGBA{FixedPointNumbers.Normed{UInt8,8}},2}}}},1}}},Tuple{Base.MultiplicativeInverses.SignedMultiplicativeInverse{Int64},Base.MultiplicativeInverses.SignedMultiplicativeInverse{Int64}}}}:
- RGBA{N0f8}(0.349,0.49,0.529,1.0)   …  RGBA{N0f8}(0.0,0.0,0.0,0.0)
- RGBA{N0f8}(0.369,0.498,0.58,1.0)      RGBA{N0f8}(0.0,0.0,0.0,0.0)
- RGBA{N0f8}(0.361,0.498,0.608,1.0)     RGBA{N0f8}(0.0,0.0,0.0,0.0)
- RGBA{N0f8}(0.345,0.478,0.588,1.0)     RGBA{N0f8}(0.0,0.0,0.0,0.0)
- RGBA{N0f8}(0.349,0.486,0.596,1.0)     RGBA{N0f8}(0.0,0.0,0.0,0.0)
- RGBA{N0f8}(0.365,0.502,0.612,1.0)  …  RGBA{N0f8}(0.0,0.0,0.0,0.0)
- RGBA{N0f8}(0.365,0.502,0.612,1.0)     RGBA{N0f8}(0.0,0.0,0.0,0.0)
- RGBA{N0f8}(0.376,0.502,0.616,1.0)     RGBA{N0f8}(0.0,0.0,0.0,0.0)
- RGBA{N0f8}(0.373,0.498,0.604,1.0)     RGBA{N0f8}(0.0,0.0,0.0,0.0)
- RGBA{N0f8}(0.373,0.498,0.604,1.0)     RGBA{N0f8}(0.0,0.0,0.0,0.0)
+</code></pre><pre class=codeoutput ><code>Downloading artifact: images
+                                                                           0.9%#########################                                                 35.1%#######################################                                   55.5%#####################################################                     74.5%####################################################################      94.6%######################################################################## 100.0%
+</code></pre><pre class=coderesult ><code>1040×3124 MosaicViews.MosaicView{ColorTypes.RGBA{FixedPointNumbers.Normed{UInt8,8}},4,Base.ReshapedArray{ColorTypes.RGBA{FixedPointNumbers.Normed{UInt8,8}},4,PaddedViews.PaddedView{ColorTypes.RGBA{FixedPointNumbers.Normed{UInt8,8}},3,Tuple{Base.OneTo{Int64},Base.OneTo{Int64},Base.OneTo{Int64}},StackViews.StackView{ColorTypes.RGBA{FixedPointNumbers.Normed{UInt8,8}},3,3,Array{OffsetArrays.OffsetArray{ColorTypes.RGBA{FixedPointNumbers.Normed{UInt8,8}},2,PaddedViews.PaddedView{ColorTypes.RGBA{FixedPointNumbers.Normed{UInt8,8}},2,Tuple{UnitRange{Int64},UnitRange{Int64}},OffsetArrays.OffsetArray{ColorTypes.RGBA{FixedPointNumbers.Normed{UInt8,8}},2,Array{ColorTypes.RGBA{FixedPointNumbers.Normed{UInt8,8}},2}}}},1}}},Tuple{Base.MultiplicativeInverses.SignedMultiplicativeInverse{Int64},Base.MultiplicativeInverses.SignedMultiplicativeInverse{Int64}}}}:
+ RGBA{N0f8}(0.361,0.486,0.6,1.0)    …  RGBA{N0f8}(0.0,0.0,0.0,0.0)
+ RGBA{N0f8}(0.361,0.486,0.6,1.0)       RGBA{N0f8}(0.0,0.0,0.0,0.0)
+ RGBA{N0f8}(0.376,0.514,0.624,1.0)     RGBA{N0f8}(0.0,0.0,0.0,0.0)
+ RGBA{N0f8}(0.365,0.498,0.62,1.0)      RGBA{N0f8}(0.0,0.0,0.0,0.0)
+ RGBA{N0f8}(0.365,0.498,0.627,1.0)     RGBA{N0f8}(0.0,0.0,0.0,0.0)
+ RGBA{N0f8}(0.369,0.502,0.635,1.0)  …  RGBA{N0f8}(0.0,0.0,0.0,0.0)
+ RGBA{N0f8}(0.38,0.518,0.635,1.0)      RGBA{N0f8}(0.0,0.0,0.0,0.0)
+ RGBA{N0f8}(0.369,0.502,0.635,1.0)     RGBA{N0f8}(0.0,0.0,0.0,0.0)
+ RGBA{N0f8}(0.357,0.502,0.627,1.0)     RGBA{N0f8}(0.0,0.0,0.0,0.0)
+ RGBA{N0f8}(0.349,0.49,0.62,1.0)       RGBA{N0f8}(0.0,0.0,0.0,0.0)
  ⋮                                  ⋱  
  RGBA{N0f8}(0.176,0.216,0.239,1.0)     RGBA{N0f8}(0.0,0.0,0.0,0.0)
  RGBA{N0f8}(0.231,0.271,0.294,1.0)     RGBA{N0f8}(0.0,0.0,0.0,0.0)
@@ -23,4 +25,4 @@ showgrid(titems; ncol = 4, npad = 16)
  RGBA{N0f8}(0.267,0.31,0.353,1.0)      RGBA{N0f8}(0.0,0.0,0.0,0.0)
  RGBA{N0f8}(0.184,0.22,0.247,1.0)      RGBA{N0f8}(0.0,0.0,0.0,0.0)
  RGBA{N0f8}(0.18,0.208,0.22,1.0)       RGBA{N0f8}(0.0,0.0,0.0,0.0)
- RGBA{N0f8}(0.0,0.0,0.0,1.0)           RGBA{N0f8}(0.0,0.0,0.0,0.0)</div></div></article><footer class=book-footer ></footer></div><aside class=book-toc ><nav id=toc class=book-toc-content ><ul><li><a href=#stochastic-transformations >Stochastic transformations</a><ul><li><a href=#example >Example</a><ul></ul></li></ul></li></ul></nav></aside></main></body></HTML>
+ RGBA{N0f8}(0.0,0.0,0.0,1.0)           RGBA{N0f8}(0.0,0.0,0.0,0.0)</code></pre></div></article><footer class=book-footer ></footer></div><aside class=book-toc ><nav id=toc class=book-toc-content ><ul><li><a href=#stochastic-transformations >Stochastic transformations</a><ul><li><a href=#example >Example</a><ul></ul></li></ul></li></ul></nav></aside></main></body></HTML>
