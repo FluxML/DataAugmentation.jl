@@ -5,8 +5,7 @@ using CoordinateTransformations
 using Distributions: Sampleable, Uniform, Categorical
 using IndirectArrays: IndirectArray
 using ImageDraw
-using Images
-using Images: Colorant, permuteddimsview
+using ImageCore
 using ImageTransformations
 using ImageTransformations: center, _center, box_extrapolation, warp!
 using Interpolations
