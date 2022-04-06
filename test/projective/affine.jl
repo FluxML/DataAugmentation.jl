@@ -157,11 +157,12 @@ end
     @testset ExtendedTestSet "2D" begin
         tfms = compose(
             Rotate(10),
-            FlipX(), FlipY(),
+            FlipX(),
+            FlipY(),
             ScaleRatio((.8, .8)),
-            RandomCrop((10, 10)),
             WarpAffine(0.1),
-            Zoom((1., 1.2))
+            Zoom((1., 1.2)),
+            RandomCrop((10, 10)),
         )
         testprojective(tfms)
     end
