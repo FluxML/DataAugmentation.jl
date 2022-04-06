@@ -101,6 +101,10 @@ function compose(composed::ComposedProjectiveTransform, cropped::CroppedProjecti
 
 end
 
+function compose(cropped::CroppedProjectiveTransform, projective::ProjectiveTransform)
+    return Sequence(cropped, projective)
+end
+
 
 """
     offsetcropbounds(sz, bounds, offsets)
