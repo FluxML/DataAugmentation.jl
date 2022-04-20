@@ -88,7 +88,7 @@ function project!(bufimage::Image, P, image::Image{N, T}, bounds::Bounds{N}) whe
     a = OffsetArray(parent(itemdata(bufimage)), bounds.rs)
     res = warp!(
         a,
-        box_extrapolation(itemdata(image), zero(T)),
+        box_extrapolation(itemdata(image); fillvalue=zero(T)),
         inv(P),
     )
     return Image(res, bounds)

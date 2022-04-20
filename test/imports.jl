@@ -1,9 +1,10 @@
 using DataAugmentation
-using Images
 using StaticArrays
 using Test
 using TestSetExtensions
 using CoordinateTransformations
+using Colors
+using FixedPointNumbers: N0f8
 
 
 using DataAugmentation: Item, Transform, getrandstate, itemdata, setdata, ComposedProjectiveTransform,
