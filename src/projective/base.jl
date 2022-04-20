@@ -49,7 +49,7 @@ end
 Apply `CoordinateTransformations.Transformation` to `bounds`.
 """
 function transformbounds(bounds::Bounds, P::CoordinateTransformations.Transformation)
-    return Bounds(ImageTransformations.autorange(CartesianIndices(bounds.rs), P))
+    return Bounds(_autorange(CartesianIndices(bounds.rs), P))
 end
 
 """
@@ -129,3 +129,53 @@ struct Project{T<:CoordinateTransformations.Transformation} <: ProjectiveTransfo
 end
 
 getprojection(tfm::Project, bounds; randstate = nothing) = tfm.P
+
+# ## ImageTransformations.jl 0.8 internal functionality port
+#
+# Ported from ImageTransformations 0.8, since 0.9 introduced changes that broke
+# some assumptions.
+
+function _autorange(img, tform)
+    R = CartesianIndices(axes(img))
+    autorange(R, tform)
+end
+
+function _autorange(R::CartesianIndices, tform)
+    tform = _round(tform)
+    mn = mx = tform(SVector(first(R).I))
+    for I in ImageTransformations.CornerIterator(R)
+        x = tform(SVector(I.I))
+        # we map min and max to prevent type-inference issues
+        # (because min(::SVector,::SVector) -> Vector)
+        mn = map(min, x, mn)
+        mx = map(max, x, mx)
+    end
+    _autorange(Tuple(mn), Tuple(mx))
+end
+
+@noinline _autorange(mn::Tuple, mx::Tuple) = map((a,b)->floor(Int,a):ceil(Int,b), mn, mx)
+
+
+# Slightly round/discretize the transformation so that the warpped image size isn't affected by
+# numerical stability
+# https://github.com/JuliaImages/ImageTransformations.jl/issues/104
+_default_digits(::Type{T}) where T<:Number = _default_digits(floattype(T))
+# these constants come from eps() digits
+_default_digits(::Type{<:AbstractFloat}) = 15
+_default_digits(::Type{Float64}) = 15
+_default_digits(::Type{Float32}) = 7
+
+function _round(tform::T; kwargs...) where T<:CoordinateTransformations.Transformation
+    rounded_fields = map(Base.OneTo(fieldcount(T))) do i
+        __round(getfield(tform, i); kwargs...)
+    end
+    T(rounded_fields...)
+end
+if isdefined(Base, :ComposedFunction)
+    _round(tform::ComposedFunction; kwargs...) = _round(tform.outer; kwargs...) ∘ _round(tform.inner; kwargs...)
+end
+_round(tform; kwargs...) = tform
+
+__round(x; kwargs...) = x
+__round(x::AbstractArray; digits=_default_digits(eltype(x)), kwargs...) = round.(x; digits=digits, kwargs...)
+__round(x::T; digits=_default_digits(T), kwargs...) where T<:Number = round(x; digits=digits, kwargs...)
