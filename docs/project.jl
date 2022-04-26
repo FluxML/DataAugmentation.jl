@@ -12,7 +12,7 @@ ms = [m]
 
 
 # Add rewriters here
-project = Project(
+project = Pollen.Project(
     Pollen.Rewriter[
         DocumentFolder(Pkg.pkgdir(m), prefix = "documents"),
         ParseCode(),
