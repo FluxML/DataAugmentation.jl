@@ -1,0 +1,32 @@
+<HTML><head><title>DataAugmentation.AdjustContrast</title><script src=../template/highlight.min.js ></script><script src=../template/julia.min.js ></script><script src=../template/loadhighlightjs.js ></script><link href=../template/ansi.css rel=stylesheet ></link><link href=../template/hugobook.css rel=stylesheet ></link><meta content=Type=text/html; charset=utf-8 http-equiv=Content-Type ></meta><meta name=viewport content=width=device-width, initial-scale=1 ></meta></head><body><input onclick=toggleMenu() id=menu-control class=hidden toggle type=checkbox ></input><input id=toc-control type=checkbox class=hidden toggle ></input><main class=container flex ><aside id=menu-container class=book-menu ><nav class=book-menu-content ><h2 id=title >DataAugmentation.jl</h2><div id=sidebar ><div class=doctree ><body><ul><li><p>User guide (TODO)</p><ul><li><p><a href=../docs/literate/quickstart.md.html title= >Quickstart</a></p></li></ul></li><li><p>Library</p><ul><li><p><a href=../docs/literate/intro.md.html title= >Introduction</a></p></li><li><p><a href=../docs/literate/iteminterface.md.html title= >Item interface</a></p></li><li><p><a href=../docs/literate/tfminterface.md.html title= >Transformation interface</a></p></li><li><p><a href=../docs/literate/buffering.md.html title= >Buffering</a></p></li><li><p>Projective transformations</p><ul><li><p><a href=../docs/literate/projective/intro.md.html title= >Introduction</a></p></li><li><p><a href=../docs/literate/projective/interface.md.html title= >Interface</a></p></li><li><p><a href=../docs/literate/projective/data.md.html title= >Spatial data</a></p></li><li><p><a href=../docs/literate/projective/usage.md.html title= >Usage</a></p></li><li><p><a href=../docs/literate/projective/gallery.md.html title= >Gallery</a></p></li></ul></li><li><p><a href=../docs/literate/preprocessing.md.html title= >Preprocessing</a></p></li><li><p><a href=../docs/literate/stochastic.md.html title= >Stochastic transformations</a></p></li><li><p><a href=../docs/literate/colortransforms.md.html title= >Color transformations</a></p></li></ul></li><li><p><a href=../REFERENCE.html title= >Reference</a></p></li></ul></body></div></div></nav></aside><div class=book-page ><header class=book-header ></header><article><article><h1 id=dataaugmentationadjustcontrast ><code>DataAugmentation.AdjustContrast</code></h1><div class=docs ><div typesig=Union{} module=DataAugmentation linenumber=60 binding=DataAugmentation.AdjustContrast path=/home/runner/work/DataAugmentation.jl/DataAugmentation.jl/src/colortransforms.jl class=doc fields=Dict{Any,Any}() ><pre lang= ><code>AdjustContrast(factor = 0.2)
+AdjustContrast(distribution)
+</code></pre><p>Adjust the contrast of an image by a factor chosen uniformly
+from <code>f ∈ [1-δ, 1+δ]</code>.</p><p>Pixels <code>c</code> are transformed <code>c + μ*(1-f)</code> where <code>μ</code> is the mean color
+of the image.</p><p>You can also pass any <code>Distributions.Sampleable</code> from which the
+factor is selected.</p><h2 id=example >Example</h2><div class=cellcontainer cell=AdjustBrightness lang=julia ><pre class=codecell cell=AdjustBrightness lang=julia ><code>using DataAugmentation, TestImages
+
+item = Image(testimage(&quot;lighthouse&quot;))
+tfm = AdjustContrast(0.2)
+titems = [apply(tfm, item) for _ in 1:8]
+showgrid(titems; ncol = 4, npad = 16)
+</code></pre><div class=coderesult >1040×3120 MosaicViews.MosaicView{ColorTypes.RGBA{FixedPointNumbers.Normed{UInt8,8}},4,Base.ReshapedArray{ColorTypes.RGBA{FixedPointNumbers.Normed{UInt8,8}},4,PaddedViews.PaddedView{ColorTypes.RGBA{FixedPointNumbers.Normed{UInt8,8}},3,Tuple{Base.OneTo{Int64},Base.OneTo{Int64},Base.OneTo{Int64}},StackViews.StackView{ColorTypes.RGBA{FixedPointNumbers.Normed{UInt8,8}},3,3,Array{OffsetArrays.OffsetArray{ColorTypes.RGBA{FixedPointNumbers.Normed{UInt8,8}},2,PaddedViews.PaddedView{ColorTypes.RGBA{FixedPointNumbers.Normed{UInt8,8}},2,Tuple{UnitRange{Int64},UnitRange{Int64}},OffsetArrays.OffsetArray{ColorTypes.RGBA{FixedPointNumbers.Normed{UInt8,8}},2,Array{ColorTypes.RGBA{FixedPointNumbers.Normed{UInt8,8}},2}}}},1}}},Tuple{Base.MultiplicativeInverses.SignedMultiplicativeInverse{Int64},Base.MultiplicativeInverses.SignedMultiplicativeInverse{Int64}}}}:
+ RGBA{N0f8}(0.337,0.463,0.576,1.0)  …  RGBA{N0f8}(0.384,0.529,0.569,1.0)
+ RGBA{N0f8}(0.337,0.463,0.576,1.0)     RGBA{N0f8}(0.404,0.537,0.62,1.0)
+ RGBA{N0f8}(0.353,0.49,0.6,1.0)        RGBA{N0f8}(0.396,0.537,0.647,1.0)
+ RGBA{N0f8}(0.341,0.475,0.596,1.0)     RGBA{N0f8}(0.38,0.518,0.627,1.0)
+ RGBA{N0f8}(0.341,0.475,0.604,1.0)     RGBA{N0f8}(0.384,0.525,0.635,1.0)
+ RGBA{N0f8}(0.345,0.478,0.612,1.0)  …  RGBA{N0f8}(0.4,0.541,0.651,1.0)
+ RGBA{N0f8}(0.357,0.494,0.612,1.0)     RGBA{N0f8}(0.4,0.541,0.651,1.0)
+ RGBA{N0f8}(0.345,0.478,0.612,1.0)     RGBA{N0f8}(0.412,0.541,0.655,1.0)
+ RGBA{N0f8}(0.333,0.478,0.604,1.0)     RGBA{N0f8}(0.408,0.537,0.643,1.0)
+ RGBA{N0f8}(0.325,0.467,0.596,1.0)     RGBA{N0f8}(0.408,0.537,0.643,1.0)
+ ⋮                                  ⋱  
+ RGBA{N0f8}(0.082,0.051,0.039,1.0)     RGBA{N0f8}(0.212,0.255,0.275,1.0)
+ RGBA{N0f8}(0.118,0.09,0.067,1.0)      RGBA{N0f8}(0.267,0.31,0.329,1.0)
+ RGBA{N0f8}(0.239,0.224,0.188,1.0)     RGBA{N0f8}(0.29,0.341,0.369,1.0)
+ RGBA{N0f8}(0.416,0.424,0.369,1.0)     RGBA{N0f8}(0.267,0.329,0.353,1.0)
+ RGBA{N0f8}(0.592,0.608,0.553,1.0)  …  RGBA{N0f8}(0.302,0.349,0.388,1.0)
+ RGBA{N0f8}(0.631,0.671,0.604,1.0)     RGBA{N0f8}(0.302,0.349,0.388,1.0)
+ RGBA{N0f8}(0.388,0.412,0.373,1.0)     RGBA{N0f8}(0.22,0.259,0.282,1.0)
+ RGBA{N0f8}(0.373,0.392,0.365,1.0)     RGBA{N0f8}(0.216,0.247,0.255,1.0)
+ RGBA{N0f8}(0.0,0.0,0.0,1.0)           RGBA{N0f8}(0.035,0.039,0.035,1.0)</div></div></div></div></article></article><footer class=book-footer ></footer></div><aside class=book-toc ><nav id=toc class=book-toc-content ><ul><li><a href=#dataaugmentationadjustcontrast >DataAugmentation.AdjustContrast</a><ul></ul></li></ul></nav></aside></main></body></HTML>

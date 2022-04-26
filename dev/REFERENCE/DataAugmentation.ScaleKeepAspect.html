@@ -1,0 +1,27 @@
+<HTML><head><title>DataAugmentation.ScaleKeepAspect</title><script src=../template/highlight.min.js ></script><script src=../template/julia.min.js ></script><script src=../template/loadhighlightjs.js ></script><link href=../template/ansi.css rel=stylesheet ></link><link href=../template/hugobook.css rel=stylesheet ></link><meta content=Type=text/html; charset=utf-8 http-equiv=Content-Type ></meta><meta name=viewport content=width=device-width, initial-scale=1 ></meta></head><body><input onclick=toggleMenu() id=menu-control class=hidden toggle type=checkbox ></input><input id=toc-control type=checkbox class=hidden toggle ></input><main class=container flex ><aside id=menu-container class=book-menu ><nav class=book-menu-content ><h2 id=title >DataAugmentation.jl</h2><div id=sidebar ><div class=doctree ><body><ul><li><p>User guide (TODO)</p><ul><li><p><a href=../docs/literate/quickstart.md.html title= >Quickstart</a></p></li></ul></li><li><p>Library</p><ul><li><p><a href=../docs/literate/intro.md.html title= >Introduction</a></p></li><li><p><a href=../docs/literate/iteminterface.md.html title= >Item interface</a></p></li><li><p><a href=../docs/literate/tfminterface.md.html title= >Transformation interface</a></p></li><li><p><a href=../docs/literate/buffering.md.html title= >Buffering</a></p></li><li><p>Projective transformations</p><ul><li><p><a href=../docs/literate/projective/intro.md.html title= >Introduction</a></p></li><li><p><a href=../docs/literate/projective/interface.md.html title= >Interface</a></p></li><li><p><a href=../docs/literate/projective/data.md.html title= >Spatial data</a></p></li><li><p><a href=../docs/literate/projective/usage.md.html title= >Usage</a></p></li><li><p><a href=../docs/literate/projective/gallery.md.html title= >Gallery</a></p></li></ul></li><li><p><a href=../docs/literate/preprocessing.md.html title= >Preprocessing</a></p></li><li><p><a href=../docs/literate/stochastic.md.html title= >Stochastic transformations</a></p></li><li><p><a href=../docs/literate/colortransforms.md.html title= >Color transformations</a></p></li></ul></li><li><p><a href=../REFERENCE.html title= >Reference</a></p></li></ul></body></div></div></nav></aside><div class=book-page ><header class=book-header ></header><article><article><h1 id=dataaugmentationscalekeepaspect ><code>DataAugmentation.ScaleKeepAspect</code></h1><div class=docs ><div typesig=Union{} module=DataAugmentation linenumber=21 binding=DataAugmentation.ScaleKeepAspect path=/home/runner/work/DataAugmentation.jl/DataAugmentation.jl/src/projective/affine.jl class=doc fields=Dict{Any,Any}() ><pre lang= ><code>ScaleKeepAspect(minlengths) &lt;: ProjectiveTransform
+</code></pre><p>Scales the shortest side of <code>item</code> to <code>minlengths</code>, keeping the
+original aspect ratio.</p><h2 id=examples >Examples</h2><div class=cellcontainer cell=ScaleKeepAspect lang=julia ><pre class=codecell cell=ScaleKeepAspect lang=julia ><code>using DataAugmentation, TestImages
+image = testimage(&quot;lighthouse&quot;)
+tfm = ScaleKeepAspect((200, 200))
+apply(tfm, Image(image)) |&gt; showitems
+</code></pre><div class=coderesult >200×300 OffsetArray(::Array{RGBA{N0f8},2}, 1:200, 1:300) with eltype ColorTypes.RGBA{FixedPointNumbers.Normed{UInt8,8}} with indices 1:200×1:300:
+ RGBA{N0f8}(0.361,0.494,0.604,1.0)  …  RGBA{N0f8}(0.357,0.49,0.561,1.0)
+ RGBA{N0f8}(0.373,0.506,0.627,1.0)     RGBA{N0f8}(0.361,0.486,0.592,1.0)
+ RGBA{N0f8}(0.369,0.502,0.624,1.0)     RGBA{N0f8}(0.365,0.494,0.596,1.0)
+ RGBA{N0f8}(0.373,0.506,0.631,1.0)     RGBA{N0f8}(0.361,0.482,0.596,1.0)
+ RGBA{N0f8}(0.373,0.51,0.631,1.0)      RGBA{N0f8}(0.376,0.498,0.6,1.0)
+ RGBA{N0f8}(0.384,0.518,0.647,1.0)  …  RGBA{N0f8}(0.361,0.486,0.6,1.0)
+ RGBA{N0f8}(0.384,0.522,0.651,1.0)     RGBA{N0f8}(0.369,0.494,0.592,1.0)
+ RGBA{N0f8}(0.373,0.518,0.635,1.0)     RGBA{N0f8}(0.369,0.49,0.604,1.0)
+ RGBA{N0f8}(0.38,0.514,0.643,1.0)      RGBA{N0f8}(0.373,0.486,0.596,1.0)
+ RGBA{N0f8}(0.384,0.522,0.647,1.0)     RGBA{N0f8}(0.376,0.494,0.592,1.0)
+ ⋮                                  ⋱  
+ RGBA{N0f8}(0.271,0.251,0.243,1.0)     RGBA{N0f8}(0.216,0.263,0.294,1.0)
+ RGBA{N0f8}(0.22,0.2,0.2,1.0)          RGBA{N0f8}(0.2,0.247,0.282,1.0)
+ RGBA{N0f8}(0.216,0.196,0.204,1.0)     RGBA{N0f8}(0.235,0.271,0.306,1.0)
+ RGBA{N0f8}(0.282,0.255,0.243,1.0)     RGBA{N0f8}(0.22,0.267,0.298,1.0)
+ RGBA{N0f8}(0.18,0.145,0.137,1.0)   …  RGBA{N0f8}(0.282,0.329,0.361,1.0)
+ RGBA{N0f8}(0.18,0.145,0.125,1.0)      RGBA{N0f8}(0.227,0.271,0.306,1.0)
+ RGBA{N0f8}(0.161,0.129,0.122,1.0)     RGBA{N0f8}(0.243,0.294,0.329,1.0)
+ RGBA{N0f8}(0.478,0.475,0.435,1.0)     RGBA{N0f8}(0.255,0.29,0.325,1.0)
+ RGBA{N0f8}(0.694,0.733,0.678,1.0)     RGBA{N0f8}(0.251,0.286,0.322,1.0)</div></div></div></div></article></article><footer class=book-footer ></footer></div><aside class=book-toc ><nav id=toc class=book-toc-content ><ul><li><a href=#dataaugmentationscalekeepaspect >DataAugmentation.ScaleKeepAspect</a><ul></ul></li></ul></nav></aside></main></body></HTML>
