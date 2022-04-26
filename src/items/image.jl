@@ -1,7 +1,3 @@
-# ## `items/image.jl`
-#
-# ### Item
-#
 # We first define the [`Image`](#) item. Since we need to keep
 # track of the spatial bounds for projective transformations
 # we add them as a field. By default, they will simply
@@ -58,9 +54,6 @@ function showitem!(img, image::Image{2, <:AbstractFloat})
 end
 
 
-
-# ### Projective transformations
-#
 # To support projective transformations, we need to implement [`getbounds`](#)
 # and [`project`](#).
 

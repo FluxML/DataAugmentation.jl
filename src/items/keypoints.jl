@@ -62,8 +62,6 @@ function showitem!(img, keypoints::Keypoints{N}) where N
     return img
 end
 
-# ## Wrappers
-#
 # We also define some wrappers for `Keypoints` which have the same representation,
 # but a different meaning.
 
