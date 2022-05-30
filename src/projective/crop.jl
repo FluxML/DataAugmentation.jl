@@ -122,7 +122,7 @@ function offsetcropbounds(
     mins = getindex.(indices, 1)
     diffs = length.(indices) .- sz
 
-    startindices = floor.(Int, mins .+ (diffs .* offsets))
+    startindices = round.(Int, mins .+ (diffs .* offsets))
     endindices = startindices .+ sz .- 1
 
     bs = Bounds(UnitRange.(startindices, endindices))
