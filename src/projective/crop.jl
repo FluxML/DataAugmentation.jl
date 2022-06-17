@@ -120,9 +120,9 @@ function offsetcropbounds(
         offsets::NTuple{N, <:Number}) where N
     indices = bounds.rs
     mins = getindex.(indices, 1)
-    diffs = length.(indices) .- sz
+    diffs = length.(indices) .- sz .+ 1
 
-    startindices = round.(Int, mins .+ (diffs .* offsets))
+    startindices = floor.(Int, mins .+ (diffs .* offsets))
     endindices = startindices .+ sz .- 1
 
     bs = Bounds(UnitRange.(startindices, endindices))
