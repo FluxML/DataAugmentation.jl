@@ -69,8 +69,8 @@ function project(P, image::Image{N, T}, bounds::Bounds) where {N, T}
     data_ = warp(
         itemdata(image),
         inv(P),
-        bounds.rs,
-        zero(T))
+        bounds.rs;
+        fillvalue = zero(T))
     return Image(data_, bounds)
 end
 
