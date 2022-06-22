@@ -117,7 +117,8 @@ the crop by `offsets[i]` times the difference between the two.
 function offsetcropbounds(
         sz::NTuple{N, Int},
         bounds::Bounds{N},
-        offsets::NTuple{N, <:Number}) where N
+        offsets::NTuple{N, T}) where {N, T<:AbstractFloat}
+    offsets = map(o -> o == one(T) ? one(T) - eps(T) : o, offsets)
     indices = bounds.rs
     mins = getindex.(indices, 1)
     diffs = length.(indices) .- sz .+ 1
