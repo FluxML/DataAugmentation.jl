@@ -177,8 +177,10 @@ end
         )
 
         tfms = compose(
+            ScaleFixed((30, 40, 50)),
             ScaleRatio((.8, .8, .8)),
             ScaleKeepAspect((12, 10, 10)),
+            Zoom((1., 1.2)),
             RandomCrop((10, 10, 10))
         )
         testprojective(tfms, items)
