@@ -19,7 +19,7 @@ We can break down most augmentation used in practive into a single (possibly sto
 As an example, consider an image augmentation pipeline: A random horizontal flip, followed by a random resized crop. The latter resizes and crops (irregularly sized) images to a common size without distorting the aspect ratio.
 
 ```julia
-Maybe(FlipX()) |> RandomResizeCrop((h, w))
+Maybe(FlipX(2)) |> RandomResizeCrop((h, w))
 ```
 
 Let's pull apart the steps involved. 

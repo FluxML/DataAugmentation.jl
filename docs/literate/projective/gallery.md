@@ -147,15 +147,15 @@ tfms = [
 o = showtransforms(tfms, (image, bbox))
 ```
 
-### [`FlipX`](#), [`FlipY`](#), [`Reflect`](#)
+### [`FlipX`](#), [`FlipY`](#), [`FlipZ`](#), [`FlipDim`](#), [`Reflect`](#)
 
 Flip the data on the horizontally and vertically, respectively. More generally, reflect around an angle from the x-axis.
 
 {cell=main result=false}
 ```julia
 tfms = [
-    FlipX(),
-    FlipY(),
+    FlipX(2),
+    FlipY(2),
     Reflect(30),
 ]
 ```

@@ -142,7 +142,7 @@ include("../imports.jl")
     @testset ExtendedTestSet "`RandomCrop` correct indices" begin
         # Flipping and cropping should be the same as reverse-indexing
         # the flipped dimension
-        tfm = FlipX() |> RandomCrop((64, 64)) |> PinOrigin()
+        tfm = FlipX(2) |> RandomCrop((64, 64)) |> PinOrigin()
         img = rand(RGB, 64, 64)
         item = Image(img)
         titem = apply(tfm, item)
@@ -157,8 +157,8 @@ end
     @testset ExtendedTestSet "2D" begin
         tfms = compose(
             Rotate(10),
-            FlipX(),
-            FlipY(),
+            FlipX(2),
+            FlipY(2),
             ScaleRatio((.8, .8)),
             WarpAffine(0.1),
             Zoom((1., 1.2)),
@@ -177,6 +177,9 @@ end
         )
 
         tfms = compose(
+            FlipX(3),
+            FlipY(3),
+            FlipZ(3),
             ScaleFixed((30, 40, 50)),
             ScaleRatio((.8, .8, .8)),
             ScaleKeepAspect((12, 10, 10)),

@@ -178,21 +178,42 @@ end
 Transform `P` so that is applied around the center of `bounds`
 instead of the origin
 """
-function centered(P, bounds::Bounds{2})
+function centered(P, bounds::Bounds{N}) where N
     upperleft = minimum.(bounds.rs)
     bottomright = maximum.(bounds.rs)
 
-    midpoint = SVector{2, Float32}((bottomright .- upperleft) ./ 2) .+ SVector{2, Float32}(.5, .5)
+    midpoint = SVector{N, Float32}((bottomright .- upperleft) ./ 2) .+ .5f0
     return recenter(P, midpoint)
 end
-
-
-FlipX() = Reflect(180)
-FlipY() = Reflect(90)
 
 function reflectionmatrix(r)
     A = SMatrix{2, 2, Float32}(cos(2r), sin(2r), sin(2r), -cos(2r))
     return round.(A; digits = 12)
+end
+
+
+"""
+    FlipDim{N}()
+Reflect `N` dimensional data along the axis of dimension `dim`. Must satisfy 1 <= `dim` <= `N`.
+## Examples
+```julia
+tfm = FlipDim{2}(1)
+```
+"""
+struct FlipDim{N} <: ProjectiveTransform
+    dim::Int
+    FlipDim{N}(dim) where {N} = 1 <= dim <= N ? new{N}(dim) : error("invalid dimension")
+end
+# 2D images use (r, c) = (y, x) convention
+FlipX(N) = FlipDim{N}(N==2 ? 2 : 1)
+FlipY(N) = FlipDim{N}(N==2 ? 1 : 2)
+FlipZ(N) = FlipDim{N}(3)
+
+function getprojection(tfm::FlipDim{N}, bounds::Bounds{N}; randstate = nothing) where N
+    arr = 1I(N)
+    arr[tfm.dim, tfm.dim] = -1
+    M = SMatrix{N, N, Float32}(arr)
+    return DataAugmentation.centered(LinearMap(M), bounds)
 end
 
 
