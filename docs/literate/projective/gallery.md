@@ -154,8 +154,8 @@ Flip the data on the horizontally and vertically, respectively. More generally, 
 {cell=main result=false}
 ```julia
 tfms = [
-    FlipX(2),
-    FlipY(2),
+    FlipX{2}(),
+    FlipY{2}(),
     Reflect(30),
 ]
 ```

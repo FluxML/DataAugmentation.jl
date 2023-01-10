@@ -193,7 +193,7 @@ end
 
 
 """
-    FlipDim{N}()
+    FlipDim{N}(dim)
 Reflect `N` dimensional data along the axis of dimension `dim`. Must satisfy 1 <= `dim` <= `N`.
 ## Examples
 ```julia
@@ -202,12 +202,21 @@ tfm = FlipDim{2}(1)
 """
 struct FlipDim{N} <: ProjectiveTransform
     dim::Int
-    FlipDim{N}(dim) where {N} = 1 <= dim <= N ? new{N}(dim) : error("invalid dimension")
+    FlipDim{N}(dim) where N = 1 <= dim <= N ? new{N}(dim) : error("invalid dimension")
 end
+
 # 2D images use (r, c) = (y, x) convention
-FlipX(N) = FlipDim{N}(N==2 ? 2 : 1)
-FlipY(N) = FlipDim{N}(N==2 ? 1 : 2)
-FlipZ(N) = FlipDim{N}(3)
+struct FlipX{N}
+    FlipX{N}() where N = FlipDim{N}(N==2 ? 2 : 1)
+end
+
+struct FlipY{N}
+    FlipY{N}() where N = FlipDim{N}(N==2 ? 1 : 2)
+end
+
+struct FlipZ{N}
+    FlipZ{N}() where N = FlipDim{N}(3)
+end
 
 function getprojection(tfm::FlipDim{N}, bounds::Bounds{N}; randstate = nothing) where N
     arr = 1I(N)

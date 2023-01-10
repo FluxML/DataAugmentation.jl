@@ -13,7 +13,7 @@ Let's say we have an image classification dataset. For most datasets, horizontal
 ```julia
 using DataAugmentation, TestImages
 item = Image(testimage("lighthouse"))
-tfm = Maybe(FlipX(2))
+tfm = Maybe(FlipX{2}())
 titems = [apply(tfm, item) for _ in 1:8]
 showgrid(titems; ncol = 4, npad = 16)
 ```
