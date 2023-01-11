@@ -139,8 +139,26 @@ include("../imports.jl")
         @test_nowarn apply!(buffer, tfm, image2)
     end
 
+    @testset ExtendedTestSet "FlipX 2D: flip dimension of 1 = identity" begin
+        tfm = FlipX{2}()
+        img = rand(RGB, 10, 1)
+        item = Image(img)
+        @test_nowarn titem = apply(tfm, item)
+        titem = apply(tfm, item)
+        @test itemdata(titem) == img
+    end
+
+    @testset ExtendedTestSet "FlipZ 3D: flip dimension of 1 = identity" begin
+        tfm = FlipZ{3}()
+        img = rand(RGB, 10, 10, 1)
+        item = Image(img)
+        @test_nowarn titem = apply(tfm, item)
+        titem = apply(tfm, item)
+        @test itemdata(titem) == img
+    end
+
     @testset ExtendedTestSet "`RandomCrop` correct indices" begin
-        # Flipping and cropping should be the same as reverse-indexing
+        # Flipping followed by cropping should be the same as reverse-indexing
         # the flipped dimension
         tfm = FlipX{2}() |> RandomCrop((64, 64)) |> PinOrigin()
         img = rand(RGB, 64, 64)
