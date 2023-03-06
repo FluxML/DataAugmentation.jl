@@ -139,34 +139,60 @@ include("../imports.jl")
         @test_nowarn apply!(buffer, tfm, image2)
     end
 
-    @testset ExtendedTestSet "FlipX 2D: flip dimension of 1 = identity" begin
-        tfm = FlipX{2}()
-        img = rand(RGB, 10, 1)
+
+    @testset ExtendedTestSet "FlipX 2D correct indices" begin
+        tfm = FlipX{2}() |> RandomCrop((10,10)) |> PinOrigin()
+        img = rand(RGB, 10, 10)
+        item = Image(img)
+        @test_nowarn titem = apply(tfm, item)
+        titem = apply(tfm, item)
+        @test itemdata(titem) == img[:, end:-1:1]
+    end
+
+    @testset ExtendedTestSet "FlipY 2D correct indices" begin
+        tfm = FlipY{2}() |> RandomCrop((10,10)) |> PinOrigin()
+        img = rand(RGB, 10, 10)
+        item = Image(img)
+        @test_nowarn titem = apply(tfm, item)
+        titem = apply(tfm, item)
+        @test itemdata(titem) == img[end:-1:1, :]
+    end
+
+
+    @testset ExtendedTestSet "FlipX 3D correct indices" begin
+        tfm = FlipX{3}() |> RandomCrop((10,10,10)) |> PinOrigin()
+        img = rand(RGB, 10, 10, 10)
+        item = Image(img)
+        @test_nowarn titem = apply(tfm, item)
+        titem = apply(tfm, item)
+        @test itemdata(titem) == img[end:-1:1, :, :]
+    end
+
+    @testset ExtendedTestSet "FlipY 3D correct indices" begin
+        tfm = FlipY{3}() |> RandomCrop((10,10,10)) |> PinOrigin()
+        img = rand(RGB, 10, 10, 10)
+        item = Image(img)
+        @test_nowarn titem = apply(tfm, item)
+        titem = apply(tfm, item)
+        @test itemdata(titem) == img[:, end:-1:1, :]
+    end
+
+    @testset ExtendedTestSet "FlipZ 3D correct indices" begin
+        tfm = FlipZ{3}() |> RandomCrop((10,10,10)) |> PinOrigin()
+        img = rand(RGB, 10, 10, 10)
+        item = Image(img)
+        @test_nowarn titem = apply(tfm, item)
+        titem = apply(tfm, item)
+        @test itemdata(titem) == img[:, :, end:-1:1]
+    end
+
+    @testset ExtendedTestSet "Double flip is identity" begin
+        tfm = FlipZ{3}() |> FlipZ{3}() |> RandomCrop((10,10,10)) |> PinOrigin()
+        img = rand(RGB, 10, 10, 10)
         item = Image(img)
         @test_nowarn titem = apply(tfm, item)
         titem = apply(tfm, item)
         @test itemdata(titem) == img
-    end
-
-    @testset ExtendedTestSet "FlipZ 3D: flip dimension of 1 = identity" begin
-        tfm = FlipZ{3}()
-        img = rand(RGB, 10, 10, 1)
-        item = Image(img)
-        @test_nowarn titem = apply(tfm, item)
-        titem = apply(tfm, item)
-        @test itemdata(titem) == img
-    end
-
-    @testset ExtendedTestSet "`RandomCrop` correct indices" begin
-        # Flipping followed by cropping should be the same as reverse-indexing
-        # the flipped dimension
-        tfm = FlipX{2}() |> RandomCrop((64, 64)) |> PinOrigin()
-        img = rand(RGB, 64, 64)
-        item = Image(img)
-        titem = apply(tfm, item)
-        timg = itemdata(titem)
-        rimg = img[:, end:-1:1]
-        @test titem.data == rimg
     end
 end
 
