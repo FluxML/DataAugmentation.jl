@@ -47,4 +47,7 @@ include("./imports.jl")
     @testset ExtendedTestSet "rowtransforms.jl" begin
         include("rowtransforms.jl")
     end
+    @testset ExtendedTestSet "colortransforms.jl" begin
+        include("colortransforms.jl")
+    end
 end
