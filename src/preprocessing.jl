@@ -212,7 +212,7 @@ function _channelview(img)
     return chview
 end
 
-function _colorview(C::Type{<:Color}, img) where T
+function _colorview(C::Type{<:Color}, img)
     if size(img, 1) == 1
         img = reshape(img, size(img)[2:end])
     end
