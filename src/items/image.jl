@@ -10,7 +10,6 @@ Item representing an N-dimensional image with element type T.
 
 ## Examples
 
-{cell=image}
 ```julia
 using DataAugmentation, Images
 
@@ -21,7 +20,6 @@ showitems(item)
 
 If `T` is not a color, the image will be interpreted as grayscale:
 
-{cell=image}
 ```julia
 imagedata = rand(Float32, 100, 100)
 item = Image(imagedata)
