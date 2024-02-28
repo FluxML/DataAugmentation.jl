@@ -20,5 +20,5 @@ makedocs(sitename="DataAugmentation.jl",
       "References" => "ref.md"
     ],
   ],
-  format = Documenter.HTML(prettyurls = false)
+  # format = Documenter.HTML(prettyurls = false)
 )
