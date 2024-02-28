@@ -9,6 +9,11 @@ function scaleprojection(ratios::NTuple{N}, T = Float32) where N
 end
 
 
+"""
+    ScaleRatio(minlengths) <: ProjectiveTransform
+
+Scales the aspect ratio
+"""
 struct ScaleRatio{N} <: ProjectiveTransform
     ratios::NTuple{N}
 end
@@ -26,12 +31,11 @@ original aspect ratio.
 
 ## Examples
 
-{cell=ScaleKeepAspect}
-```julia
+```@example
 using DataAugmentation, TestImages
 image = testimage("lighthouse")
 tfm = ScaleKeepAspect((200, 200))
-apply(tfm, Image(image)) |> showitems
+apply(tfm, Image(image))
 ```
 """
 struct ScaleKeepAspect{N} <: ProjectiveTransform
@@ -186,8 +190,13 @@ function centered(P, bounds::Bounds{2})
     return recenter(P, midpoint)
 end
 
-
+"""
+Reflect(180)
+"""
 FlipX() = Reflect(180)
+"""
+Reflect(90)
+"""
 FlipY() = Reflect(90)
 
 function reflectionmatrix(r)
@@ -239,8 +248,15 @@ compose(cropped::ComposedProjectiveTransform, pin::PinOrigin) = Sequence(cropped
 compose(cropped::ProjectiveTransform, pin::PinOrigin) = Sequence(cropped, pin)
 
 # ## Resize crops
-
+"""
+ScaleKeepAspect(sz) |> RandomCrop(sz) |> PinOrigin()
+"""
 RandomResizeCrop(sz) = ScaleKeepAspect(sz) |> RandomCrop(sz) |> PinOrigin()
+"""
+ScaleKeepAspect(sz) |> CenterCrop(sz) |> PinOrigin()
+"""
 CenterResizeCrop(sz) = ScaleKeepAspect(sz) |> CenterCrop(sz) |> PinOrigin()
-
+"""
+ScaleKeepAspect(sz) |> PadDivisible(by) |> PinOrigin()
+"""
 ResizePadDivisible(sz, by) = ScaleKeepAspect(sz) |> PadDivisible(by) |> PinOrigin()

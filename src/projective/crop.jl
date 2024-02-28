@@ -13,6 +13,9 @@ struct Crop{N, F<:CropFrom} <: AbstractCrop
     from::F
 end
 
+"""
+Crop(sz, FromOrigin())
+"""
 Crop(sz) = Crop(sz, FromOrigin())
 
 
@@ -25,7 +28,13 @@ function apply(crop::Crop, item::Item; randstate = getrandstate(crop))
 end
 
 
+"""
+Crop(sz, FromCenter())
+"""
 CenterCrop(sz) = Crop(sz, FromCenter())
+"""
+Crop(sz, FromRandom())
+"""
 RandomCrop(sz) = Crop(sz, FromRandom())
 
 # The random state of a [`Crop`](#) consists of offsets from the origin.
