@@ -219,6 +219,39 @@ function _colorview(C::Type{<:Color}, img) where T
     return colorview(C, img)
 end
 
+# ### [`PermuteDims`](#)
+
+"""
+    PermuteDims(perm)
+
+Permute the dimensions of an `ArrayItem`.
+`perm` is a vector or a tuple of length `ndims(A)` specifying the permutation.
+
+Refer to the `permutedims` documentation for examples for permutation vectors `perm`.
+
+## Examples
+
+Preprocessing an image with 3 color channels.
+
+{cell=Normalize}
+```julia
+using DataAugmentation, Images
+image = Image(rand(RGB, 20, 20))
+tfms = ImageToTensor() |> PermuteDims(2, 1, 3) # HWC to WHC
+apply(tfms, image)
+```
+
+"""
+struct PermuteDims{N} <: Transform
+    perm::NTuple{N, Int}
+end
+PermuteDims(perm...) = PermuteDims(perm)
+
+function apply(tfm::PermuteDims, item::ArrayItem; randstate = nothing)
+    data = permutedims(itemdata(item), tfm.perm)
+    return ArrayItem(data)
+end
+
 # OneHot encoding
 
 """
