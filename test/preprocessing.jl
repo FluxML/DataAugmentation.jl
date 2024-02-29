@@ -64,12 +64,14 @@ end
 
 @testset ExtendedTestSet "PermuteDims" begin
     tfm = PermuteDims(2, 1, 4, 3)
-    A = rand(3, 4, 5, 6)
-    item = ArrayItem(A)
-    @test_nowarn apply(tfm, item)
-    B = itemdata(apply(tfm, item))
-    @test size(B) == (4, 3, 6, 5)
-    testapply(tfm, item)
+    item1 = ArrayItem(rand(3, 4, 5, 6))
+    item2 = ArrayItem(rand(3, 4, 5, 6))
+    @test_nowarn apply(tfm, item1)
+    a = itemdata(apply(tfm, item1))
+    @test size(a) == (4, 3, 6, 5)
+
+    testapply(tfm, item1)
+    testapply!(tfm, item1, item2)
 end
 
 @testset ExtendedTestSet "OneHot" begin

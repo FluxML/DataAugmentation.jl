@@ -229,6 +229,8 @@ Permute the dimensions of an `ArrayItem`.
 
 Refer to the `permutedims` documentation for examples for permutation vectors `perm`.
 
+Supports `apply!`.
+
 ## Examples
 
 Preprocessing an image with 3 color channels.
@@ -250,6 +252,11 @@ PermuteDims(perm...) = PermuteDims(perm)
 function apply(tfm::PermuteDims, item::ArrayItem; randstate = nothing)
     data = permutedims(itemdata(item), tfm.perm)
     return ArrayItem(data)
+end
+
+function apply!(buf, tfm::PermuteDims, item::ArrayItem; randstate = nothing)
+    permutedims!(itemdata(buf), itemdata(item), tfm.perm)
+    return buf
 end
 
 # OneHot encoding
