@@ -1,4 +1,4 @@
-# [`ComposedProjectiveTransform`](#) implements efficient composition
+# [`ComposedProjectiveTransform`](@ref) implements efficient composition
 # of `ProjectiveTransform`s.
 
 """

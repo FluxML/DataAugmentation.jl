@@ -69,7 +69,7 @@ end
     Polygon(points, sz)
     Polygon{N, T, M}(points, bounds)
 
-Item wrapper around [`Keypoints`](#).
+Item wrapper around [`Keypoints`](@ref).
 
 ## Examples
 
@@ -106,7 +106,7 @@ end
     BoundingBox(points, sz)
     BoundingBox{N, T, M}(points, bounds)
 
-Item wrapper around [`Keypoints`](#).
+Item wrapper around [`Keypoints`](@ref).
 
 ## Examples
 

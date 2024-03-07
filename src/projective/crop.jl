@@ -37,7 +37,7 @@ Crop(sz, FromRandom())
 """
 RandomCrop(sz) = Crop(sz, FromRandom())
 
-# The random state of a [`Crop`](#) consists of offsets from the origin.
+# The random state of a [`Crop`](@ref) consists of offsets from the origin.
 
 getrandstate(crop::Crop{N, FromOrigin}) where N = Tuple(0. for _ in 1:N)
 getrandstate(crop::Crop{N, FromCenter}) where N = Tuple(0.5 for _ in 1:N)

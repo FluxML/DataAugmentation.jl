@@ -72,7 +72,7 @@ end
 Projective transformation that scales sides to `sizes`, disregarding
 aspect ratio.
 
-See also [`ScaleKeepAspect`](#).
+See also [`ScaleKeepAspect`](@ref).
 """
 struct ScaleFixed{N} <: ProjectiveTransform
     sizes::NTuple{N, Int}
