@@ -253,7 +253,7 @@ end
 PermuteDims(perm...) = PermuteDims(perm)
 
 function apply(tfm::PermuteDims, item::ArrayItem; randstate = nothing)
-    data = permutedims(itemdata(item), tfm.perm)
+    data = PermutedDimsArray(itemdata(item), tfm.perm)
     return ArrayItem(data)
 end
 
