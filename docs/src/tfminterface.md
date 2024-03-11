@@ -17,7 +17,7 @@ A transformation is a type that subtypes [`Transform`](@ref). The only *required
 
 You may additionally also implement:
 
-- [`getrandstate`](@ref)`(tfm)` for *stochastic* transformations
+- [`DataAugmentation.getrandstate`](@ref)`(tfm)` for *stochastic* transformations
 
     Generates random state to be used inside `apply`. Calling `apply(tfm, item)` is equivalent to
     `apply(tfm, item; randstate = getrandstate(tfm))`. It defaults to `nothing`, so we need not implement it for deterministic transformations.
@@ -27,7 +27,7 @@ You may additionally also implement:
     Buffered version of `apply` that mutates `bufitem`. If not implemented,
     falls back to regular `apply`.
 
-- [`compose`](@ref)`(tfm1, tfm2)` for custom *composition* with other transformations
+- [`DataAugmentation.compose`](@ref)`(tfm1, tfm2)` for custom *composition* with other transformations
 
     Composes transformations. By default, returns a [`Sequence`](@ref) transformation that applies the transformations one after the other.
 
@@ -43,7 +43,7 @@ struct MapElem <: Transform
 end
 ```
 
-The `apply` implementation dispatches on [`AbstractArrayItem`](@ref), an abstract item type for items that wrap arrays. Note that the `randstate` keyword argument needs to be given even for implementations of deterministic transformations. We also make use of the [`setdata`](@ref) helper to update the item data.
+The `apply` implementation dispatches on [`DataAugmentation.AbstractArrayItem`](@ref), an abstract item type for items that wrap arrays. Note that the `randstate` keyword argument needs to be given even for implementations of deterministic transformations. We also make use of the [`DataAugmentation.setdata`](@ref) helper to update the item data.
 
 ```julia
 function apply(tfm::MapElem, item::AbstractArrayItem; randstate = nothing)

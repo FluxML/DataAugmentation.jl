@@ -2,7 +2,6 @@
     abstract type ProjectiveTransform <: Transform
 
 Abstract supertype for projective transformations. See
-[Projective transformations](../docs/projective/interface.md).
 """
 abstract type ProjectiveTransform <: Transform end
 

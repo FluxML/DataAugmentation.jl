@@ -21,7 +21,7 @@ The above example is simple, but there are more requirements of data augmentatio
 A transformation is stochastic (as opposed to deterministic) if it produces different outputs based on some random state.
 This randomness can become a problem when applying an transformation to an aligned pair of input and target. If we have an image and a corresponding segmentation mask, using different scaling factors results in misalignment of the two; the segmentation no longer matches up with the image pixels.
 
-To handle this, the random state is explicitly passed to the transformations, rendering them deterministic. A generator for the random state can be defined with [`getrandstate`](@ref)`(tfm)` and passed to `apply` with the `randstate` keyword argument.
+To handle this, the random state is explicitly passed to the transformations, rendering them deterministic. A generator for the random state can be defined with [`DataAugmentation.getrandstate`](@ref)`(tfm)` and passed to `apply` with the `randstate` keyword argument.
 
 ### Composition
 

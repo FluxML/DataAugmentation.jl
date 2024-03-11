@@ -41,6 +41,9 @@ end
 
 # ## Buffered transforms
 
+"""
+Buffer to store transform results
+"""
 mutable struct Buffered{T<:Transform} <: Transform
     tfm::T
     buffers::Dict
@@ -73,6 +76,9 @@ function apply!(buf, buffered::Buffered, items::T; randstate = getrandstate(buff
 end
 
 
+"""
+Buffer to store transform results (threadsafe)
+"""
 struct BufferedThreadsafe <: Transform
     buffereds::Vector{Buffered}
     function BufferedThreadsafe(tfm; n = Threads.nthreads())

@@ -20,8 +20,8 @@ struct MyItem <: Item
 end
 ```
 
-The only function that is expected to be implemented is [`itemdata`](@ref), which simply returns the wrapped data. If, as above, you simply call the field holding the data `data`, you do not need to implement it. The same goes for the [`setdata`](@ref) helper.
+The only function that is expected to be implemented is [`itemdata`](@ref), which simply returns the wrapped data. If, as above, you simply call the field holding the data `data`, you do not need to implement it. The same goes for the [`DataAugmentation.setdata`](@ref) helper.
 
 For some items, it also makes sense to implement the following:
 
-- [`showitem!`](@ref)`(img, item::I)` creates a visual representation of an item on top of `img`.
+- [`DataAugmentation.showitem!`](@ref)`(img, item::I)` creates a visual representation of an item on top of `img`.

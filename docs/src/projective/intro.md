@@ -30,8 +30,8 @@ By default, the bounds of a projected item will be chosen so they still encase a
 
 ## Projective transformations interface
 
-The abstract type [`ProjectiveTransform`](@ref) represents a projective transformation.
-A `ProjectiveTransform` needs to implement [`getprojection`](@ref)`(tfm, bounds; randstate)` that should return a `Transformation` from [CoordinateTransformations.jl](https://github.com/JuliaGeometry/CoordinateTransformations.jl).
+The abstract type [`DataAugmentation.ProjectiveTransform`](@ref) represents a projective transformation.
+A `ProjectiveTransform` needs to implement [`DataAugmentation.getprojection`](@ref)`(tfm, bounds; randstate)` that should return a `Transformation` from [CoordinateTransformations.jl](https://github.com/JuliaGeometry/CoordinateTransformations.jl).
 
 To add support for projective transformations to an item `I`, you need to implement
 

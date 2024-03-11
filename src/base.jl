@@ -110,10 +110,11 @@ compose(::Identity, ::Identity) = Identity()
 compose(tfm::Transform, ::Identity) = tfm
 compose(::Identity, tfm::Transform) = tfm
 
-# Lastly, [`setdata`](@ref) provides a convenient way to create a copy
-# of an item, replacing only the wrapped data. This relies on the
-# wrapped data field being named `data`, though.
-
+"""
+Provides a convenient way to create a copy
+of an item, replacing only the wrapped data. This relies on the
+wrapped data field being named `data`, though.
+"""
 function setdata(item::Item, data)
     item = Setfield.@set item.data = data
     return item

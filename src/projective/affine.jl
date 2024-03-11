@@ -108,6 +108,9 @@ end
 
 Zoom(scales::NTuple{2, T} = (1., 1.2)) where T = Zoom(Uniform(scales[1], scales[2]))
 
+"""
+Return random state of the transform
+"""
 getrandstate(tfm::Zoom) = rand(tfm.dist)
 
 function getprojection(tfm::Zoom, bounds::Bounds{N}; randstate = getrandstate(tfm)) where N

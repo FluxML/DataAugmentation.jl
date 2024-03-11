@@ -71,3 +71,7 @@ tfm = Maybe(FlipX())
 titems = [apply(tfm, item) for _ in 1:8]
 showgrid(titems; ncol = 4, npad = 16)
 ```
+
+```@docs
+DataAugmentation.ImageToTensor
+```
