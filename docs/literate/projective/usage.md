@@ -3,7 +3,7 @@
 Using projective transformations is as simple as any other transformations. Simply `compose` them:
 
 ```julia
-Rotate(-10:10) |> ScaleRatio(0.7:0.1:1.2) |> FlipX() |> Crop((128, 128))
+Rotate(-10:10) |> ScaleRatio(0.7:0.1:1.2) |> FlipX(2) |> Crop((128, 128))
 ```
 
 The composition will automatically create a single projective transformation and evaluate only the cropped area.
@@ -14,7 +14,7 @@ Affine transformations are a subgroup of projective transformations that can be 
 
 - [`ScaleRatio`](#), [`ScaleKeepAspect`](#)
 - [`Rotate`](#)
-- [`FlipX`](#), [`FlipY`](#), [`Reflect`](#)
+- [`FlipX`](#), [`FlipY`](#), [`FlipZ`](#), [`FlipDim`](#), [`Reflect`](#)
 - [`WarpAffine`](#)
 
 ## Crops
