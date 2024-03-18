@@ -102,7 +102,7 @@ end
 
     res = apply(tfm, item1)
     a = itemdata(res)
-    @test size(a) == (32, 48, 3)
+    @test size(a) == (48, 32, 3)
     @test eltype(a) == Float32
 
     testapply(tfm, item1)

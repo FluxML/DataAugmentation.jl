@@ -133,8 +133,8 @@ end
 """
     ImageToTensor()
 
-Expands an `Image{N, T}` of size `sz` to an `ArrayItem{N+1}` with
-size `(sz..., ch)` where `ch` is the number of color channels of `T`.
+Expands an `Image{N, T}` of size `(height, width, ...)` to an `ArrayItem{N+1}` with
+size `(width, height, ..., ch)` where `ch` is the number of color channels of `T`.
 
 Supports `apply!`.
 
@@ -144,9 +144,10 @@ Supports `apply!`.
 ```julia
 using DataAugmentation, Images
 
-image = Image(rand(RGB, 50, 50))
+h, w = 40, 50
+image = Image(rand(RGB, h, w))
 tfm = ImageToTensor()
-apply(tfm, image)
+apply(tfm, image) # ArrayItem in WHC format of size (50, 40, 3)
 ```
 
 """
@@ -166,23 +167,11 @@ function apply!(buf, ::ImageToTensor, image::Image; randstate = nothing)
 end
 
 function imagetotensor(image::AbstractArray{C, N}, T = Float32) where {C<:Colorant, N}
-    T.(PermutedDimsArray(_channelview(image), ((i for i in 2:N+1)..., 1)))
+    T.(PermutedDimsArray(_channelview(image), (3, 2, 4:N+1..., 1)))
 end
 
-#=
-function imagetotensor(image::AbstractArray{C, N}, T = Float32) where {TC, C<:Colorant{TC, 1}, N}
-    return T.(_channelview(image))
-end
-=#
-
-
-# TODO: relax color type constraint, implement for other colors
-# single-channel colors need a `channelview` that also expands the array
 function imagetotensor!(buf, image::AbstractArray{<:Colorant, N}) where N
-    permutedims!(
-        buf,
-        _channelview(image),
-        (2:N+1..., 1))
+    permutedims!(buf, _channelview(image), (3, 2, 4:N+1..., 1))
 end
 
 function tensortoimage(a::AbstractArray)
@@ -198,11 +187,12 @@ function tensortoimage(a::AbstractArray)
 end
 
 function tensortoimage(C::Type{<:Colorant}, a::AbstractArray{T, N}) where {T, N}
-    perm = (N, 1:N-1...)
+    perm = (N, 2, 1, 3:N-1...)
     return _colorview(C, PermutedDimsArray(a, perm))
 end
 
-# for single-channel colors, expand the color dimension anyway
+# For single-channel colors, expand the color dimension anyway
+# such that the output is always of size (channels, height, width, ...)
 _channelview(img::AbstractArray{<:Colorant{T, N}}) where {T, N} = channelview(img)
 function _channelview(img::AbstractArray{<:Colorant{T, 1}}) where T
     cv = channelview(img)
