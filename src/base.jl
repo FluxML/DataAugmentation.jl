@@ -6,7 +6,7 @@
     abstract type AbstractItem
 
 Abstract supertype for all items. To implement items, subtype
-either [`Item`](#) to create a new item or [`ItemWrapper`](#)
+either [`Item`](@ref) to create a new item or [`ItemWrapper`](@ref)
 to wrap an existing item.
 """
 abstract type AbstractItem end
@@ -18,7 +18,7 @@ abstract type AbstractItem end
 Abstract supertype of concrete items.
 
 Subtype if you want to create a new item. If you want to wrap
-an existing item, see [`ItemWrapper`](#).
+an existing item, see [`ItemWrapper`](@ref).
 """
 abstract type Item <: AbstractItem end
 
@@ -38,8 +38,8 @@ Abstract supertype for all transformations.
 """
 abstract type Transform end
 
-# Plus the default implementations of [`itemdata`](#) and
-# [`getrandstate`](#).
+# Plus the default implementations of [`itemdata`](@ref) and
+# [`getrandstate`](@ref).
 
 """
     itemdata(item)
@@ -86,7 +86,7 @@ end
 
 Compose tranformations. Use `|>` as an alias.
 
-Defaults to creating a [`Sequence`](#) of transformations,
+Defaults to creating a [`Sequence`](@ref) of transformations,
 but smarter behavior can be implemented.
 For example, `MapElem(f) |> MapElem(g) == MapElem(g ∘ f)`.
 """
@@ -95,7 +95,7 @@ compose(tfm::Transform) = tfm
 compose(tfms...) = compose(compose(tfms[1], tfms[2]), tfms[3:end]...)
 Base.:(|>)(tfm1::Transform, tfm2::Transform) = compose(tfm1, tfm2)
 
-# [`Identity`](#) is the identity transformation.
+# [`Identity`](@ref) is the identity transformation.
 
 """
     Identity()
@@ -110,10 +110,11 @@ compose(::Identity, ::Identity) = Identity()
 compose(tfm::Transform, ::Identity) = tfm
 compose(::Identity, tfm::Transform) = tfm
 
-# Lastly, [`setdata`](#) provides a convenient way to create a copy
-# of an item, replacing only the wrapped data. This relies on the
-# wrapped data field being named `data`, though.
-
+"""
+Provides a convenient way to create a copy
+of an item, replacing only the wrapped data. This relies on the
+wrapped data field being named `data`, though.
+"""
 function setdata(item::Item, data)
     item = Setfield.@set item.data = data
     return item

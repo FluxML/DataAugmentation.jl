@@ -1,4 +1,4 @@
-# We first define the [`Image`](#) item. Since we need to keep
+# We first define the [`Image`](@ref) item. Since we need to keep
 # track of the spatial bounds for projective transformations
 # we add them as a field. By default, they will simply
 # correspond to the image axes.
@@ -10,7 +10,6 @@ Item representing an N-dimensional image with element type T.
 
 ## Examples
 
-{cell=image}
 ```julia
 using DataAugmentation, Images
 
@@ -21,7 +20,6 @@ showitems(item)
 
 If `T` is not a color, the image will be interpreted as grayscale:
 
-{cell=image}
 ```julia
 imagedata = rand(Float32, 100, 100)
 item = Image(imagedata)
@@ -54,8 +52,8 @@ function showitem!(img, image::Image{2, <:AbstractFloat})
 end
 
 
-# To support projective transformations, we need to implement [`getbounds`](#)
-# and [`project`](#).
+# To support projective transformations, we need to implement [`getbounds`](@ref)
+# and [`project`](@ref).
 
 getbounds(image::Image) = image.bounds
 

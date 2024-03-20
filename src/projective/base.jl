@@ -2,7 +2,6 @@
     abstract type ProjectiveTransform <: Transform
 
 Abstract supertype for projective transformations. See
-[Projective transformations](../docs/projective/interface.md).
 """
 abstract type ProjectiveTransform <: Transform end
 
@@ -76,7 +75,7 @@ function project end
     project!(bufitem, P, item, indices)
 
 Project `item` using projection `P` and crop to `indices` if given.
-Store result in `bufitem`. Inplace version of [`project`](#).
+Store result in `bufitem`. Inplace version of [`project`](@ref).
 
 Default implementation falls back to `project`.
 """

@@ -2,13 +2,20 @@
 
 Let's visualize what these projective transformations look like.
 
-You can apply them to [`Image`](#)s and
-the keypoint-based items [`Keypoints`](#), [`Polygon`](#), and [`BoundingBox`](#).
+You can apply them to [`Image`](@ref)s and
+the keypoint-based items [`Keypoints`](@ref), [`Polygon`](@ref), and [`BoundingBox`](@ref).
 
 Let's take this picture of a light house:
 
-{cell=main style="display:none;" result=false output=false}
-```julia
+```@setup deps
+using DataAugmentation
+using MosaicViews
+using Images
+using TestImages
+using StaticArrays
+```
+
+```@example
 using DataAugmentation
 using MosaicViews
 using Images
@@ -19,42 +26,36 @@ imagedata = testimage("lighthouse")
 imagedata = imresize(imagedata, ratio = 196 / size(imagedata, 1))
 ```
 
-```julia
+```@example deps
 imagedata = testimage("lighthouse")
-```
-{cell=main style="display:none;"}
-```julia
 imagedata
 ```
-To apply a transformation `tfm` to it, wrap it in
-`Image`, apply the transformation and unwrap it using [`itemdata`](#):
 
-{cell=main }
-```julia
+To apply a transformation `tfm` to it, wrap it in
+`Image`, apply the transformation and unwrap it using [`itemdata`](@ref):
+
+```@example deps
 tfm = CenterCrop((196, 196))
 image = Image(imagedata)
 apply(tfm, image) |> itemdata
 ```
 
-Now let's say we want to train a light house detector and have a bounding box for the light house. We can use the [`BoundingBox`](#) item to represent it. It takes the two corners of the bounding rectangle as the first argument. As the second argument we have to pass the size of the corresponding image.
+Now let's say we want to train a light house detector and have a bounding box for the light house. We can use the [`BoundingBox`](@ref) item to represent it. It takes the two corners of the bounding rectangle as the first argument. As the second argument we have to pass the size of the corresponding image.
 
-{cell=main}
-```julia
+```@example deps
 points = SVector{2, Float32}[SVector(23., 120.), SVector(120., 150.)]
 bbox = BoundingBox(points, size(imagedata))
 ```
 
-[`showitems`](#) visualizes the two items:
-{cell=main}
-```julia
+[`showitems`](@ref) visualizes the two items:
+```@example deps
 showitems((image, bbox))
 ```
 If we apply transformations like translation and cropping to the image, then the same transformations have to be applied to the bounding box. Otherwise, the bounding box will no longer match up with the light house.
 
-Another problem can occur with stochastic transformations like [`RandomResizeCrop`](#). If we apply it separately to the image and the bounding box, they will be cropped from slightly different locations:
+Another problem can occur with stochastic transformations like [`RandomResizeCrop`](@ref) If we apply it separately to the image and the bounding box, they will be cropped from slightly different locations:
 
-{cell=main}
-```julia
+```@example deps
 tfm = RandomResizeCrop((128, 128))
 showitems((
     apply(tfm, image),
@@ -63,19 +64,17 @@ showitems((
 ```
 Instead, pass a tuple of the items to a single `apply` call so the same random state will be used for both image and bounding box:
 
-{cell=main}
-```julia
+```@example deps
 apply(tfm, (image, bbox)) |> showitems
 ```
 
 !!! info "3D Projective dimensions"
 
-    We'll use a 2-dimensional [`Image`](#) and [`BoundingBox`](#) here, but you can apply most projective transformations to any spatial item (including [`Keypoints`](#), [`MaskBinary`](#) and [`MaskMulti`](#)) in 3 dimensions.
+    We'll use a 2-dimensional [`Image`](@ref) and [`BoundingBox`](@ref) here, but you can apply most projective transformations to any spatial item (including [`Keypoints`](@ref), [`MaskBinary`](@ref) and [`MaskMulti`](@ref)) in 3 dimensions.
     
     Of course, you have to create a 3-dimensional transformation, i.e. `CenterCrop((128, 128, 128))` instead of `CenterCrop((128, 128))`.
 
 ## Gallery
-{cell=main style="display:none;" result=false}
 ```julia
 function showtransform(tfm, item, n = 8; ncol = 4)
     return mosaicview(
@@ -95,41 +94,38 @@ function showtransforms(tfms, item; ncol = length(tfms))
         rowmajor = true,
         ncol = ncol)
 end
+
+nothing # hide
 ```
 
-### [`RandomResizeCrop`](#)`(sz)`
+### [`RandomResizeCrop`](@ref)`(sz)`
 
 Resizes the sides so that one of them is no longer than `sz` and crops a region of size `sz` *from a random location*.
 
-{cell=main result=false}
 ```julia
 tfm = RandomResizeCrop((128, 128))
 ```
 
-{cell=main style="display:none;"}
 ```julia
 o = showtransform(tfm, (image, bbox), 6, ncol=6)
 ```
 
-### [`CenterResizeCrop`](#)
+### [`CenterResizeCrop`](@ref)
 
 Resizes the sides so that one of them is no longer than `sz` and crops a region of size `sz` *from the center*.
 
-{cell=main result=false}
 ```julia
 tfm = CenterResizeCrop((128, 128))
 ```
 
-{cell=main style="display:none;"}
 ```julia
 o = showtransform(tfm, (image, bbox), 1)
 ```
 
-### [`Crop`](#)`(sz[, from])`
+### [`Crop`](@ref)`(sz[, from])`
 
 Crops a region of size `sz` from the image, *without resizing* the image first.
 
-{cell=main result=false}
 ```julia
 using DataAugmentation: FromOrigin, FromCenter, FromRandom
 tfms = [
@@ -142,16 +138,14 @@ tfms = [
 ]
 ```
 
-{cell=main style="display:none;"}
 ```julia
 o = showtransforms(tfms, (image, bbox))
 ```
 
-### [`FlipX`](#), [`FlipY`](#), [`Reflect`](#)
+### [`FlipX`](@ref), [`FlipY`](@ref), [`Reflect`](@ref)
 
 Flip the data on the horizontally and vertically, respectively. More generally, reflect around an angle from the x-axis.
 
-{cell=main result=false}
 ```julia
 tfms = [
     FlipX(),
@@ -160,21 +154,18 @@ tfms = [
 ]
 ```
 
-{cell=main style="display:none;"}
 ```julia
 o = showtransforms(tfms, (image, bbox))
 ```
 
-### [`Rotate`](#)
+### [`Rotate`](@ref)
 
 Rotate counter-clockwise by an angle.
 
-{cell=main result=false}
 ```julia
 tfm = Rotate(20) |> CenterCrop((256, 256))
 ```
 
-{cell=main style="display:none;"}
 ```julia
 o = showtransform(tfm, (image, bbox), 1)
 ```

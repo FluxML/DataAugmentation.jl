@@ -1,6 +1,6 @@
 # Item interface
 
-As described previously, items are simply containers for data: an [`Image`](#) represents an image, and [`Keypoints`](#) some keypoints.
+As described previously, items are simply containers for data: an [`Image`](@ref) represents an image, and [`Keypoints`](@ref) some keypoints.
 
 ### Why do I need to wrap my data in an item?
 
@@ -12,7 +12,7 @@ Separating the representation from the data's meaning resolves those ambiguities
 
 ## Creating items
 
-To create a new item, you can simply subtype [`Item`](#):
+To create a new item, you can simply subtype [`Item`](@ref):
 
 ```julia
 struct MyItem <: Item
@@ -20,8 +20,8 @@ struct MyItem <: Item
 end
 ```
 
-The only function that is expected to be implemented is [`itemdata`](#), which simply returns the wrapped data. If, as above, you simply call the field holding the data `data`, you do not need to implement it. The same goes for the [`setdata`](#) helper.
+The only function that is expected to be implemented is [`itemdata`](@ref), which simply returns the wrapped data. If, as above, you simply call the field holding the data `data`, you do not need to implement it. The same goes for the [`DataAugmentation.setdata`](@ref) helper.
 
 For some items, it also makes sense to implement the following:
 
-- [`showitem!`](#)`(img, item::I)` creates a visual representation of an item on top of `img`.
+- [`DataAugmentation.showitem!`](@ref)`(img, item::I)` creates a visual representation of an item on top of `img`.

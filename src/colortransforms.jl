@@ -13,7 +13,6 @@ Pixels are clamped to [0,1] unless `clamp=false` is passed.
 
 ## Example
 
-{cell=AdjustBrightness}
 ```julia
 using DataAugmentation, TestImages
 
@@ -77,7 +76,6 @@ Pixels are clamped to [0,1] unless `clamp=false` is passed.
 
 ## Example
 
-{cell=AdjustBrightness}
 ```julia
 using DataAugmentation, TestImages
 

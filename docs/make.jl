@@ -1,28 +1,33 @@
-"""
-This script builds the Pollen.jl documentation so that it can be loaded
-by the frontend. It accepts one argument: the path where the generated
-files should be stored.
+using Documenter, DataAugmentation
 
-    > julia docs/make.jl DIR
-
-Use `./serve.jl` for interactive development.
-"""
-
-# Create target folder
-isempty(ARGS) && error("Please pass a file path to make.jl:\n\t> julia docs/make.jl DIR ")
-DIR = abspath(mkpath(ARGS[1]))
-
-# Create Project
-project = include("project.jl")
-
-@info "Rewriting documents..."
-Pollen.rewritesources!(project)
-
-@info "Writing to disk at \"$DIR\"..."
-Pollen.build(
-    FileBuilder(
-        JSONFormat(),
-        DIR,
-    ),
-    project,
+makedocs(;
+    modules = [DataAugmentation],
+    sitename="DataAugmentation.jl",
+    pages = [
+        "index.md",
+        "Quickstart" => "quickstart.md",
+        "Transformations" => "transformations.md",
+        "Build your transformations" =>[
+            "Item Interface" => "iteminterface.md",
+            "Transform Interface" => "tfminterface.md", 
+            "Projective Interface" => [
+                "Intro" => "projective/intro.md",
+                "Data" => "projective/data.md",
+                "Gallery" => "projective/gallery.md",
+            ],
+        ],
+        "Misc" =>[
+            "Buffering" => "buffering.md",
+            "Preprocessing" => "preprocessing.md",
+            "References" => "ref.md"
+        ],
+    ],
+    warnonly = [:example_block, :missing_docs, :cross_references],
+    format = Documenter.HTML(canonical = "https://fluxml.ai/DataAugmentation.jl/stable/",
+                             assets = ["assets/flux.css"],
+                             prettyurls = get(ENV, "CI", nothing) == "true")
 )
+
+deploydocs(repo = "github.com/FluxML/DataAugmentation.jl.git",
+           target = "build",
+           push_preview = true)
