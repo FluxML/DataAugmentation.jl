@@ -120,10 +120,14 @@ end
 
 """
     Rotate(γ)
-    Rotate(γs)
+    Rotate(distribution)
+    Rotate(α, β, γ)
+    Rotate(α_distribution, β_distribution, γ_distribution)
 
-Rotate 2D spatial data around the center by an angle chosen at
-uniformly from [-γ, γ], an angle given in degrees.
+Rotate spatial data around its center. Rotate(γ) is a 2D rotation
+by an angle chosen uniformly from [-γ, γ], an angle given in degrees.
+Rotate(α, β, γ) is a 3D rotation by angles chosen uniformly from
+[-α, α], [-β, β], and [-γ, γ], for X, Y, and Z rotations.
 
 You can also pass any `Distributions.Sampleable` from which the
 angle is selected.
@@ -131,25 +135,77 @@ angle is selected.
 ## Examples
 
 ```julia
-tfm = Rotate(10)
-```
+tfm2d = Rotate(10)
+apply(tfm2d, Image(rand(Float32, 16, 16)))
 
+tfm3d = Rotate(10, 20, 30)
+apply(tfm3d, Image(rand(Float32, 16, 16, 16)))
+```
 """
-struct Rotate{S<:Sampleable} <: ProjectiveTransform
+struct Rotate{N, R, S<:Sampleable} <: ProjectiveTransform
     dist::S
 end
-Rotate(γ) = Rotate(Uniform(-abs(γ), abs(γ)))
+
+Rotate{N, R}(s::S) where {N, R, S} = Rotate{N, R, S}(s)
+
+function Rotate{N, R}(s::S) where {N, R, S<:Number}
+    if s == 0
+        return Identity()
+    end
+    Rotate{N, R, Uniform}(Uniform(-abs(s), abs(s)))
+end
+
+Rotate(s) = Rotate{2, Type{RotMatrix{2, Float64}}}(s)
+Rotate(sx, sy, sz) = RotateX(sx) |> RotateY(sy) |> RotateZ(sz)
+Rotate{3}(s) = Rotate(s, s, s)
+Rotate{2}(s) = Rotate(s)
+
+"""
+    RotateX(γ)
+    RotateX(distribution)
+
+X-Axis rotation of 3D spatial data around the center by an angle chosen
+uniformly from [-γ, γ], an angle given in degrees.
+
+You can also pass any `Distributions.Sampleable` from which the
+angle is selected.
+"""
+RotateX(s) = Rotate{3, Type{RotX{Float64}}}(s)
+
+"""
+    RotateY(γ)
+    RotateY(distribution)
+
+Y-Axis rotation of 3D spatial data around the center by an angle chosen
+uniformly from [-γ, γ], an angle given in degrees.
+
+You can also pass any `Distributions.Sampleable` from which the
+angle is selected.
+"""
+RotateY(s) = Rotate{3, Type{RotY{Float64}}}(s)
+
+"""
+    RotateZ(γ)
+    RotateZ(distribution)
+
+Z-Axis rotation of 3D spatial data around the center by an angle chosen
+uniformly from [-γ, γ], an angle given in degrees.
+
+You can also pass any `Distributions.Sampleable` from which the
+angle is selected.
+"""
+RotateZ(s) = Rotate{3, Type{RotZ{Float64}}}(s)
 
 getrandstate(tfm::Rotate) = rand(tfm.dist)
 
 function getprojection(
-        tfm::Rotate,
-        bounds::Bounds{2};
-        randstate = getrandstate(tfm))
+        tfm::Rotate{N, Type{R}, S},
+        bounds::Bounds{N};
+        randstate = getrandstate(tfm)) where {N, R, S}
     γ = randstate
-    middlepoint = SVector{2, Float32}(mean.(bounds.rs))
+    middlepoint = SVector{N, Float32}(mean.(bounds.rs))
     r = γ / 360 * 2pi
-    return recenter(RotMatrix(convert(Float32, r)), middlepoint)
+    return recenter(RotMatrix{N, Float32}(R(convert(Float64, r))), middlepoint)
 end
 
 
