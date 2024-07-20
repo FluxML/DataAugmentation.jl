@@ -25,20 +25,26 @@ Projective transformations include:
 
 Affine transformations are a subgroup of projective transformations that can be composed very efficiently: composing two affine transformations results in another affine transformation. Affine transformations can represent translation, scaling, reflection and rotation. Available `Transform`s are:
 
-```@docs
-ScaleRatio
-ScaleKeepAspect
+```@docs; canonical=false
 FlipX
 FlipY
 Reflect
+Rotate
+RotateX
+RotateY
+RotateZ
+ScaleKeepAspect
+ScaleFixed
+ScaleRatio
 WarpAffine
+Zoom
 ```
     
 ## Crops
 
 To get a cropped result, simply `compose` any `ProjectiveTransform` with
 
-```@docs
+```@docs; canonical=false
 CenterCrop
 RandomCrop
 ```
@@ -47,9 +53,9 @@ RandomCrop
 
 DataAugmentation.jl currently supports the following color transformations for augmentation:
 
-```@docs
-AdjustContrast
+```@docs; canonical=false
 AdjustBrightness
+AdjustContrast
 ```
 
 # Stochastic transformations
@@ -57,7 +63,7 @@ When augmenting data, it is often useful to apply a transformation only with som
 
 - [`Maybe`](@ref)`(tfm, p = 0.5)` applies a transformation with probability `p`; and
 - [`OneOf`](@ref)`([tfm1, tfm2])` randomly selects a transformation to apply.
-```@docs
+```@docs; canonical=false
 Maybe
 OneOf
 ```
@@ -72,6 +78,6 @@ titems = [apply(tfm, item) for _ in 1:8]
 showgrid(titems; ncol = 4, npad = 16)
 ```
 
-```@docs
+```@docs; canonical=false
 DataAugmentation.ImageToTensor
 ```

@@ -7,15 +7,7 @@ the keypoint-based items [`Keypoints`](@ref), [`Polygon`](@ref), and [`BoundingB
 
 Let's take this picture of a light house:
 
-```@setup deps
-using DataAugmentation
-using MosaicViews
-using Images
-using TestImages
-using StaticArrays
-```
-
-```@example
+```@example deps
 using DataAugmentation
 using MosaicViews
 using Images
@@ -24,11 +16,6 @@ using StaticArrays
 
 imagedata = testimage("lighthouse")
 imagedata = imresize(imagedata, ratio = 196 / size(imagedata, 1))
-```
-
-```@example deps
-imagedata = testimage("lighthouse")
-imagedata
 ```
 
 To apply a transformation `tfm` to it, wrap it in
@@ -74,59 +61,29 @@ apply(tfm, (image, bbox)) |> showitems
     
     Of course, you have to create a 3-dimensional transformation, i.e. `CenterCrop((128, 128, 128))` instead of `CenterCrop((128, 128))`.
 
-## Gallery
-```julia
-function showtransform(tfm, item, n = 8; ncol = 4)
-    return mosaicview(
-        [showitems(apply(tfm, item)) for _ in 1:n],
-        fillvalue = RGBA(1, 1, 1, 0),
-        npad = 8,
-        rowmajor = true,
-        ncol = ncol)
-end
-
-
-function showtransforms(tfms, item; ncol = length(tfms))
-    return mosaicview(
-        [parent(showitems(apply(tfm, item))) for tfm in tfms],
-        fillvalue = RGBA(1, 1, 1, 0),
-        npad = 8,
-        rowmajor = true,
-        ncol = ncol)
-end
-
-nothing # hide
-```
-
-### [`RandomResizeCrop`](@ref)`(sz)`
+## [`RandomResizeCrop`](@ref)`(sz)`
 
 Resizes the sides so that one of them is no longer than `sz` and crops a region of size `sz` *from a random location*.
 
-```julia
+```@example deps
 tfm = RandomResizeCrop((128, 128))
+showgrid([apply(tfm, (image, bbox)) for _ in 1:6]; ncol=6, npad=8)
 ```
 
-```julia
-o = showtransform(tfm, (image, bbox), 6, ncol=6)
-```
-
-### [`CenterResizeCrop`](@ref)
+## [`CenterResizeCrop`](@ref)
 
 Resizes the sides so that one of them is no longer than `sz` and crops a region of size `sz` *from the center*.
 
-```julia
+```@example deps
 tfm = CenterResizeCrop((128, 128))
+showgrid([apply(tfm, (image, bbox))]; ncol=6, npad=8)
 ```
 
-```julia
-o = showtransform(tfm, (image, bbox), 1)
-```
-
-### [`Crop`](@ref)`(sz[, from])`
+## [`Crop`](@ref)`(sz[, from])`
 
 Crops a region of size `sz` from the image, *without resizing* the image first.
 
-```julia
+```@example deps
 using DataAugmentation: FromOrigin, FromCenter, FromRandom
 tfms = [
     Crop((128, 128), FromOrigin()),
@@ -136,36 +93,43 @@ tfms = [
     Crop((128, 128), FromRandom()),
     Crop((128, 128), FromRandom()),
 ]
+showgrid([apply(tfm, (image, bbox)) for tfm in tfms]; ncol=6, npad=8)
 ```
 
-```julia
-o = showtransforms(tfms, (image, bbox))
-```
-
-### [`FlipX`](@ref), [`FlipY`](@ref), [`Reflect`](@ref)
+## [`FlipX`](@ref), [`FlipY`](@ref), [`Reflect`](@ref)
 
 Flip the data on the horizontally and vertically, respectively. More generally, reflect around an angle from the x-axis.
 
-```julia
+```@example deps
 tfms = [
     FlipX(),
     FlipY(),
     Reflect(30),
 ]
+showgrid([apply(tfm, (image, bbox)) for tfm in tfms]; ncol=6, npad=8)
 ```
 
-```julia
-o = showtransforms(tfms, (image, bbox))
-```
+## [`Rotate`](@ref), [`RotateX`](@ref), [`RotateY`](@ref), [`RotateZ`](@ref)
 
-### [`Rotate`](@ref)
+Rotate a 2D image counter-clockwise by an angle.
 
-Rotate counter-clockwise by an angle.
-
-```julia
+```@example deps
 tfm = Rotate(20) |> CenterCrop((256, 256))
+showgrid([apply(tfm, (image, bbox)) for _ in 1:6]; ncol=6, npad=8)
 ```
 
-```julia
-o = showtransform(tfm, (image, bbox), 1)
+Rotate also works with 3D images in addition to 3D specific transforms RotateX, RotateY, and RotateZ.
+
+```@example deps
+image3D = Image([RGB(i, j, k) for i=0:0.01:1, j=0:0.01:1, k=0:0.01:1])
+tfms = [
+    Rotate(20, 30, 40),
+    Rotate{3}(45),
+    RotateX(45),
+    RotateY(45),
+    RotateZ(45),
+]
+transformed = [apply(tfm, image3D) |> itemdata for tfm in tfms]
+slices = [Image(parent(t[:, :, 50])) for t in transformed]
+showgrid(slices; ncol=6, npad=8)
 ```
