@@ -10,6 +10,9 @@ RandomResizeCrop
 CenterResizeCrop
 Crop
 Rotate
+RotateX
+RotateY
+RotateZ
 itemdata
 showitems
 
