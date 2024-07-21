@@ -107,14 +107,64 @@ include("../imports.jl")
         P = DataAugmentation.getprojection(tfm, getbounds(image))
         @test P isa AffineMap
         @test P.linear.mat[1] isa Float32
+        timage = apply(tfm, image, randstate=180)
+        @test itemdata(image) ≈ itemdata(timage)[end:-1:1, end:-1:1]
     end
 
-    @testset ExtendedTestSet "Rotate" begin
+    @testset ExtendedTestSet "Rotate3D" begin
+        image = Image(rand(RGB, 10, 20, 30))
+        tfm1 = Rotate(180, 180, 180)
+        tfm2 = Rotate{3}(180)
+        @test_nowarn apply(tfm1, image)
+        @test_nowarn apply(tfm2, image)
+
+        # Test equivalent rotations result in the same image. Both rotations
+        # should invert the x and y axis.
+        timage1 = apply(tfm1, image, randstate=[180, 180, 0])
+        timage2 = apply(tfm2, image, randstate=[0, 0, 180])
+        @test image.bounds == timage1.bounds
+        @test image.bounds == timage2.bounds
+        @test size(itemdata(image)) == size(itemdata(timage1))
+        @test size(itemdata(image)) == size(itemdata(timage2))
+        @test itemdata(image) ≈ itemdata(timage1)[end:-1:1, end:-1:1, :]
+        @test itemdata(image) ≈ itemdata(timage2)[end:-1:1, end:-1:1, :]
+    end
+
+    @testset ExtendedTestSet "RotateX" begin
+        tfm = RotateX(180)
+        image = Image(rand(Float32, 10, 20, 30))
+        @test_nowarn apply(tfm, image)
+        transformed = apply(tfm, image, randstate=180)
+        @test image.bounds == transformed.bounds
+        @test size(itemdata(image)) == size(itemdata(transformed))
+        @test itemdata(image) ≈ itemdata(transformed)[:, end:-1:1, end:-1:1]
+    end
+
+    @testset ExtendedTestSet "RotateY" begin
+        tfm = RotateY(180)
+        image = Image(rand(Float32, 10, 20, 30))
+        @test_nowarn apply(tfm, image)
+        transformed = apply(tfm, image, randstate=180)
+        @test image.bounds == transformed.bounds
+        @test size(itemdata(image)) == size(itemdata(transformed))
+        @test itemdata(image) ≈ itemdata(transformed)[end:-1:1, :, end:-1:1]
+    end
+
+    @testset ExtendedTestSet "RotateZ" begin
+        tfm = RotateZ(180)
+        image = Image(rand(Float32, 10, 20, 30))
+        @test_nowarn apply(tfm, image)
+        transformed = apply(tfm, image, randstate=180)
+        @test image.bounds == transformed.bounds
+        @test size(itemdata(image)) == size(itemdata(transformed))
+        @test itemdata(image) ≈ itemdata(transformed)[end:-1:1, end:-1:1, :]
+    end
+
+    @testset ExtendedTestSet "Zoom" begin
         tfm = Zoom((0.1, 2.))
         image = Image(rand(RGB, 50, 50))
         @test_nowarn apply(tfm, image)
     end
-
 
     @testset ExtendedTestSet "Reflect" begin
         tfm = Reflect(10)
@@ -177,6 +227,7 @@ end
         )
 
         tfms = compose(
+            Rotate(10, 20, 30),
             ScaleRatio((.8, .8, .8)),
             ScaleKeepAspect((12, 10, 10)),
             RandomCrop((10, 10, 10))

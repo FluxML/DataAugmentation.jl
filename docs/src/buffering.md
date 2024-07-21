@@ -22,7 +22,7 @@ buffer = apply(tfm, item)  # uses apply! internally
 
 Since `Buffered` only stores one buffer, you may run into problems when using it in a multi-threading context where different threads invalidate the buffer before it can be used. In that case, you can use [`DataAugmentation.BufferedThreadsafe`](@ref), a version of `Buffered` that keeps a separate buffer for every thread. 
 
-```@docs
+```@docs; canonical=false
 DataAugmentation.Buffered
 DataAugmentation.BufferedThreadsafe
 ```
