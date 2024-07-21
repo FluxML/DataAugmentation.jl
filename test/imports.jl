@@ -5,6 +5,8 @@ using TestSetExtensions
 using CoordinateTransformations
 using Colors
 using FixedPointNumbers: N0f8
+using LinearAlgebra
+using Rotations
 
 
 using DataAugmentation: Item, Transform, getrandstate, itemdata, setdata, ComposedProjectiveTransform,
