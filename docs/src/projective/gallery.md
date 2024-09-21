@@ -26,6 +26,45 @@ tfm = CenterCrop((196, 196))
 image = Image(imagedata)
 apply(tfm, image) |> itemdata
 ```
+Customization of how pixel values are interpolated and extrapolated during
+transformations is done with the Item types ([`Image`](@ref),
+[`MaskBinary`](@ref), [`MaskMulti`](@ref)). For example, if we scale the image
+we can see how the interpolation affects how values of projected pixels are
+calculated.
+```@example deps
+using Interpolations: BSpline, Constant, Linear
+tfm = ScaleFixed((2000, 2000)) |> CenterCrop((200, 200))
+showgrid(
+    [
+        # Default is linear interpolation for Image
+        apply(tfm, Image(imagedata)),
+        # Nearest neighbor interpolation
+        apply(tfm, Image(imagedata; interpolate=BSpline(Constant()))),
+        # Linear interpolation
+        apply(tfm, Image(imagedata; interpolate=BSpline(Linear()))),
+    ];
+    ncol=3,
+    npad=8,
+)
+```
+Similarly, if we crop to a larger region than the image, we can see how
+extrapolation affects how pixel values are calculated in the regions outside
+the original image bounds.
+```@example deps
+import Interpolations
+tfm = CenterCrop((400, 400))
+showgrid(
+    [
+        apply(tfm, Image(imagedata)),
+        apply(tfm, Image(imagedata; extrapolate=1)),
+        apply(tfm, Image(imagedata; extrapolate=Interpolations.Flat())),
+        apply(tfm, Image(imagedata; extrapolate=Interpolations.Periodic())),
+        apply(tfm, Image(imagedata; extrapolate=Interpolations.Reflect())),
+    ];
+    ncol=5,
+    npad=8,
+)
+```
 
 Now let's say we want to train a light house detector and have a bounding box for the light house. We can use the [`BoundingBox`](@ref) item to represent it. It takes the two corners of the bounding rectangle as the first argument. As the second argument we have to pass the size of the corresponding image.
 
