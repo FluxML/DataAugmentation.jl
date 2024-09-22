@@ -7,6 +7,9 @@ using Colors
 using FixedPointNumbers: N0f8
 using LinearAlgebra
 using Rotations
+using Statistics
+using OffsetArrays
+import Interpolations
 
 
 using DataAugmentation: Item, Transform, getrandstate, itemdata, setdata, ComposedProjectiveTransform,

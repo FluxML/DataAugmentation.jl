@@ -4,9 +4,21 @@
 # correspond to the image axes.
 
 """
-    Image(image[, bounds])
+    Image(image[, bounds]; interpolate=BSpline(Linear()), extrapolate=zero(T))
 
-Item representing an N-dimensional image with element type T.
+Item representing an N-dimensional image with element type T. Optionally, the
+interpolation and extrapolation method can be provided. Interpolation here
+refers to how the values of projected pixels that fall into the transformed
+content bounds are calculated. Extrapolation refers to how to assign values
+that fall outside the projected content bounds. The default is linear
+interpolation and to fill new regions with zero.
+
+!!! info
+    The `Interpolations` package provides numerous methods for use with
+    the `interpolate` and `extrapolate` keyword arguments.  For instance,
+    `BSpline(Linear())` and `BSpline(Constant())` provide linear and nearest
+    neighbor interpolation, respectively. In addition `Flat()`, `Reflect()` and
+    `Periodic()` boundary conditions are available for extrapolation.
 
 ## Examples
 
@@ -30,14 +42,24 @@ showitems(item)
 struct Image{N,T} <: AbstractArrayItem{N,T}
     data::AbstractArray{T,N}
     bounds::Bounds{N}
+    interpolate::Interpolations.InterpolationType
+    extrapolate::ImageTransformations.FillType
 end
 
-Image(data) = Image(data, Bounds(axes(data)))
-
-function Image(data::AbstractArray{T,N}, sz::NTuple{N,Int}) where {T,N}
-    return Image(data, Bounds(sz))
+function Image(
+    data::AbstractArray{T,N},
+    bounds::Bounds{N};
+    interpolate::Interpolations.InterpolationType=BSpline(Linear()),
+    extrapolate::ImageTransformations.FillType=zero(T),
+) where {T,N}
+    return Image(data, bounds, interpolate, extrapolate)
 end
 
+Image(data; kwargs...) = Image(data, Bounds(axes(data)); kwargs...)
+
+function Image(data::AbstractArray{T,N}, sz::NTuple{N,Int}; kwargs...) where {T,N}
+    return Image(data, Bounds(sz); kwargs...)
+end
 
 Base.show(io::IO, item::Image{N,T}) where {N,T} =
     print(io, "Image{$N, $T}() with bounds $(item.bounds)")
@@ -68,7 +90,8 @@ function project(P, image::Image{N, T}, bounds::Bounds) where {N, T}
         itemdata(image),
         inv(P),
         bounds.rs;
-        fillvalue = zero(T))
+        method=image.interpolate,
+        fillvalue=image.extrapolate)
     return Image(data_, bounds)
 end
 
@@ -79,7 +102,7 @@ function project!(bufimage::Image, P, image::Image{N, T}, bounds::Bounds{N}) whe
     a = OffsetArray(parent(itemdata(bufimage)), bounds.rs)
     res = warp!(
         a,
-        box_extrapolation(itemdata(image); fillvalue=zero(T)),
+        box_extrapolation(itemdata(image); method=image.interpolate, fillvalue=image.extrapolate),
         inv(P),
     )
     return Image(res, bounds)
