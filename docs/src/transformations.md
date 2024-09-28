@@ -26,6 +26,7 @@ Projective transformations include:
 Affine transformations are a subgroup of projective transformations that can be composed very efficiently: composing two affine transformations results in another affine transformation. Affine transformations can represent translation, scaling, reflection and rotation. Available `Transform`s are:
 
 ```@docs; canonical=false
+FlipDim
 FlipX
 FlipY
 FlipZ

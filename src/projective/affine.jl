@@ -258,8 +258,11 @@ end
 
 """
     FlipDim{N}(dim)
+
 Reflect `N` dimensional data along the axis of dimension `dim`. Must satisfy 1 <= `dim` <= `N`.
+
 ## Examples
+
 ```julia
 tfm = FlipDim{2}(1)
 ```
@@ -269,15 +272,33 @@ struct FlipDim{N} <: ProjectiveTransform
     FlipDim{N}(dim) where N = 1 <= dim <= N ? new{N}(dim) : error("invalid dimension")
 end
 
-# 2D images use (r, c) = (y, x) convention
+"""
+    FlipX{N}()
+
+Flip `N` dimensional data along the x-axis. 2D images use (r, c) = (y, x)
+convention such that x-axis flips occur along the second dimension. For N >= 3,
+x-axis flips occur along the first dimension.
+"""
 struct FlipX{N}
     FlipX{N}() where N = FlipDim{N}(N==2 ? 2 : 1)
 end
 
+"""
+    FlipY{N}()
+
+Flip `N` dimensional data along the y-axis. 2D images use (r, c) = (y, x)
+convention such that y-axis flips occur along the first dimension. For N >= 3,
+y-axis flips occur along the second dimension.
+"""
 struct FlipY{N}
     FlipY{N}() where N = FlipDim{N}(N==2 ? 1 : 2)
 end
 
+"""
+    FlipZ{N}()
+
+Flip `N` dimensional data along the z-axis.
+"""
 struct FlipZ{N}
     FlipZ{N}() where N = FlipDim{N}(3)
 end

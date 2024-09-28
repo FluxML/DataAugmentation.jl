@@ -26,6 +26,9 @@ compose(composed::ComposedProjectiveTransform, tfm::ProjectiveTransform) =
 compose(tfm::ProjectiveTransform, composed::ComposedProjectiveTransform) =
     ComposedProjectiveTransform(tfm, composed.tfms...)
 
+compose(composed1::ComposedProjectiveTransform, composed2::ComposedProjectiveTransform) =
+    ComposedProjectiveTransform(composed1.tfms..., composed2.tfms...)
+
 
 # The random state is collected from the transformations that make up the
 # `ComposedProjectiveTransform`:
