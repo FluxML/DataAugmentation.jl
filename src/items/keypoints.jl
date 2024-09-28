@@ -40,16 +40,14 @@ getbounds(keypoints::Keypoints) = keypoints.bounds
 
 
 function project(P, keypoints::Keypoints{N, T}, bounds::Bounds{N}) where {N, T}
-    # TODO: convert back to `T`?
     return Keypoints(
-        map(fmap(P), keypoints.data),
+        collect(SVector{N, T}, map(fmap(P), keypoints.data)),
         bounds,
     )
 end
 function project!(buf, P, keypoints::Keypoints{N, T}, bounds::Bounds{N}) where {N, T}
-    # TODO: convert back to `T`?
     return Keypoints(
-        map(fmap(P), keypoints.data),
+        collect(SVector{N, T}, map(fmap(P), keypoints.data)),
         bounds,
     )
 end
@@ -69,7 +67,7 @@ end
     Polygon(points, sz)
     Polygon{N, T, M}(points, bounds)
 
-Item wrapper around [`Keypoints`](#).
+Item wrapper around [`Keypoints`](@ref).
 
 ## Examples
 
@@ -106,7 +104,7 @@ end
     BoundingBox(points, sz)
     BoundingBox{N, T, M}(points, bounds)
 
-Item wrapper around [`Keypoints`](#).
+Item wrapper around [`Keypoints`](@ref).
 
 ## Examples
 
@@ -126,11 +124,16 @@ struct BoundingBox{N, T, S} <: ItemWrapper{Keypoints{N, T, S, 1}}
     item::Keypoints{N, T, S, 1}
 end
 
-function BoundingBox(data::AbstractVector{<:SVector{N}}, bounds) where N
-    length(data) == N || error("Give $N corner points for an $N-dimensional bounding box")
-    BoundingBox(Keypoints(data, bounds))
+function BoundingBox(data::AbstractVector{<:SVector{N, T}}, bounds) where {N, T}
+    length(data) == 2 || error("Give 2 corner points for an $N-dimensional bounding box")
+    corners = reduce(vcat, Iterators.product(zip(data...)...))
+    corners = collect(SVector{N, T}, corners)
+    corners = SVector{2^N, SVector{N, T}}(corners)
+    BoundingBox{N, T, SVector{N, T}}(Keypoints(corners, bounds))
 end
 
+itemdata(box::BoundingBox{N, T}) where {N, T} =
+    [min.(box.item.data...), max.(box.item.data...)]
 
 Base.show(io::IO, item::BoundingBox{N, T}) where {N, T} =
     print(io, "BoundingBox{$N, $T}()")

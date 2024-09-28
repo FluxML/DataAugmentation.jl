@@ -1,7 +1,7 @@
 
 
-# To make composition possible, we implement [`compose`](#), which
-# defaults to returning a [`Sequence`](#).
+# To make composition possible, we implement [`compose`](@ref), which
+# defaults to returning a [`Sequence`](@ref).
 
 """
     Sequence(transforms...)
@@ -9,7 +9,7 @@
 `Transform` that applies multiple `transformations`
 after each other.
 
-You should not use this explicitly. Instead use [`compose`](#).
+You should not use this explicitly. Instead use [`compose`](@ref).
 """
 struct Sequence{T<:Tuple} <: Transform
     transforms::T

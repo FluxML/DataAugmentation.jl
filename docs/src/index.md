@@ -4,7 +4,7 @@ This library provides data transformations for machine and deep learning. At the
 
 For the most part, the transformations themselves are not very complex. The challenge this library tackles is to reconcile an easy-to-use, composable interface with performant execution.
 
-The key abstractions are `Transform`s, the transformation to apply, and `Item`s which contain the data to be transformed. [`apply`](#)`(tfm, item)`, as the name gives away, applies a transformation to an item.  For example, given an [`Image`](#) item, we can resize it with the [`CenterResizeCrop`](#) transformation.
+The key abstractions are `Transform`s, the transformation to apply, and `Item`s which contain the data to be transformed. [`apply`](@ref)`(tfm, item)`, as the name gives away, applies a transformation to an item.  For example, given an [`Image`](@ref) item, we can resize it with the [`CenterResizeCrop`](@ref) transformation.
 
 ```julia
 item = Image(image)
@@ -21,7 +21,7 @@ The above example is simple, but there are more requirements of data augmentatio
 A transformation is stochastic (as opposed to deterministic) if it produces different outputs based on some random state.
 This randomness can become a problem when applying an transformation to an aligned pair of input and target. If we have an image and a corresponding segmentation mask, using different scaling factors results in misalignment of the two; the segmentation no longer matches up with the image pixels.
 
-To handle this, the random state is explicitly passed to the transformations, rendering them deterministic. A generator for the random state can be defined with [`getrandstate`](#)`(tfm)` and passed to `apply` with the `randstate` keyword argument.
+To handle this, the random state is explicitly passed to the transformations, rendering them deterministic. A generator for the random state can be defined with [`DataAugmentation.getrandstate`](@ref)`(tfm)` and passed to `apply` with the `randstate` keyword argument.
 
 ### Composition
 

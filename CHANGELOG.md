@@ -8,6 +8,64 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0]
+
+### Added
+
+- Add `PermuteDims` transformation
+
+### Changed
+
+- `ImageToTensor` now returns arrays in `WHC` format instead of `HWC` 
+
+## [0.2.12]
+
+### Added
+
+- Added optional `clamp` flag to `AdjustBrightness` and `AdjustContrast`
+
+### Changed
+
+- Transfered repository to FluxML
+
+## [0.2.11]
+
+### Fixed
+
+- Bump Setfield compat
+
+## [0.2.10]
+
+### Fixed 
+
+- Fix `RandomCrop` transform
+
+## [0.2.9]
+
+### Added 
+
+- Set up Pollen.jl documentation 
+
+### Fixed 
+
+- Fix deprecated call to `warp`
+
+## [0.2.8]
+
+### Fixed
+
+- Fix compatibility with ImageTransformations 0.9
+
+## [0.2.7]
+
+### Changed
+
+- Replace Images.jl dependency with ImageCore.jl
+
+### Fixed
+
+- Fix crop-projective composition
+
 ## [0.2.6]
 
 ### Fixed

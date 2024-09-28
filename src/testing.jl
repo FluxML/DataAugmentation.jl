@@ -103,17 +103,19 @@ function testitem end
 testitem(::Type{ArrayItem}) = testitem(ArrayItem{2, Float32})
 testitem(::Type{ArrayItem{N, T}}) where {N, T} = ArrayItem(rand(T, ntuple(i -> 16, N)))
 
-testitem(::Type{Image}) = testitem(Image{2, RGB{N0f8}})
-testitem(::Type{Image{N, T}}) where {N, T} = Image(rand(T, ntuple(i -> 16, N)))
+testitem(::Type{Image}; kwargs...) = testitem(Image{2, RGB{N0f8}}; kwargs...)
+testitem(::Type{Image{N}}; kwargs...) where {N} = testitem(Image{N, RGB{N0f8}}; kwargs...)
+testitem(::Type{Image{N, T}}; kwargs...) where {N, T} = Image(rand(T, ntuple(i -> 16, N)); kwargs...)
 
-testitem(::Type{MaskBinary}) = testitem(MaskBinary{2})
-testitem(::Type{MaskBinary{N}}) where {N} = MaskBinary(rand(Bool, ntuple(i -> 16, N)))
+testitem(::Type{MaskBinary}; kwargs...) = testitem(MaskBinary{2}; kwargs...)
+testitem(::Type{MaskBinary{N}}; kwargs...) where {N} = MaskBinary(rand(Bool, ntuple(i -> 16, N)); kwargs...)
 
-testitem(::Type{MaskMulti}) = testitem(MaskMulti{2, UInt8})
-function testitem(::Type{MaskMulti{N, T}}) where {N, T}
+testitem(::Type{MaskMulti}; kwargs...) = testitem(MaskMulti{2, UInt8}; kwargs...)
+testitem(::Type{MaskMulti{N}}; kwargs...) where {N} = testitem(MaskMulti{N, UInt8}; kwargs...)
+function testitem(::Type{MaskMulti{N, T}}; kwargs...) where {N, T}
     n = rand(2:10)
     data = T.(rand(1:n, ntuple(i -> 16, N)))
-    MaskMulti(data, 1:n)
+    MaskMulti(data, 1:n; kwargs...)
 end
 
 

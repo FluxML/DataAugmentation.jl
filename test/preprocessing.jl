@@ -62,6 +62,18 @@ end
     end
 end
 
+@testset ExtendedTestSet "PermuteDims" begin
+    tfm = PermuteDims(2, 1, 4, 3)
+    item1 = ArrayItem(rand(3, 4, 5, 6))
+    item2 = ArrayItem(rand(3, 4, 5, 6))
+    @test_nowarn apply(tfm, item1)
+    a = itemdata(apply(tfm, item1))
+    @test size(a) == (4, 3, 6, 5)
+
+    testapply(tfm, item1)
+    testapply!(tfm, item1, item2)
+end
+
 @testset ExtendedTestSet "OneHot" begin
     tfm = OneHot()
     mask = rand(1:4, 10, 10)
@@ -90,7 +102,7 @@ end
 
     res = apply(tfm, item1)
     a = itemdata(res)
-    @test size(a) == (32, 48, 3)
+    @test size(a) == (48, 32, 3)
     @test eltype(a) == Float32
 
     testapply(tfm, item1)

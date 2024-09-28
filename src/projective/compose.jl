@@ -1,4 +1,4 @@
-# [`ComposedProjectiveTransform`](#) implements efficient composition
+# [`ComposedProjectiveTransform`](@ref) implements efficient composition
 # of `ProjectiveTransform`s.
 
 """
@@ -40,6 +40,7 @@ function getprojection(
         composed::ComposedProjectiveTransform,
         bounds;
         randstate = getrandstate(composed))
+    @assert length(composed.tfms) == length(randstate)
     P = CoordinateTransformations.IdentityTransformation()
     for (tfm, r) in zip(composed.tfms, randstate)
         P_tfm = getprojection(tfm, bounds; randstate = r)

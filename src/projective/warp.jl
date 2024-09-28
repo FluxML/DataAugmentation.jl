@@ -32,7 +32,7 @@ end
 """
     threepointwarpaffine(srcps, dstps)
 
-Calculate an affine [`CoordinateTransformations.LinearMap`](#)
+Calculate an affine `CoordinateTransformations.LinearMap`
 from 3 source points to 3 destination points.
 
 Adapted from  [CoordinateTransformations.jl#30](https://github.com/JuliaGeometry/CoordinateTransformations.jl/issues/30#issuecomment-610337378).
