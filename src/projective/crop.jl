@@ -24,7 +24,7 @@ function apply(crop::Crop, item::Item; randstate = getrandstate(crop))
     return apply(
         Project(CoordinateTransformations.IdentityTransformation()) |> crop,
         item;
-        randstate = (nothing, randstate))
+        randstate = (nothing, (randstate,)))
 end
 
 
@@ -50,14 +50,14 @@ end
 
 
 
-struct CroppedProjectiveTransform{P<:ProjectiveTransform, C<:AbstractCrop} <: ProjectiveTransform
+struct CroppedProjectiveTransform{P<:ProjectiveTransform, C<:Tuple} <: ProjectiveTransform
     tfm::P
-    crop::C
+    crops::C
 end
 
 
 function getrandstate(cropped::CroppedProjectiveTransform)
-    return (getrandstate(cropped.tfm), getrandstate(cropped.crop))
+    return (getrandstate(cropped.tfm), getrandstate.(cropped.crops))
 end
 
 
@@ -69,49 +69,55 @@ function getprojection(
     return getprojection(cropped.tfm, bounds; randstate = tfmstate)
 end
 
-
 function projectionbounds(
-        cropped::CroppedProjectiveTransform{PT, C},
+        cropped::CroppedProjectiveTransform,
         P,
         bounds;
-        randstate = getrandstate(cropped)) where {PT, C<:Crop}
-    tfmstate, cropstate = randstate
+        randstate = getrandstate(cropped))
+    tfmstate, cropstates = randstate
     bounds_ = projectionbounds(cropped.tfm, P, bounds; randstate = tfmstate)
-    return offsetcropbounds(cropped.crop.size, bounds_, cropstate)
+    for (crop, cropstate) in zip(cropped.crops, cropstates)
+        bounds_ = cropbounds(crop, bounds_; randstate = cropstate)
+    end
+    return bounds_
+end
+
+compose(tfm::ProjectiveTransform, crop::AbstractCrop) = CroppedProjectiveTransform(tfm, (crop,))
+compose(tfm::ProjectiveTransform, cropped::CroppedProjectiveTransform) =
+    CroppedProjectiveTransform(tfm |> cropped.tfm, cropped.crops)
+
+function compose(composed::ComposedProjectiveTransform, cropped::CroppedProjectiveTransform)
+    return CroppedProjectiveTransform(composed |> cropped.tfm, cropped.crops)
+end
+
+function compose(cropped::CroppedProjectiveTransform, crop::AbstractCrop)
+    return CroppedProjectiveTransform(cropped.tfm, (cropped.crops..., crop))
+end
+
+function compose(cropped::CroppedProjectiveTransform, projective::ProjectiveTransform)
+    return Sequence(cropped, projective)
+end
+
+function compose(cropped::CroppedProjectiveTransform, composed::ComposedProjectiveTransform)
+    return Sequence(cropped, composed)
 end
 
 
-function projectionbounds(
-        cropped::CroppedProjectiveTransform{PT, PadDivisible},
-        P,
-        bounds;
-        randstate = getrandstate(cropped)) where {PT}
-    tfmstate, cropstate = randstate
-    bounds_ = projectionbounds(cropped.tfm, P, bounds; randstate = tfmstate)
-    ranges = bounds_.rs
+cropbounds(crop::Crop, bounds::Bounds; randstate=getrandstate(crop)) = offsetcropbounds(crop.size, bounds, randstate)
+
+function cropbounds(
+        crop::PadDivisible,
+        bounds::Bounds;
+        randstate = getrandstate(crop))
+    ranges = bounds.rs
 
     sz = length.(ranges)
-    pad = (cropped.crop.by .- (sz .% cropped.crop.by)) .% cropped.crop.by
+    pad = (crop.by .- (sz .% crop.by)) .% crop.by
 
     start = minimum.(ranges)
     end_ = start .+ sz .+ pad .- 1
     rs = UnitRange.(start, end_)
     return Bounds(rs)
-end
-
-
-
-compose(tfm::ProjectiveTransform, crop::AbstractCrop) = CroppedProjectiveTransform(tfm, crop)
-compose(tfm::ProjectiveTransform, crop::CroppedProjectiveTransform) =
-    CroppedProjectiveTransform(tfm |> crop.tfm, crop.crop)
-
-function compose(composed::ComposedProjectiveTransform, cropped::CroppedProjectiveTransform)
-    return CroppedProjectiveTransform(composed |> cropped.tfm, cropped.crop)
-
-end
-
-function compose(cropped::CroppedProjectiveTransform, projective::ProjectiveTransform)
-    return Sequence(cropped, projective)
 end
 
 
