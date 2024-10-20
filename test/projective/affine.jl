@@ -94,9 +94,12 @@ include("../imports.jl")
 
         @testset ExtendedTestSet "ScaleKeepAspect" begin
             tfm = ScaleKeepAspect((32, 32))
+
             img = rand(RGB{N0f8}, 64, 96)
             @test apply(tfm, Image(img)) |> itemdata |> size == (32, 48)
 
+            img = rand(RGB{N0f8}, 196, 196)
+            @test apply(tfm, Image(img)) |> itemdata |> size == (32, 32)
         end
     end
 
