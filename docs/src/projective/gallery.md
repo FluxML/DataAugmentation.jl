@@ -135,14 +135,14 @@ tfms = [
 showgrid([apply(tfm, (image, bbox)) for tfm in tfms]; ncol=6, npad=8)
 ```
 
-## [`FlipX`](@ref), [`FlipY`](@ref), [`Reflect`](@ref)
+## [`FlipX`](@ref), [`FlipY`](@ref), [`FlipZ`](@ref), [`Reflect`](@ref)
 
 Flip the data on the horizontally and vertically, respectively. More generally, reflect around an angle from the x-axis.
 
 ```@example deps
 tfms = [
-    FlipX(),
-    FlipY(),
+    FlipX{2}(),
+    FlipY{2}(),
     Reflect(30),
 ]
 showgrid([apply(tfm, (image, bbox)) for tfm in tfms]; ncol=6, npad=8)

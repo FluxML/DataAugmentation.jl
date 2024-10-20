@@ -43,7 +43,7 @@ struct ScaleKeepAspect{N} <: ProjectiveTransform
 end
 
 
-function getprojection(scale::ScaleKeepAspect{N}, bounds; randstate = nothing) where N
+function getprojection(scale::ScaleKeepAspect{N}, bounds::Bounds{N}; randstate = nothing) where N
     # If no scaling needs to be done, return a noop transform
     scale.minlengths == length.(bounds.rs) && return IdentityTransformation()
 
@@ -51,7 +51,7 @@ function getprojection(scale::ScaleKeepAspect{N}, bounds; randstate = nothing) w
     ratio = maximum((scale.minlengths .+ 1) ./ length.(bounds.rs))
     upperleft = SVector{N, Float32}(minimum.(bounds.rs)) .- 0.5
     P = scaleprojection(Tuple(ratio for _ in 1:N))
-    if upperleft != SVector(0, 0)
+    if any(upperleft .!= 0)
         P = P ∘ Translation((Float32.(P(upperleft)) .+ 0.5f0))
     end
     return P
@@ -79,11 +79,11 @@ struct ScaleFixed{N} <: ProjectiveTransform
 end
 
 
-function getprojection(scale::ScaleFixed, bounds; randstate = nothing)
+function getprojection(scale::ScaleFixed, bounds::Bounds{N}; randstate = nothing) where N
     ratios = (scale.sizes .+ 1) ./ length.(bounds.rs)
-    upperleft = SVector{2, Float32}(minimum.(bounds.rs)) .- 1
+    upperleft = SVector{N, Float32}(minimum.(bounds.rs)) .- 1
     P = scaleprojection(ratios)
-    if upperleft != SVector(0, 0)
+    if any(upperleft .!= 0)
         P = P  ∘ Translation(-upperleft)
     end
     return P
@@ -92,7 +92,7 @@ end
 
 function projectionbounds(tfm::ScaleFixed{N}, P, bounds::Bounds{N}; randstate = nothing) where N
     bounds_ = transformbounds(bounds, P)
-    return offsetcropbounds(tfm.sizes, bounds_, (1., 1.))
+    return offsetcropbounds(tfm.sizes, bounds_, ntuple(_ -> 1., N))
 end
 
 """
@@ -230,7 +230,7 @@ struct Reflect <: ProjectiveTransform
 end
 
 
-function getprojection(tfm::Reflect, bounds; randstate = getrandstate(tfm))
+function getprojection(tfm::Reflect, bounds::Bounds{2}; randstate = getrandstate(tfm))
     r = tfm.γ / 360 * 2pi
     return centered(LinearMap(reflectionmatrix(r)), bounds)
 end
@@ -241,26 +241,73 @@ end
 Transform `P` so that is applied around the center of `bounds`
 instead of the origin
 """
-function centered(P, bounds::Bounds{2})
+function centered(P, bounds::Bounds{N}) where N
     upperleft = minimum.(bounds.rs)
     bottomright = maximum.(bounds.rs)
 
-    midpoint = SVector{2, Float32}((bottomright .- upperleft) ./ 2) .+ SVector{2, Float32}(.5, .5)
+    midpoint = SVector{N, Float32}((bottomright .- upperleft) ./ 2) .+ .5f0
     return recenter(P, midpoint)
 end
 
-"""
-Reflect(180)
-"""
-FlipX() = Reflect(180)
-"""
-Reflect(90)
-"""
-FlipY() = Reflect(90)
 
 function reflectionmatrix(r)
     A = SMatrix{2, 2, Float32}(cos(2r), sin(2r), sin(2r), -cos(2r))
     return round.(A; digits = 12)
+end
+
+
+"""
+    FlipDim{N}(dim)
+
+Reflect `N` dimensional data along the axis of dimension `dim`. Must satisfy 1 <= `dim` <= `N`.
+
+## Examples
+
+```julia
+tfm = FlipDim{2}(1)
+```
+"""
+struct FlipDim{N} <: ProjectiveTransform
+    dim::Int
+    FlipDim{N}(dim) where N = 1 <= dim <= N ? new{N}(dim) : error("invalid dimension")
+end
+
+"""
+    FlipX{N}()
+
+Flip `N` dimensional data along the x-axis. 2D images use (r, c) = (y, x)
+convention such that x-axis flips occur along the second dimension. For N >= 3,
+x-axis flips occur along the first dimension.
+"""
+struct FlipX{N}
+    FlipX{N}() where N = FlipDim{N}(N==2 ? 2 : 1)
+end
+
+"""
+    FlipY{N}()
+
+Flip `N` dimensional data along the y-axis. 2D images use (r, c) = (y, x)
+convention such that y-axis flips occur along the first dimension. For N >= 3,
+y-axis flips occur along the second dimension.
+"""
+struct FlipY{N}
+    FlipY{N}() where N = FlipDim{N}(N==2 ? 1 : 2)
+end
+
+"""
+    FlipZ{N}()
+
+Flip `N` dimensional data along the z-axis.
+"""
+struct FlipZ{N}
+    FlipZ{N}() where N = FlipDim{N}(3)
+end
+
+function getprojection(tfm::FlipDim{N}, bounds::Bounds{N}; randstate = nothing) where N
+    arr = 1I(N)
+    arr[tfm.dim, tfm.dim] = -1
+    M = SMatrix{N, N, Float32}(arr)
+    return DataAugmentation.centered(LinearMap(M), bounds)
 end
 
 
@@ -281,8 +328,8 @@ at one.
 """
 struct PinOrigin <: ProjectiveTransform end
 
-function getprojection(::PinOrigin, bounds; randstate = nothing)
-    p = (-SVector{2, Float32}(minimum.(bounds.rs))) .+ 1
+function getprojection(::PinOrigin, bounds::Bounds{N}; randstate = nothing) where N
+    p = (-SVector{N, Float32}(minimum.(bounds.rs))) .+ 1
     P = Translation(p)
     return P
 end

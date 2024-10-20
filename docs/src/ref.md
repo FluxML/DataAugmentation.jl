@@ -6,8 +6,10 @@ BoundingBox
 CenterCrop
 CenterResizeCrop
 Crop
+FlipDim
 FlipX
 FlipY
+FlipZ
 Image
 Keypoints
 MaskBinary

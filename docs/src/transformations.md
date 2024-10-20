@@ -6,7 +6,7 @@ using DataAugmentation
 Using  transformations is easy. Simply `compose` them:
 
 ```@example tsm
-tfm = Rotate(10) |> ScaleRatio((0.7,0.1,1.2)) |> FlipX() |> Crop((128, 128))
+tfm = Rotate(10) |> ScaleRatio((0.7,0.1,1.2)) |> FlipX{2}() |> Crop((128, 128))
 ```
 
 # Projective transformations
@@ -26,8 +26,10 @@ Projective transformations include:
 Affine transformations are a subgroup of projective transformations that can be composed very efficiently: composing two affine transformations results in another affine transformation. Affine transformations can represent translation, scaling, reflection and rotation. Available `Transform`s are:
 
 ```@docs; canonical=false
+FlipDim
 FlipX
 FlipY
+FlipZ
 Reflect
 Rotate
 RotateX
@@ -73,7 +75,7 @@ Let's say we have an image classification dataset. For most datasets, horizontal
 ```@example
 using DataAugmentation, TestImages
 item = Image(testimage("lighthouse"))
-tfm = Maybe(FlipX())
+tfm = Maybe(FlipX{2}())
 titems = [apply(tfm, item) for _ in 1:8]
 showgrid(titems; ncol = 4, npad = 16)
 ```

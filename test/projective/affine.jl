@@ -192,16 +192,60 @@ include("../imports.jl")
         @test_nowarn apply!(buffer, tfm, image2)
     end
 
-    @testset ExtendedTestSet "`RandomCrop` correct indices" begin
-        # Flipping and cropping should be the same as reverse-indexing
-        # the flipped dimension
-        tfm = FlipX() |> RandomCrop((64, 64)) |> PinOrigin()
-        img = rand(RGB, 64, 64)
+
+    @testset ExtendedTestSet "FlipX 2D correct indices" begin
+        tfm = FlipX{2}() |> RandomCrop((10,10)) |> PinOrigin()
+        img = rand(RGB, 10, 10)
         item = Image(img)
+        @test_nowarn titem = apply(tfm, item)
         titem = apply(tfm, item)
-        timg = itemdata(titem)
-        rimg = img[:, end:-1:1]
-        @test titem.data == rimg
+        @test itemdata(titem) == img[:, end:-1:1]
+    end
+
+    @testset ExtendedTestSet "FlipY 2D correct indices" begin
+        tfm = FlipY{2}() |> RandomCrop((10,10)) |> PinOrigin()
+        img = rand(RGB, 10, 10)
+        item = Image(img)
+        @test_nowarn titem = apply(tfm, item)
+        titem = apply(tfm, item)
+        @test itemdata(titem) == img[end:-1:1, :]
+    end
+
+
+    @testset ExtendedTestSet "FlipX 3D correct indices" begin
+        tfm = FlipX{3}() |> RandomCrop((10,10,10)) |> PinOrigin()
+        img = rand(RGB, 10, 10, 10)
+        item = Image(img)
+        @test_nowarn titem = apply(tfm, item)
+        titem = apply(tfm, item)
+        @test itemdata(titem) == img[end:-1:1, :, :]
+    end
+
+    @testset ExtendedTestSet "FlipY 3D correct indices" begin
+        tfm = FlipY{3}() |> RandomCrop((10,10,10)) |> PinOrigin()
+        img = rand(RGB, 10, 10, 10)
+        item = Image(img)
+        @test_nowarn titem = apply(tfm, item)
+        titem = apply(tfm, item)
+        @test itemdata(titem) == img[:, end:-1:1, :]
+    end
+
+    @testset ExtendedTestSet "FlipZ 3D correct indices" begin
+        tfm = FlipZ{3}() |> RandomCrop((10,10,10)) |> PinOrigin()
+        img = rand(RGB, 10, 10, 10)
+        item = Image(img)
+        @test_nowarn titem = apply(tfm, item)
+        titem = apply(tfm, item)
+        @test itemdata(titem) == img[:, :, end:-1:1]
+    end
+
+    @testset ExtendedTestSet "Double flip is identity" begin
+        tfm = FlipZ{3}() |> FlipZ{3}() |> RandomCrop((10,10,10)) |> PinOrigin()
+        img = rand(RGB, 10, 10, 10)
+        item = Image(img)
+        @test_nowarn titem = apply(tfm, item)
+        titem = apply(tfm, item)
+        @test itemdata(titem) == img
     end
 end
 
@@ -210,8 +254,8 @@ end
     @testset ExtendedTestSet "2D" begin
         tfms = compose(
             Rotate(10),
-            FlipX(),
-            FlipY(),
+            FlipX{2}(),
+            FlipY{2}(),
             ScaleRatio((.8, .8)),
             WarpAffine(0.1),
             Zoom((1., 1.2)),
@@ -230,9 +274,14 @@ end
         )
 
         tfms = compose(
+            FlipX{3}(),
+            FlipY{3}(),
+            FlipZ{3}(),
+            ScaleFixed((30, 40, 50)),
             Rotate(10, 20, 30),
             ScaleRatio((.8, .8, .8)),
             ScaleKeepAspect((12, 10, 10)),
+            Zoom((1., 1.2)),
             RandomCrop((10, 10, 10))
         )
         testprojective(tfms, items)
