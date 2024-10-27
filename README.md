@@ -1,9 +1,7 @@
 # DataAugmentation.jl
 
-![CI](https://github.com/FluxML/DataAugmentation.jl/actions/workflows/CI/badge.svg)
-![compat](https://github.com/FluxML/DataAugmentation.jl/actions/workflows/CompatHelper.yml/badge.svg)
-
-
-[Documentation | Latest](https://fluxml.ai/DataAugmentation.jl/dev/)
+[![Documentation Dev](https://img.shields.io/badge/Documentation-dev-blue.svg)](https://fluxml.ai/DataAugmentation.jl/dev/)
+[![Continuous Integration](https://github.com/FluxML/DataAugmentation.jl/actions/workflows/ci.yml/badge.svg)](https://github.com/FluxML/DataAugmentation.jl/actions/workflows/ci.yml)
+[![CompatHelper](https://github.com/FluxML/DataAugmentation.jl/actions/workflows/CompatHelper.yml/badge.svg)](https://github.com/FluxML/DataAugmentation.jl/actions/workflows/CompatHelper.yml)
 
 Efficient, composable data augmentation for machine and deep learning with support for n-dimensional images, keypoints and categorical masks.
