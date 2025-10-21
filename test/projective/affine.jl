@@ -76,6 +76,7 @@ include("../imports.jl")
             @test_nowarn apply(tfm, keypoints)
             timage = apply(tfm, image)
             tkeypoints = apply(tfm, keypoints)
+            @test !any(isnan.(timage |> itemdata))
             @test length.(getbounds(timage).rs) == (25, 25)
             @test getbounds(timage) == getbounds(tkeypoints)
             testprojective(tfm)
@@ -87,7 +88,8 @@ include("../imports.jl")
             @test_nowarn apply(tfm, keypoints)
             timage = apply(tfm, image)
             tkeypoints = apply(tfm, keypoints)
-            @test getbounds(timage).rs == (0:25, 0:25)
+            @test !any(isnan.(timage |> itemdata))
+            @test getbounds(timage).rs == (2:26, 2:26)
             @test getbounds(timage) == getbounds(tkeypoints)
             testprojective(tfm)
         end
@@ -96,10 +98,14 @@ include("../imports.jl")
             tfm = ScaleKeepAspect((32, 32))
 
             img = rand(RGB{N0f8}, 64, 96)
-            @test apply(tfm, Image(img)) |> itemdata |> size == (32, 48)
+            timg = apply(tfm, Image(img)) |> itemdata
+            @test timg |> size == (32, 48)
+            @test !any(isnan.(timg))
 
             img = rand(RGB{N0f8}, 196, 196)
-            @test apply(tfm, Image(img)) |> itemdata |> size == (32, 32)
+            timg = apply(tfm, Image(img)) |> itemdata
+            @test timg |> size == (32, 32)
+            @test !any(isnan.(timg))
         end
     end
 
