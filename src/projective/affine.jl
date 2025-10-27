@@ -75,7 +75,7 @@ end
 function getprojection(scale::ScaleFixed, bounds::Bounds{N}; randstate = nothing) where N
     # If no scaling needs to be done, return a noop transform
     (scale.sizes == length.(bounds.rs)) && return IdentityTransformation()
-    
+
     ratios = (scale.sizes .+ 1) ./ length.(bounds.rs)
     upperleft = SVector{N, Float32}(minimum.(bounds.rs)) .- 1
     P = scaleprojection(ratios)
@@ -88,7 +88,7 @@ end
 
 function projectionbounds(tfm::ScaleFixed{N}, P, bounds::Bounds{N}; randstate = nothing) where N
     bounds_ = transformbounds(bounds, P)
-    return offsetcropbounds(tfm.sizes, bounds_, ntuple(_ -> 1., N))
+    return offsetcropbounds(tfm.sizes, bounds_, ntuple(_ -> 0.5, N))
 end
 
 """
