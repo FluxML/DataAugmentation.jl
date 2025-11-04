@@ -77,7 +77,7 @@ include("../imports.jl")
             timage = apply(tfm, image)
             tkeypoints = apply(tfm, keypoints)
             @test !any(isnan.(timage |> itemdata))
-            @test length.(getbounds(timage).rs) == (25, 25)
+            @test getbounds(timage).rs == (1:25, 1:25)
             @test getbounds(timage) == getbounds(tkeypoints)
             testprojective(tfm)
 
@@ -97,7 +97,6 @@ include("../imports.jl")
 
         @testset ExtendedTestSet "ScaleRatioTwice" begin
             tfm = ScaleRatio((4/5, 4/5)) |> ScaleRatio((1/2, 1/2))
-            @show getbounds(image).rs
             @test_nowarn apply(tfm, image)
             @test_nowarn apply(tfm, keypoints)
             timage = apply(tfm, image)
@@ -113,14 +112,14 @@ include("../imports.jl")
 
             img = rand(RGB{N0f8}, 64, 96)
             timg = apply(tfm, Image(img)) |> itemdata
-            @test timg |> size == (32, 48)
-            @test !any(isnan.(timg))
-
+            timg = apply(tfm, Image(img))
+            @test getbounds(timg).rs == (1:32, 1:48)
+            @test !any(isnan.(timg |> itemdata))
             img = rand(RGB{N0f8}, 196, 196)
             timg = apply(tfm, Image(img)) |> itemdata
-            @test timg |> size == (32, 32)
-            @test !any(isnan.(timg))
-        end
+            timg = apply(tfm, Image(img))
+            @test getbounds(timg).rs == (1:32, 1:32)
+            @test !any(isnan.(timg |> itemdata))
     end
 
     @testset ExtendedTestSet "Rotate" begin
