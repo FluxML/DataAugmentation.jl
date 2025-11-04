@@ -120,6 +120,7 @@ include("../imports.jl")
             timg = apply(tfm, Image(img))
             @test getbounds(timg).rs == (1:32, 1:32)
             @test !any(isnan.(timg |> itemdata))
+        end
     end
 
     @testset ExtendedTestSet "Rotate" begin
