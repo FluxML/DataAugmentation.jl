@@ -10,7 +10,7 @@ end
 
 
 """
-    ScaleRatio(minlengths) <: ProjectiveTransform
+    ScaleRatio(ratios) <: ProjectiveTransform
 
 Scales the aspect ratio
 """
@@ -18,16 +18,22 @@ struct ScaleRatio{N} <: ProjectiveTransform
     ratios::NTuple{N}
 end
 
+# This allows for roundtrip through ScaleFixed and avoids code duplication
+fixed_sizes(scale::ScaleRatio, bounds::Bounds) = round.(Int,  scale.ratios .* length.(bounds.rs))
 
-function getprojection(scale::ScaleRatio, bounds; randstate = nothing)
-    return scaleprojection(scale.ratios)
+function getprojection(scale::ScaleRatio{N}, bounds::Bounds{N}; randstate = nothing) where N
+    return getprojection(ScaleFixed{N}(fixed_sizes(scale, bounds)), bounds; randstate)
+end
+
+function projectionbounds(tfm::ScaleRatio{N}, P, bounds::Bounds{N}; randstate = nothing) where N
+    projectionbounds(ScaleFixed{N}(fixed_sizes(tfm, bounds)), P, bounds; randstate)
 end
 
 """
     ScaleKeepAspect(minlengths) <: ProjectiveTransform
 
-Scales the shortest side of `item` to `minlengths`, keeping the
-original aspect ratio.
+Scales the sides of `item` to be as least as large as `minlengths`,
+keeping the original aspect ratio.
 
 ## Examples
 
@@ -42,28 +48,15 @@ struct ScaleKeepAspect{N} <: ProjectiveTransform
     minlengths::NTuple{N, Int}
 end
 
+# This allows for roundtrip through ScaleFixed and avoids code duplication
+fixed_sizes(scale::ScaleKeepAspect, bounds::Bounds) = round.(Int, maximum(scale.minlengths ./ length.(bounds.rs)) .* length.(bounds.rs))
 
 function getprojection(scale::ScaleKeepAspect{N}, bounds::Bounds{N}; randstate = nothing) where N
-    # If no scaling needs to be done, return a noop transform
-    scale.minlengths == length.(bounds.rs) && return IdentityTransformation()
-
-    # Offset `minlengths` by 1 to avoid black border on one side
-    ratio = maximum((scale.minlengths .+ 1) ./ length.(bounds.rs))
-    upperleft = SVector{N, Float32}(minimum.(bounds.rs)) .- 0.5
-    P = scaleprojection(Tuple(ratio for _ in 1:N))
-    if any(upperleft .!= 0)
-        P = P ∘ Translation((Float32.(P(upperleft)) .+ 0.5f0))
-    end
-    return P
+    getprojection(ScaleFixed{N}(fixed_sizes(scale, bounds)), bounds; randstate)
 end
 
 function projectionbounds(tfm::ScaleKeepAspect{N}, P, bounds::Bounds{N}; randstate = nothing) where N
-    origsz = length.(bounds.rs)
-    ratio = maximum((tfm.minlengths) ./ origsz)
-    sz = round.(Int, ratio .* origsz)
-    bounds_ = transformbounds(bounds, P)
-    bs_ = offsetcropbounds(sz, bounds_, ntuple(_ -> 0.5, N))
-    return bs_
+    projectionbounds(ScaleFixed{N}(fixed_sizes(tfm, bounds)), P, bounds; randstate)
 end
 
 """
@@ -80,6 +73,9 @@ end
 
 
 function getprojection(scale::ScaleFixed, bounds::Bounds{N}; randstate = nothing) where N
+    # If no scaling needs to be done, return a noop transform
+    (scale.sizes == length.(bounds.rs)) && return IdentityTransformation()
+
     ratios = (scale.sizes .+ 1) ./ length.(bounds.rs)
     upperleft = SVector{N, Float32}(minimum.(bounds.rs)) .- 1
     P = scaleprojection(ratios)
@@ -92,7 +88,7 @@ end
 
 function projectionbounds(tfm::ScaleFixed{N}, P, bounds::Bounds{N}; randstate = nothing) where N
     bounds_ = transformbounds(bounds, P)
-    return offsetcropbounds(tfm.sizes, bounds_, ntuple(_ -> 1., N))
+    return offsetcropbounds(tfm.sizes, bounds_, ntuple(_ -> 0.5, N))
 end
 
 """

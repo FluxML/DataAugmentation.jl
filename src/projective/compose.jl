@@ -54,5 +54,12 @@ function getprojection(
 end
 
 function projectionbounds(composed::ComposedProjectiveTransform, P, bounds; randstate = getrandstate(composed))
-    return transformbounds(bounds, P)
+    @assert length(composed.tfms) == length(randstate)
+    P = CoordinateTransformations.IdentityTransformation()
+    for (tfm, r) in zip(composed.tfms, randstate)
+        P_tfm = getprojection(tfm, bounds; randstate = r)
+        bounds = projectionbounds(tfm, P_tfm, bounds; randstate = r)
+        P = P_tfm ∘ P
+    end
+    return bounds
 end

@@ -76,18 +76,33 @@ include("../imports.jl")
             @test_nowarn apply(tfm, keypoints)
             timage = apply(tfm, image)
             tkeypoints = apply(tfm, keypoints)
-            @test length.(getbounds(timage).rs) == (25, 25)
+            @test !any(isnan.(timage |> itemdata))
+            @test getbounds(timage).rs == (1:25, 1:25)
             @test getbounds(timage) == getbounds(tkeypoints)
             testprojective(tfm)
 
         end
+        
         @testset ExtendedTestSet "ScaleRatio" begin
             tfm = ScaleRatio((1/2, 1/2))
             @test_nowarn apply(tfm, image)
             @test_nowarn apply(tfm, keypoints)
             timage = apply(tfm, image)
             tkeypoints = apply(tfm, keypoints)
-            @test getbounds(timage).rs == (0:25, 0:25)
+            @test !any(isnan.(timage |> itemdata))
+            @test getbounds(timage).rs == (1:25, 1:25)
+            @test getbounds(timage) == getbounds(tkeypoints)
+            testprojective(tfm)
+        end
+
+        @testset ExtendedTestSet "ScaleRatioTwice" begin
+            tfm = ScaleRatio((4/5, 4/5)) |> ScaleRatio((1/2, 1/2))
+            @test_nowarn apply(tfm, image)
+            @test_nowarn apply(tfm, keypoints)
+            timage = apply(tfm, image)
+            tkeypoints = apply(tfm, keypoints)
+            @test !any(isnan.(timage |> itemdata))
+            @test getbounds(timage).rs == (1:20, 1:20)
             @test getbounds(timage) == getbounds(tkeypoints)
             testprojective(tfm)
         end
@@ -96,10 +111,15 @@ include("../imports.jl")
             tfm = ScaleKeepAspect((32, 32))
 
             img = rand(RGB{N0f8}, 64, 96)
-            @test apply(tfm, Image(img)) |> itemdata |> size == (32, 48)
-
+            timg = apply(tfm, Image(img)) |> itemdata
+            timg = apply(tfm, Image(img))
+            @test getbounds(timg).rs == (1:32, 1:48)
+            @test !any(isnan.(timg |> itemdata))
             img = rand(RGB{N0f8}, 196, 196)
-            @test apply(tfm, Image(img)) |> itemdata |> size == (32, 32)
+            timg = apply(tfm, Image(img)) |> itemdata
+            timg = apply(tfm, Image(img))
+            @test getbounds(timg).rs == (1:32, 1:32)
+            @test !any(isnan.(timg |> itemdata))
         end
     end
 
