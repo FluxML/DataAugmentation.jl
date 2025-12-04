@@ -82,7 +82,7 @@ include("../imports.jl")
             testprojective(tfm)
 
         end
-        
+
         @testset ExtendedTestSet "ScaleRatio" begin
             tfm = ScaleRatio((1/2, 1/2))
             @test_nowarn apply(tfm, image)
