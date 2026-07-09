@@ -76,7 +76,7 @@ function getprojection(scale::ScaleFixed, bounds::Bounds{N}; randstate = nothing
     # If no scaling needs to be done, return a noop transform
     (scale.sizes == length.(bounds.rs)) && return IdentityTransformation()
 
-    ratios = (scale.sizes .+ 1) ./ length.(bounds.rs)
+    ratios = (scale.sizes .+ 2) ./ length.(bounds.rs)
     upperleft = SVector{N, Float32}(minimum.(bounds.rs)) .- 1
     P = scaleprojection(ratios)
     if any(upperleft .!= 0)
@@ -111,7 +111,12 @@ getrandstate(tfm::Zoom) = rand(tfm.dist)
 
 function getprojection(tfm::Zoom, bounds::Bounds{N}; randstate = getrandstate(tfm)) where N
     ratio = randstate
-    return scaleprojection(ntuple(_ -> ratio, N))
+    return getprojection(ScaleRatio{N}(ntuple(_ -> ratio, N)), bounds; randstate = nothing)
+end
+
+function projectionbounds(tfm::Zoom, P, bounds::Bounds{N}; randstate = getrandstate(tfm)) where N
+    ratio = randstate
+    projectionbounds(ScaleFixed{N}(fixed_sizes(ScaleRatio{N}(ntuple(_ -> ratio, N)), bounds)), P, bounds; randstate = nothing)
 end
 
 """
