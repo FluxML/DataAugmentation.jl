@@ -13,3 +13,4 @@ DataAugmentation = {path = ".."}
 
 [compat]
 Documenter = "1"
+MosaicViews = "0.3.4"
