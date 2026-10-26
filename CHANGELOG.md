@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   projective transforms and a distribution, applying `Buffered`/`BufferedThreadsafe` to
   `BoundingBox`/`Polygon` items or with `apply!` to tuples of items, and creating a
   `MaskMulti` from an integer-valued `IndirectArray`
+- `Keypoints` with only `nothing` elements now throws an informative `ArgumentError`
 
 ## [0.3.0]
 
