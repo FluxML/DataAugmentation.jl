@@ -1,6 +1,6 @@
 module DataAugmentation
 
-using ColorBlendModes
+using Accessors: @set
 using CoordinateTransformations
 using Distributions: Sampleable, Uniform, Categorical
 using IndirectArrays: IndirectArray
@@ -12,10 +12,8 @@ using Interpolations
 using MosaicViews: mosaicview
 using OffsetArrays: OffsetArray
 using LinearAlgebra: I
-using Parameters
 using Random
 using Rotations
-using Setfield
 using StaticArrays
 using Statistics
 using Test: @test, @test_nowarn
@@ -97,8 +95,7 @@ export Item,
     onehot,
     showitems,
     showgrid,
-    Bounds,
-    getcategorypools
+    Bounds
 
 
 end # module

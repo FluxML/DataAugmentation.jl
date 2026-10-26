@@ -1,7 +1,7 @@
 include("../imports.jl")
 
 
-@testset ExtendedTestSet "projective" begin
+@testset "projective" begin
     keypoints = Keypoints([SVector(2., 2)], (32, 32))
     tfm = Project(Translation(20, 10))
 
@@ -11,7 +11,7 @@ include("../imports.jl")
     @test_nowarn apply(tfm, Polygon(keypoints))
 end
 
-@testset ExtendedTestSet "$(N)D BoundingBox" for N in 2:4
+@testset "$(N)D BoundingBox" for N in 2:4
     bounds = Bounds{N}(ntuple(_ -> -50:50, N))
 
     min = SVector{N, Float64}(ntuple(i -> i==1 ? -20 : -10, N)) # [-20, -10, ...]

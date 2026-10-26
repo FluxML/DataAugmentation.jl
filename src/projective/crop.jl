@@ -98,6 +98,10 @@ function compose(cropped::CroppedProjectiveTransform, projective::ProjectiveTran
     return Sequence(cropped, projective)
 end
 
+function compose(cropped1::CroppedProjectiveTransform, cropped2::CroppedProjectiveTransform)
+    return Sequence(cropped1, cropped2)
+end
+
 function compose(cropped::CroppedProjectiveTransform, composed::ComposedProjectiveTransform)
     return Sequence(cropped, composed)
 end
@@ -132,8 +136,8 @@ the crop by `offsets[i]` times the difference between the two.
 function offsetcropbounds(
         sz::NTuple{N, Int},
         bounds::Bounds{N},
-        offsets::NTuple{N, T}) where {N, T<:AbstractFloat}
-    offsets = map(o -> o == one(T) ? one(T) - eps(T) : o, offsets)
+        offsets::NTuple{N, <:AbstractFloat}) where N
+    offsets = map(o -> o == one(o) ? one(o) - eps(typeof(o)) : o, offsets)
     indices = bounds.rs
     mins = getindex.(indices, 1)
     diffs = length.(indices) .- sz .+ 1

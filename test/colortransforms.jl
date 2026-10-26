@@ -1,7 +1,7 @@
 include("imports.jl")
 
 
-@testset ExtendedTestSet "`AdjustContrast`" begin
+@testset "`AdjustContrast`" begin
     item = Image(rand(RGB{N0f8}, 64, 64))
     tfm = AdjustContrast(0.2)
     @test_nowarn apply(tfm, item)
@@ -11,7 +11,7 @@ include("imports.jl")
     testapply!(tfm, Image)
 end
 
-@testset ExtendedTestSet "`AdjustBrightness`" begin
+@testset "`AdjustBrightness`" begin
     item = Image(rand(RGB{N0f8}, 64, 64))
     tfm = AdjustBrightness(0.2)
     @test_nowarn apply(tfm, item)

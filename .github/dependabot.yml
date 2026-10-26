@@ -5,10 +5,15 @@ updates:
     schedule:
       interval: "weekly"
   - package-ecosystem: "julia"
-    directory: "/"
+    directories:
+      - "/"
+      - "/docs"
+      - "/test"
     schedule:
       interval: "weekly"
-    # groups: # uncomment to group all julia package updates into a single PR
-    #   all-julia-packages:
-    #     patterns:
-    #       - "*"
+    ignore:
+      # stdlibs: dependabot proposes bogus bounds such as "< 0.0.1, 1"
+      - dependency-name: "LinearAlgebra"
+      - dependency-name: "Random"
+      - dependency-name: "Statistics"
+      - dependency-name: "Test"

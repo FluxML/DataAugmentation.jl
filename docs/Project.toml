@@ -8,5 +8,8 @@ MosaicViews = "e94cdb99-869f-56ef-bcf0-1ae2bcbe0389"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 TestImages = "5e47fb64-e119-507b-a336-dd2b206d9990"
 
+[sources]
+DataAugmentation = {path = ".."}
+
 [compat]
-Documenter = "1.2"
+Documenter = "1"

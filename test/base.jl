@@ -20,7 +20,7 @@ compose(add1::Add, add2::Add) = Add(add1.n + add2.n)
 
 # Now we can perform some sanity checks for the basic interface.
 
-@testset ExtendedTestSet "Basic interface" begin
+@testset "Basic interface" begin
     testapply(Add(0), TestItem)
     tfm = Add(0)
     item = TestItem(10)
@@ -33,7 +33,7 @@ end
 
 # And composition:
 
-@testset ExtendedTestSet "`compose`" begin
+@testset "`compose`" begin
     data = 1
     item = TestItem(data)
 
@@ -46,7 +46,7 @@ end
     @test compose(t, t, t, t) == t |> t |> t |> t
 end
 
-@testset ExtendedTestSet "`Sequence`" begin
+@testset "`Sequence`" begin
     seq = Sequence(Add(10), Add(10))
     testapply(seq, TestItem)
 
@@ -57,7 +57,7 @@ end
 
 # `setdata` should copy, not modify.
 
-@testset ExtendedTestSet "`setdata`" begin
+@testset "`setdata`" begin
     item = TestItem(10)
     @test setdata(item, 20) == TestItem(20)
     @test setdata(item, 20) !== item

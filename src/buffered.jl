@@ -102,6 +102,20 @@ function apply!(buf, bufferedt::BufferedThreadsafe, items; kwargs...)
     return apply!(buf, bufferedthread, items; kwargs...)
 end
 
+# Resolve ambiguities with the generic methods for wrapped items and collections of items.
+
+apply(buffered::Buffered, item::ItemWrapper; kwargs...) =
+    invoke(apply, Tuple{Transform, ItemWrapper}, buffered, item; kwargs...)
+
+apply(bufferedt::BufferedThreadsafe, item::ItemWrapper; kwargs...) =
+    invoke(apply, Tuple{Transform, ItemWrapper}, bufferedt, item; kwargs...)
+
+apply!(bufs::Union{Tuple, AbstractVector}, buffered::Buffered, items::Union{Tuple, AbstractVector}; kwargs...) =
+    invoke(apply!, Tuple{Any, Buffered, Any}, bufs, buffered, items; kwargs...)
+
+apply!(bufs::Union{Tuple, AbstractVector}, bufferedt::BufferedThreadsafe, items::Union{Tuple, AbstractVector}; kwargs...) =
+    invoke(apply!, Tuple{Any, BufferedThreadsafe, Any}, bufs, bufferedt, items; kwargs...)
+
 
 # Utils
 

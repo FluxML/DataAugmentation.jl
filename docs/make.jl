@@ -1,5 +1,7 @@
 using Documenter, DataAugmentation
 
+DocMeta.setdocmeta!(DataAugmentation, :DocTestSetup, :(using DataAugmentation); recursive = true)
+
 makedocs(;
     modules = [DataAugmentation],
     sitename="DataAugmentation.jl",
@@ -22,12 +24,10 @@ makedocs(;
             "References" => "ref.md"
         ],
     ],
-    warnonly = [:example_block, :missing_docs, :cross_references],
     format = Documenter.HTML(canonical = "https://fluxml.ai/DataAugmentation.jl/stable/",
-                             assets = ["assets/flux.css"],
-                             prettyurls = get(ENV, "CI", nothing) == "true")
+                             prettyurls = get(ENV, "CI", nothing) == "true"),
 )
 
 deploydocs(repo = "github.com/FluxML/DataAugmentation.jl.git",
-           target = "build",
+           devbranch = "master",
            push_preview = true)
