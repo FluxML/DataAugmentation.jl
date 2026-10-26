@@ -1,10 +1,12 @@
 using DataAugmentation
 using StaticArrays
 using Test
-using TestSetExtensions
+using Aqua
 using CoordinateTransformations
 using Colors
+using Distributions: Categorical
 using FixedPointNumbers: N0f8
+using IndirectArrays: IndirectArray
 using LinearAlgebra
 using Rotations
 using Statistics

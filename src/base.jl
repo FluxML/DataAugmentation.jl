@@ -116,6 +116,6 @@ of an item, replacing only the wrapped data. This relies on the
 wrapped data field being named `data`, though.
 """
 function setdata(item::Item, data)
-    item = Setfield.@set item.data = data
+    item = @set item.data = data
     return item
 end

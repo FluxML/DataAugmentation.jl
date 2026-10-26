@@ -1,7 +1,7 @@
 include("imports.jl")
 
 
-@testset ExtendedTestSet "showitems" begin
+@testset "showitems" begin
     image = Image(rand(RGB, 100, 100))
     image2 = Image(rand(RGB, 200, 500))
     kps = Keypoints([SVector(1., 2.), SVector(150., 200.)], getbounds(image))

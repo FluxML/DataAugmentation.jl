@@ -31,6 +31,7 @@ end
 
 Bounds(sz::NTuple{N, <:Integer}) where N = Bounds(Tuple(1:n for n in sz))
 Bounds(axes::NTuple{N, <:Base.OneTo}) where N = Bounds(convert.(UnitRange{Int}, axes))
+Bounds(::Tuple{}) = Bounds{0}(())
 
 
 Base.:(==)(bs1::Bounds, bs2::Bounds) = false

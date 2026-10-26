@@ -1,12 +1,25 @@
-
-
 # Changelog
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.3.6]
+
+### Changed
+
+- Require Julia 1.10
+- Replace the Setfield.jl dependency with Accessors.jl
+- Remove unused dependencies (ColorBlendModes.jl, Parameters.jl)
+
+### Fixed
+
+- Remove the undefined `getcategorypools` from the exports
+- Fix method ambiguity errors when composing two cropped transforms, calling `OneOf` with
+  projective transforms and a distribution, applying `Buffered`/`BufferedThreadsafe` to
+  `BoundingBox`/`Polygon` items or with `apply!` to tuples of items, and creating a
+  `MaskMulti` from an integer-valued `IndirectArray`
+- `Keypoints` with only `nothing` elements now throws an informative `ArgumentError`
 
 ## [0.3.0]
 
@@ -105,3 +118,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Moved documentation generation to [Pollen.jl](https://github.com/lorenzoh/Pollen.jl)
+
+[0.3.6]: https://github.com/FluxML/DataAugmentation.jl/compare/v0.3.5...HEAD

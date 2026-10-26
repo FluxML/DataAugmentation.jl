@@ -1,6 +1,6 @@
 include("../imports.jl")
 
-@testset ExtendedTestSet "Affine" begin
+@testset "Affine" begin
     P = CoordinateTransformations.Translation(10, 10)
     tfm = Project(P)
 
@@ -9,7 +9,7 @@ include("../imports.jl")
 
     bounds = getbounds(keypoints)
 
-    @testset ExtendedTestSet "Affine Keypoints" begin
+    @testset "Affine Keypoints" begin
         @test getprojection(tfm, getbounds(keypoints)) == P
         @test_nowarn project(P, keypoints, bounds)
         tkeypoints = apply(tfm, keypoints)
@@ -18,7 +18,7 @@ include("../imports.jl")
     end
 
 
-    @testset ExtendedTestSet "Affine Image" begin
+    @testset "Affine Image" begin
         @test_nowarn project(P, image, bounds)
         timage = apply(tfm, image)
         @test itemdata(timage)[11, 11] ≈ itemdata(image)[1, 1]
@@ -28,7 +28,7 @@ include("../imports.jl")
 
     tfmcropped = tfm |> CenterCrop((50, 50))
 
-    @testset ExtendedTestSet "Cropped, Image" begin
+    @testset "Cropped, Image" begin
         tfmcropped = tfm |> CenterCrop((50, 50))
         @test_nowarn apply(tfmcropped, keypoints)
         tkeypoints = apply(tfmcropped, keypoints)
@@ -36,7 +36,7 @@ include("../imports.jl")
         @test itemdata(tkeypoints)[1] == SVector(11, 11)
     end
 
-    @testset ExtendedTestSet "Cropped with PinOrigin, Image" begin
+    @testset "Cropped with PinOrigin, Image" begin
         tfmcropped = tfm |> PinOrigin() |> CenterCrop((50, 50))
         @test_nowarn apply(tfmcropped, keypoints)
         tkeypoints = apply(tfmcropped, keypoints)
@@ -44,7 +44,7 @@ include("../imports.jl")
     end
 
 
-    @testset ExtendedTestSet "Composed" begin
+    @testset "Composed" begin
         tfms = Project(Translation(10, 10)) |> Project(Translation(-10, -10))
         randstate = getrandstate(tfms)
         @test getprojection(tfms, getbounds(image); randstate) == Translation(0, 0)
@@ -53,7 +53,7 @@ include("../imports.jl")
     end
 
 
-    @testset ExtendedTestSet "ScaleKeepAspect" begin
+    @testset "ScaleKeepAspect" begin
         image = Image(zeros(RGB, 100, 50))
         keypoints = Keypoints([SVector(0., 0)], (50, 50))
 
@@ -66,11 +66,11 @@ include("../imports.jl")
     end
 
 
-    @testset ExtendedTestSet "Scale" begin
+    @testset "Scale" begin
         keypoints = Keypoints([SVector(0., 0)], (50, 50))
         image = Image(rand(RGB, 50, 50))
 
-        @testset ExtendedTestSet "ScaleFixed" begin
+        @testset "ScaleFixed" begin
             tfm = ScaleFixed((25, 25))
             @test_nowarn apply(tfm, image)
             @test_nowarn apply(tfm, keypoints)
@@ -83,7 +83,7 @@ include("../imports.jl")
 
         end
         
-        @testset ExtendedTestSet "ScaleRatio" begin
+        @testset "ScaleRatio" begin
             tfm = ScaleRatio((1/2, 1/2))
             @test_nowarn apply(tfm, image)
             @test_nowarn apply(tfm, keypoints)
@@ -95,7 +95,7 @@ include("../imports.jl")
             testprojective(tfm)
         end
 
-        @testset ExtendedTestSet "ScaleRatioTwice" begin
+        @testset "ScaleRatioTwice" begin
             tfm = ScaleRatio((4/5, 4/5)) |> ScaleRatio((1/2, 1/2))
             @test_nowarn apply(tfm, image)
             @test_nowarn apply(tfm, keypoints)
@@ -107,7 +107,7 @@ include("../imports.jl")
             testprojective(tfm)
         end
 
-        @testset ExtendedTestSet "ScaleKeepAspect" begin
+        @testset "ScaleKeepAspect" begin
             tfm = ScaleKeepAspect((32, 32))
 
             img = rand(RGB{N0f8}, 64, 96)
@@ -123,7 +123,7 @@ include("../imports.jl")
         end
     end
 
-    @testset ExtendedTestSet "Rotate" begin
+    @testset "Rotate" begin
         tfm = Rotate(10)
         image = Image(rand(RGB, 50, 50))
         @test_nowarn apply(tfm, image)
@@ -134,7 +134,7 @@ include("../imports.jl")
         @test itemdata(image) ≈ itemdata(timage)[end:-1:1, end:-1:1]
     end
 
-    @testset ExtendedTestSet "Rotate3D" begin
+    @testset "Rotate3D" begin
         image = Image(rand(RGB, 10, 20, 30))
         tfm1 = Rotate(180, 180, 180)
         tfm2 = Rotate{3}(180)
@@ -153,7 +153,7 @@ include("../imports.jl")
         @test itemdata(image) ≈ itemdata(timage2)[end:-1:1, end:-1:1, :]
     end
 
-    @testset ExtendedTestSet "RotateX" begin
+    @testset "RotateX" begin
         tfm = RotateX(180)
         image = Image(rand(Float32, 10, 20, 30))
         @test_nowarn apply(tfm, image)
@@ -163,7 +163,7 @@ include("../imports.jl")
         @test itemdata(image) ≈ itemdata(transformed)[:, end:-1:1, end:-1:1]
     end
 
-    @testset ExtendedTestSet "RotateY" begin
+    @testset "RotateY" begin
         tfm = RotateY(180)
         image = Image(rand(Float32, 10, 20, 30))
         @test_nowarn apply(tfm, image)
@@ -173,7 +173,7 @@ include("../imports.jl")
         @test itemdata(image) ≈ itemdata(transformed)[end:-1:1, :, end:-1:1]
     end
 
-    @testset ExtendedTestSet "RotateZ" begin
+    @testset "RotateZ" begin
         tfm = RotateZ(180)
         image = Image(rand(Float32, 10, 20, 30))
         @test_nowarn apply(tfm, image)
@@ -183,18 +183,18 @@ include("../imports.jl")
         @test itemdata(image) ≈ itemdata(transformed)[end:-1:1, end:-1:1, :]
     end
 
-    @testset ExtendedTestSet "Zoom" begin
+    @testset "Zoom" begin
         tfm = Zoom((0.1, 2.))
         image = Image(rand(RGB, 50, 50))
         @test_nowarn apply(tfm, image)
     end
 
-    @testset ExtendedTestSet "Reflect" begin
+    @testset "Reflect" begin
         tfm = Reflect(10)
         testprojective(tfm)
     end
 
-    @testset ExtendedTestSet "CenterResizeCrop" begin
+    @testset "CenterResizeCrop" begin
         tfm = CenterResizeCrop((25, 40))
         keypoints = Keypoints([SVector(0., 0)], (50, 50))
         image = Image(rand(RGB, 50, 50))
@@ -203,7 +203,7 @@ include("../imports.jl")
         testprojective(Project(IdentityTransformation()) |> CenterCrop((12, 12)))
     end
 
-    @testset ExtendedTestSet "CroppedAffine inplace" begin
+    @testset "CroppedAffine inplace" begin
         image1 = Image(rand(RGB, 100, 100))
         image2 = Image(rand(RGB, 100, 100))
         tfm = ScaleFixed((50, 50))
@@ -213,7 +213,7 @@ include("../imports.jl")
     end
 
 
-    @testset ExtendedTestSet "FlipX 2D correct indices" begin
+    @testset "FlipX 2D correct indices" begin
         tfm = FlipX{2}() |> RandomCrop((10,10)) |> PinOrigin()
         img = rand(RGB, 10, 10)
         item = Image(img)
@@ -222,7 +222,7 @@ include("../imports.jl")
         @test itemdata(titem) == img[:, end:-1:1]
     end
 
-    @testset ExtendedTestSet "FlipY 2D correct indices" begin
+    @testset "FlipY 2D correct indices" begin
         tfm = FlipY{2}() |> RandomCrop((10,10)) |> PinOrigin()
         img = rand(RGB, 10, 10)
         item = Image(img)
@@ -232,7 +232,7 @@ include("../imports.jl")
     end
 
 
-    @testset ExtendedTestSet "FlipX 3D correct indices" begin
+    @testset "FlipX 3D correct indices" begin
         tfm = FlipX{3}() |> RandomCrop((10,10,10)) |> PinOrigin()
         img = rand(RGB, 10, 10, 10)
         item = Image(img)
@@ -241,7 +241,7 @@ include("../imports.jl")
         @test itemdata(titem) == img[end:-1:1, :, :]
     end
 
-    @testset ExtendedTestSet "FlipY 3D correct indices" begin
+    @testset "FlipY 3D correct indices" begin
         tfm = FlipY{3}() |> RandomCrop((10,10,10)) |> PinOrigin()
         img = rand(RGB, 10, 10, 10)
         item = Image(img)
@@ -250,7 +250,7 @@ include("../imports.jl")
         @test itemdata(titem) == img[:, end:-1:1, :]
     end
 
-    @testset ExtendedTestSet "FlipZ 3D correct indices" begin
+    @testset "FlipZ 3D correct indices" begin
         tfm = FlipZ{3}() |> RandomCrop((10,10,10)) |> PinOrigin()
         img = rand(RGB, 10, 10, 10)
         item = Image(img)
@@ -259,7 +259,7 @@ include("../imports.jl")
         @test itemdata(titem) == img[:, :, end:-1:1]
     end
 
-    @testset ExtendedTestSet "Double flip is identity" begin
+    @testset "Double flip is identity" begin
         tfm = FlipZ{3}() |> FlipZ{3}() |> RandomCrop((10,10,10)) |> PinOrigin()
         img = rand(RGB, 10, 10, 10)
         item = Image(img)
@@ -270,8 +270,8 @@ include("../imports.jl")
 end
 
 
-@testset ExtendedTestSet "Big pipeline" begin
-    @testset ExtendedTestSet "2D" begin
+@testset "Big pipeline" begin
+    @testset "2D" begin
         tfms = compose(
             Rotate(10),
             FlipX{2}(),
@@ -284,7 +284,7 @@ end
         testprojective(tfms)
     end
 
-    @testset ExtendedTestSet "3D" begin
+    @testset "3D" begin
         sz = (50, 50, 50)
         items = (
             Image(rand(RGB, sz)),
