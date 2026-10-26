@@ -13,3 +13,4 @@ DataAugmentation = {path = ".."}
 
 [compat]
 Documenter = "1"
+Interpolations = "0.16.3"
