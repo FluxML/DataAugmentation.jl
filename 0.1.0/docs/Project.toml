@@ -1,0 +1,10 @@
+[deps]
+Artifacts = "56f22d72-fd6d-98f1-02f0-08ddc0907c33"
+ImageIO = "82e4d734-157c-48bb-816b-45c225c6df19"
+ImageMagick = "6218d12a-5da1-5696-b52f-db25d2ecc6d1"
+ImageShow = "4e3cecfd-b093-5904-9786-8bbb286a6a31"
+Images = "916415d5-f1e6-5110-898d-aaa5f9f070e0"
+MosaicViews = "e94cdb99-869f-56ef-bcf0-1ae2bcbe0389"
+Publish = "f065f642-d108-4f50-8aa5-6749150a895a"
+StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
+TestImages = "5e47fb64-e119-507b-a336-dd2b206d9990"
