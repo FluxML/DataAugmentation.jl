@@ -43,6 +43,24 @@ Color transformations operate on [`Image`](@ref) items. You can apply them to an
 - [`AdjustGamma`](@ref), [`Solarize`](@ref), [`Posterize`](@ref), [`Invert`](@ref), [`Equalize`](@ref), and [`Autocontrast`](@ref) adjust channel intensities.
 - [`RandomChannelPermutation`](@ref) shuffles the RGB channels. [`RandomPhotometricDistort`](@ref) combines channel permutation with randomly selected brightness, contrast, saturation, and hue adjustments.
 
+## Erasing and batch mixing
+
+[`RandomErasing`](@ref) fills a random rectangle in a 2D image with a constant or with noise. Masks and keypoints passed alongside the image are preserved.
+
+[`MixUp`](@ref) blends image pairs and their labels. [`CutMix`](@ref) copies a rectangle from one image into another and weights the labels by the area each image contributes. Both work on an [`ImageBatch`](@ref) after collation. The last image axis indexes samples, and each label column represents one sample.
+
+```@example mixing
+using DataAugmentation, Images
+
+samples = [Image(rand(RGB{Float32}, 24, 32)) for _ in 1:4]
+sample_tfm = RandomErasing(value = :random) |> ImageToTensor()
+images = stack(itemdata(apply(sample_tfm, image)) for image in samples)
+
+batch = ImageBatch(images, [1, 2, 3, 2]; num_classes = 3)
+mixed_images, mixed_labels = itemdata(apply(CutMix(), batch))
+size(mixed_images), size(mixed_labels)
+```
+
 ## Stochastic transformations
 
 When augmenting data, it is often useful to apply a transformation only with some probability or choose from a set of transformations. Unlike in other data augmentation libraries like *albumentations*, in DataAugmentation.jl you can use wrapper transformations for this functionality.
