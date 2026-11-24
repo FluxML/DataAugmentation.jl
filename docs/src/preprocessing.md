@@ -20,14 +20,15 @@ using DataAugmentation, Images
 
 image = Image(rand(RGB{Float32}, 40, 50))
 tfm = ImageToTensor() |> Normalize((0.5, 0.5, 0.5), (0.2, 0.2, 0.2))
-size(itemdata(apply(tfm, image)))
+size(itemdata(tfm(image)))
 ```
 
 One-hot encoding a mask with 4 classes adds a dimension for the classes:
 
 ```@example prep
 mask = MaskMulti(rand(1:4, 8, 8), 1:4)
-size(itemdata(apply(OneHot(), mask)))
+tfm = OneHot()
+size(itemdata(tfm(mask)))
 ```
 
 ## Tabular data
@@ -47,5 +48,5 @@ item = TabularItem((; zip(cols, [missing, "rome", 52_000.0])...), cols)
 tfm = FillMissing(Dict(:age => 40), [:age]) |>
     Categorify(Dict(:city => ["milan", "rome"]), [:city]) |>
     NormalizeRow(Dict(:income => (50_000.0, 10_000.0)), [:income])
-itemdata(apply(tfm, item))
+itemdata(tfm(item))
 ```

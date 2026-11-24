@@ -17,7 +17,7 @@ item = TabularItem(row, cols)
 normdict = Dict(:col1 => (1, 1), :col2 => (2, 2))
 
 tfm = NormalizeRow(normdict, [:col1, :col2])
-apply(tfm, item)
+tfm(item)
 ```
 """
 struct NormalizeRow{T, S} <: Transform
@@ -55,7 +55,7 @@ item = TabularItem(row, cols)
 fmdict = Dict(:col1 => 100, :col2 => 100)
 
 tfm = FillMissing(fmdict, [:col1, :col2])
-apply(tfm, item)
+tfm(item)
 ```
 """
 struct FillMissing{T, S} <: Transform
@@ -95,7 +95,7 @@ item = TabularItem(row, cols)
 catdict = Dict(:col1 => ["dog", "cat"])
 
 tfm = Categorify(catdict, [:col1])
-apply(tfm, item)
+tfm(item)
 ```
 """
 struct Categorify{T, S} <: Transform

@@ -54,11 +54,9 @@ itemdata(items::Tuple) = itemdata.(items)
 """
     getrandstate(transform)
 
-Generates random state for stochastic transformations.
-Calling `apply(tfm, item)` is equivalent to
-`apply(tfm, item; randstate = getrandstate(tfm))`. It
-defaults to `nothing`, so you it only needs to be implemented
-for stochastic `Transform`s.
+Generate random state for stochastic transformations. Calling `tfm(item)` is
+equivalent to `tfm(item; randstate = getrandstate(tfm))`. The default state is
+`nothing`.
 """
 getrandstate(::Transform) = nothing
 

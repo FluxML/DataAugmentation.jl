@@ -47,8 +47,8 @@ end
 Wrapper transformation that applies `tfm` with `apply!`, reusing buffers that are
 created the first time the wrapper is applied (one set of buffers per item type).
 
-By default the returned item is the final buffer itself, so the next `apply`
-overwrites it. This is a problem for code that keeps several results alive at the
+By default the returned item is the final buffer itself, so the next call can
+overwrite it. This is a problem for code that keeps several results alive at the
 same time, like a data loader that collates a batch after loading all its samples
 (e.g. `DataLoader(...; collate = true)` from MLUtils.jl). With `copy = true` the
 buffers are still reused internally, but the returned item is a fresh copy that
@@ -91,9 +91,9 @@ Like [`Buffered`](@ref), but can be applied from multiple threads and tasks at t
 same time. Each concurrent call checks out its own buffers from a pool that grows on
 demand (`n` is the number of buffer sets created upfront) and returns them when done.
 
-Since the buffers go back to the pool, the item returned by `apply` is always a copy
-that the caller owns, and it is safe to keep several results alive at once.
-`apply!(buf, btfm, item)` writes the result into `buf` instead.
+Since the buffers go back to the pool, calling the wrapper returns a copy that the
+caller owns. It is safe to keep several results alive at once.
+`apply!(buf, btfm, item)` writes the result into `buf`.
 """
 struct BufferedThreadsafe{T<:Transform} <: Transform
     tfm::T

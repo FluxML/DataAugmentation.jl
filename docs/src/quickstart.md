@@ -31,8 +31,8 @@ titem = tfm(item)
 timage = itemdata(titem)
 ```
 
-`tfm(item)` is equivalent to [`apply`](@ref)`(tfm, item)`. Pass a tuple such as
-`tfm((item, mask))` to share the transform's random state across items.
+Pass a tuple such as `tfm((item, mask))` to share the transform's random state
+across aligned items.
 
 ## Next steps
 

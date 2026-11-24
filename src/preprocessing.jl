@@ -15,7 +15,7 @@ using DataAugmentation
 
 tfm = ToEltype(Float32)
 item = ArrayItem(rand(Int, 10))
-apply(tfm, item)
+tfm(item)
 ```
 """
 struct ToEltype{T} <: Transform end
@@ -52,7 +52,7 @@ Preprocessing a 3D image with 3 color channels.
 using DataAugmentation, Images
 image = Image(rand(RGB, 20, 20, 20))
 tfms = ImageToTensor() |> Normalize((0.1, -0.2, -0.1), (1,1,1.))
-apply(tfms, image)
+tfms(image)
 ```
 
 """
@@ -156,7 +156,7 @@ eig = eigen(Symmetric(cov(samples; dims = 2)))
 W = eig.vectors * Diagonal(1 ./ sqrt.(eig.values .+ 1f-5)) * eig.vectors'
 
 tfm = LinearTransformation(W; mean = μ)
-apply(tfm, ArrayItem(randn(Float32, 4, 4)))
+tfm(ArrayItem(randn(Float32, 4, 4)))
 ```
 """
 struct LinearTransformation{M<:AbstractMatrix, V<:AbstractVector} <: Transform
@@ -219,7 +219,7 @@ using DataAugmentation, Images
 h, w = 40, 50
 image = Image(rand(RGB, h, w))
 tfm = ImageToTensor()
-apply(tfm, image) # ArrayItem in WHC format of size (50, 40, 3)
+tfm(image) # ArrayItem in WHC format of size (50, 40, 3)
 ```
 
 """
@@ -302,7 +302,7 @@ image = Image(rand(RGB, 20, 20))
 # Turn image to tensor and permute dimensions 2 and 1
 # to convert HWC (height, width, channel) array to WHC (width, height, channel)
 tfms = ImageToTensor() |> PermuteDims(2, 1, 3)
-apply(tfms, image)
+tfms(image)
 ```
 
 """
@@ -331,7 +331,8 @@ an array item of size `(sz..., n)` with element type `T`. Supports [`apply!`](@r
 
 ```julia
 item = MaskMulti(rand(1:4, 100, 100), 1:4)
-apply(OneHot(), item)
+tfm = OneHot()
+tfm(item)
 ```
 """
 struct OneHot{T} <: Transform end

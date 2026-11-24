@@ -69,7 +69,7 @@ side becomes `minlength`.
 using DataAugmentation, TestImages
 image = testimage("lighthouse")
 tfm = ScaleKeepAspect((200, 200))
-apply(tfm, Image(image))
+tfm(Image(image))
 ```
 """
 struct ScaleKeepAspect{N} <: ProjectiveTransform
@@ -193,11 +193,11 @@ projective transforms and are not fused with neighboring ones.
 
 ```julia
 tfm = Rotate(10)
-apply(tfm, Image(rand(Float32, 16, 16)))
-apply(tfm, Image(rand(Float32, 16, 16, 16)))
+tfm(Image(rand(Float32, 16, 16)))
+tfm(Image(rand(Float32, 16, 16, 16)))
 
 tfm3d = Rotate(10, 20, 30)
-apply(tfm3d, Image(rand(Float32, 16, 16, 16)))
+tfm3d(Image(rand(Float32, 16, 16, 16)))
 ```
 """
 struct Rotate{N, R, S<:Sampleable} <: ProjectiveTransform

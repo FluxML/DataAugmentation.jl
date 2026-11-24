@@ -18,13 +18,13 @@ imagedata = testimage("lighthouse")
 imagedata = imresize(imagedata, ratio = 196 / size(imagedata, 1))
 ```
 
-To apply a transformation `tfm` to it, wrap it in
-`Image`, apply the transformation and unwrap it using [`itemdata`](@ref):
+Wrap the data in an [`Image`](@ref), call the transform, and unwrap the result
+with [`itemdata`](@ref).
 
 ```@example deps
 tfm = CenterCrop((196, 196))
 image = Image(imagedata)
-apply(tfm, image) |> itemdata
+tfm(image) |> itemdata
 ```
 Customization of how pixel values are interpolated and extrapolated during
 transformations is done with the Item types ([`Image`](@ref),
@@ -37,11 +37,11 @@ tfm = ScaleFixed((2000, 2000)) |> CenterCrop((200, 200))
 showgrid(
     [
         # Default is linear interpolation for Image
-        apply(tfm, Image(imagedata)),
+        tfm(Image(imagedata)),
         # Nearest neighbor interpolation
-        apply(tfm, Image(imagedata; interpolate=BSpline(Constant()))),
+        tfm(Image(imagedata; interpolate=BSpline(Constant()))),
         # Linear interpolation
-        apply(tfm, Image(imagedata; interpolate=BSpline(Linear()))),
+        tfm(Image(imagedata; interpolate=BSpline(Linear()))),
     ];
     ncol=3,
     npad=8,
@@ -55,11 +55,11 @@ import Interpolations
 tfm = CenterCrop((400, 400))
 showgrid(
     [
-        apply(tfm, Image(imagedata)),
-        apply(tfm, Image(imagedata; extrapolate=1)),
-        apply(tfm, Image(imagedata; extrapolate=Interpolations.Flat())),
-        apply(tfm, Image(imagedata; extrapolate=Interpolations.Periodic())),
-        apply(tfm, Image(imagedata; extrapolate=Interpolations.Reflect())),
+        tfm(Image(imagedata)),
+        tfm(Image(imagedata; extrapolate=1)),
+        tfm(Image(imagedata; extrapolate=Interpolations.Flat())),
+        tfm(Image(imagedata; extrapolate=Interpolations.Periodic())),
+        tfm(Image(imagedata; extrapolate=Interpolations.Reflect())),
     ];
     ncol=5,
     npad=8,
@@ -79,19 +79,19 @@ showitems((image, bbox))
 ```
 If we apply transformations like translation and cropping to the image, then the same transformations have to be applied to the bounding box. Otherwise, the bounding box will no longer match up with the light house.
 
-Another problem can occur with stochastic transformations like [`RandomResizeCrop`](@ref) If we apply it separately to the image and the bounding box, they will be cropped from slightly different locations:
+Stochastic transformations such as [`RandomResizeCrop`](@ref) can sample different crop locations when called separately on the image and its bounding box.
 
 ```@example deps
 tfm = RandomResizeCrop((128, 128))
 showitems((
-    apply(tfm, image),
-    apply(tfm, bbox)
+    tfm(image),
+    tfm(bbox)
 ))
 ```
-Instead, pass a tuple of the items to a single `apply` call so the same random state will be used for both image and bounding box:
+Call the transform on the tuple to share one random state across both items.
 
 ```@example deps
-apply(tfm, (image, bbox)) |> showitems
+tfm((image, bbox)) |> showitems
 ```
 
 !!! info "3D Projective dimensions"
@@ -106,7 +106,7 @@ Resizes the sides so that one of them is no longer than `sz` and crops a region 
 
 ```@example deps
 tfm = RandomResizeCrop((128, 128))
-showgrid([apply(tfm, (image, bbox)) for _ in 1:6]; ncol=6, npad=8)
+showgrid([tfm((image, bbox)) for _ in 1:6]; ncol=6, npad=8)
 ```
 
 ## [`CenterResizeCrop`](@ref)
@@ -115,7 +115,7 @@ Resizes the sides so that one of them is no longer than `sz` and crops a region 
 
 ```@example deps
 tfm = CenterResizeCrop((128, 128))
-showgrid([apply(tfm, (image, bbox))]; ncol=6, npad=8)
+showgrid([tfm((image, bbox))]; ncol=6, npad=8)
 ```
 
 ## [`Crop`](@ref)`(sz[, from])`
@@ -132,7 +132,7 @@ tfms = [
     Crop((128, 128), FromRandom()),
     Crop((128, 128), FromRandom()),
 ]
-showgrid([apply(tfm, (image, bbox)) for tfm in tfms]; ncol=6, npad=8)
+showgrid([tfm((image, bbox)) for tfm in tfms]; ncol=6, npad=8)
 ```
 
 ## [`FlipX`](@ref), [`FlipY`](@ref), [`FlipZ`](@ref), [`Reflect`](@ref)
@@ -145,7 +145,7 @@ tfms = [
     FlipY(),
     Reflect(30),
 ]
-showgrid([apply(tfm, (image, bbox)) for tfm in tfms]; ncol=6, npad=8)
+showgrid([tfm((image, bbox)) for tfm in tfms]; ncol=6, npad=8)
 ```
 
 ## [`Rotate`](@ref), [`RotateX`](@ref), [`RotateY`](@ref), [`RotateZ`](@ref)
@@ -154,7 +154,7 @@ Rotate a 2D image counter-clockwise by an angle.
 
 ```@example deps
 tfm = Rotate(20) |> CenterCrop((256, 256))
-showgrid([apply(tfm, (image, bbox)) for _ in 1:6]; ncol=6, npad=8)
+showgrid([tfm((image, bbox)) for _ in 1:6]; ncol=6, npad=8)
 ```
 
 Rotate also works with 3D images in addition to 3D specific transforms RotateX, RotateY, and RotateZ.
@@ -168,7 +168,7 @@ tfms = [
     RotateY(45),
     RotateZ(45),
 ]
-transformed = [apply(tfm, image3D) |> itemdata for tfm in tfms]
+transformed = [tfm(image3D) |> itemdata for tfm in tfms]
 slices = [Image(parent(t[:, :, 50])) for t in transformed]
 showgrid(slices; ncol=6, npad=8)
 ```
