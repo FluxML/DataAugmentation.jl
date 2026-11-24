@@ -31,8 +31,6 @@ pixels = itemdata(apply(tfm, image))
 
 ## Feature showcase
 
-The showcase uses the development branch. Install it with `Pkg.add(name = "DataAugmentation", rev = "master")`.
-
 ### Keep annotations aligned
 
 Pass aligned items as a tuple with `tfm((image, mask, boxes))` to share the random geometry. Here `FlipX` and `RandomIoUCrop` move the segmentation mask and labeled boxes with the image.
