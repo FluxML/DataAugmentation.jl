@@ -29,6 +29,7 @@ include("./items/image.jl")
 include("./items/imagebatch.jl")
 include("./items/table.jl")
 include("./items/keypoints.jl")
+include("./keypointtransforms.jl")
 include("./items/mask.jl")
 include("./projective/compose.jl")
 include("./projective/crop.jl")
@@ -66,6 +67,8 @@ export Item,
     ImageBatch,
     TabularItem,
     Keypoints,
+    ClampKeypoints,
+    SanitizeKeypoints,
     Polygon,
     ToEltype,
     ImageToTensor,
