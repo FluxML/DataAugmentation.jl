@@ -87,6 +87,12 @@ function project!(bufitem, P, item, indices)
     return bufitem
 end
 
+project(P, itemw::ItemWrapper, indices) =
+    setwrapped(itemw, project(P, getwrapped(itemw), indices))
+
+project!(bufw::ItemWrapper, P, itemw::ItemWrapper, indices) =
+    setwrapped(bufw, project!(getwrapped(bufw), P, getwrapped(itemw), indices))
+
 
 """
     projectionbounds(tfm, P, bounds, randstate)

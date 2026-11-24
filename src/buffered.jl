@@ -120,5 +120,6 @@ apply!(bufs::Union{Tuple, AbstractVector}, bufferedt::BufferedThreadsafe, items:
 # Utils
 
 copyitemdata!(buf::I, item::I) where I<:Item = (copy!(itemdata(buf), itemdata(item)); return buf)
+copyitemdata!(bufw::I, itemw::I) where I<:ItemWrapper = (copyitemdata!(getwrapped(bufw), getwrapped(itemw)); return bufw)
 copyitemdata!(bufs::T, items::T) where T<:Tuple = ((copyitemdata!.(bufs, items); bufs); return bufs)
 copyitemdata!(bufs::T, items::T) where T<:AbstractVector = ((copyitemdata!.(bufs, items); bufs); return bufs)

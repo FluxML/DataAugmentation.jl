@@ -97,6 +97,27 @@ end
     end
 end
 
+@testset "Buffered projective transform on items with wrappers" begin
+    img = Image(rand(64, 64))
+    bbox = BoundingBox([SVector(10.0, 10.0), SVector(40.0, 50.0)], (64, 64))
+    poly = Polygon([SVector(10.0, 10.0), SVector(40.0, 50.0), SVector(5.0, 30.0)], (64, 64))
+    items = (img, bbox, poly)
+    tfm = ScaleRatio((0.5, 0.5))
+    expected = apply(tfm, items)
+    @testset "$(nameof(typeof(btfm)))" for btfm in (Buffered(tfm), BufferedThreadsafe(tfm))
+        for _ in 1:2  # second call reuses the buffers
+            titems = apply(btfm, items)
+            @test typeof.(titems) == typeof.(expected)
+            @test all(itemdata(t) ≈ itemdata(e) for (t, e) in zip(titems, expected))
+        end
+
+        buf = apply(tfm, items)
+        res = apply!(buf, btfm, items)
+        @test all(itemdata(t) ≈ itemdata(e) for (t, e) in zip(res, expected))
+        @test all(itemdata(t) ≈ itemdata(e) for (t, e) in zip(buf, expected))
+    end
+end
+
 @testset "apply! with buffered transform on item collections" begin
     items = (ArrayItem(rand(5, 5)), ArrayItem(rand(5, 5)))
     tfm = MapElem(x -> x + 1)

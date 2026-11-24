@@ -18,6 +18,22 @@ end
     @test_nowarn apply(tfm, Polygon(keypoints))
 end
 
+@testset "projective inplace on item wrappers" begin
+    bounds = Bounds((64, 64))
+    tfm = ScaleRatio((0.5, 0.5))
+    wrappers = (
+        BoundingBox([SVector(10.0, 10.0), SVector(40.0, 50.0)], bounds),
+        Polygon([SVector(10.0, 10.0), SVector(40.0, 50.0), SVector(5.0, 30.0)], bounds),
+    )
+    @testset "$(nameof(typeof(item)))" for item in wrappers
+        expected = apply(tfm, item)
+        res = apply!(apply(tfm, item), tfm, item)
+        @test res isa typeof(item)
+        @test itemdata(res) ≈ itemdata(expected)
+        @test getbounds(res) == getbounds(expected)
+    end
+end
+
 @testset "$(N)D BoundingBox" for N in 2:4
     bounds = Bounds{N}(ntuple(_ -> -50:50, N))
 
