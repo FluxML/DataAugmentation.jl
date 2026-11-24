@@ -4,7 +4,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.3.7]
+## [0.3.8]
+
+## [0.3.7] - 2026-11-24
 
 ### Added
 
@@ -26,8 +28,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in a random order
 - Add `ClampKeypoints` and `SanitizeKeypoints` to clamp keypoints to the bounds of the item or mark those
   outside as `NaN`
+- Add `BoundingBoxes` for labeled box collections and support them in `RandomIoUCrop`. Add `box_convert`,
+  `box_iou`, `masks_to_boxes`, `ClampBoundingBoxes` and `SanitizeBoundingBoxes`
+- Make transformations callable as `tfm(item)` or `tfm(items)`, with the same keywords as `apply`
 - Add `LinearTransformation` (e.g. for ZCA whitening) and `UniformTemporalSubsample`
 - `showitems` and `showgrid` blend masks over the image, with the new `maskalpha` and `maskbackground` keywords
+- Add computer vision pipeline examples and a guide to data loading, batch augmentation and training with Flux
 
 ### Changed
 
@@ -40,6 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Buffered` accepts `copy = true` to reuse its buffers but return a copy of the result
 - `BufferedThreadsafe` now keeps a pool of buffers and always returns a copy
 - Reorganize the documentation into Guide, Concepts, Extending and API reference sections (the pages under `projective/` moved), and document `Project`, `PadDivisible`, `TabularItem`, `onehot`, `showgrid`, `Bounds` and `NormalizeIntensity`
+- Add a symbol index to the API reference and collapse docstrings by default
 
 ### Fixed
 
@@ -168,5 +175,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Moved documentation generation to [Pollen.jl](https://github.com/lorenzoh/Pollen.jl)
 
-[0.3.7]: https://github.com/FluxML/DataAugmentation.jl/compare/v0.3.6...HEAD
+[0.3.8]: https://github.com/FluxML/DataAugmentation.jl/compare/v0.3.7...HEAD
+[0.3.7]: https://github.com/FluxML/DataAugmentation.jl/compare/v0.3.6...v0.3.7
 [0.3.6]: https://github.com/FluxML/DataAugmentation.jl/compare/v0.3.5...v0.3.6
