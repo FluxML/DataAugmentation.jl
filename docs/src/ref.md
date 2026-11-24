@@ -78,6 +78,13 @@ PadDivisible
 ResizePadDivisible
 ```
 
+## Keypoint bounds
+
+```@docs
+ClampKeypoints
+SanitizeKeypoints
+```
+
 ## Color transformations
 
 ```@docs

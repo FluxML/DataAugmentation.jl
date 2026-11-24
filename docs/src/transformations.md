@@ -44,6 +44,20 @@ To get a cropped result, simply `compose` any projective transformation with a c
 - [`Pad`](@ref) grows the bounds using a constant value, repeating edge pixels, or reflection. [`RandomZoomOut`](@ref) randomly places the input on a larger canvas using the same padding machinery.
 - [`ResizePadDivisible`](@ref)`(sz, by)` scales the item with [`ScaleKeepAspect`](@ref) and pads it so that its side lengths are divisible by `by`.
 
+## Keypoint bounds
+
+After a crop or another geometric transformation, use [`ClampKeypoints`](@ref) to move coordinates into the item's index ranges, or [`SanitizeKeypoints`](@ref) to mark out-of-bounds points with `NaN`. Sanitizing preserves the index of each landmark, and [`showitems`](@ref) skips the marked points.
+
+```@example keypoint-bounds
+using DataAugmentation, StaticArrays
+
+image = Image(zeros(10, 10))
+points = Keypoints([SVector(1f0, 1f0), SVector(5f0, 5f0), SVector(10f0, 10f0)], (10, 10))
+tfm = CenterCrop((4, 4)) |> PinOrigin() |> SanitizeKeypoints()
+_, cropped_points = apply(tfm, (image, points))
+itemdata(cropped_points)
+```
+
 ## Color transformations
 
 Color transformations operate on [`Image`](@ref) items. You can apply them to an image together with its masks or keypoints in the same pipeline.

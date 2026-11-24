@@ -17,6 +17,7 @@ include("imports.jl")
         "projective/geometric_crops.jl",
         "items/image.jl",
         "items/keypoints.jl",
+        "keypointtransforms.jl",
         "items/mask.jl",
         "preprocessing.jl",
         "oneof.jl",

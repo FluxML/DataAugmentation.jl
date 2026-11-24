@@ -62,7 +62,9 @@ end
 
 
 function showitem!(img, keypoints::Keypoints{N}) where N
-    for point in filter(!isnothing, keypoints.data)
+    for point in keypoints.data
+        isnothing(point) && continue
+        any(isnan, point) && continue
         showkeypoint!(img, point, RGBA(1, 0, 0, 1))
     end
     return img
