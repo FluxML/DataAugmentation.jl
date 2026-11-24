@@ -2,7 +2,7 @@ module DataAugmentation
 
 using Accessors: @set
 using CoordinateTransformations
-using Distributions: Beta, Sampleable, Uniform, Categorical
+using Distributions: Beta, Categorical, Dirac, Dirichlet, Sampleable, Uniform
 using IndirectArrays: IndirectArray
 using ImageDraw
 using ImageCore
@@ -51,6 +51,9 @@ include("./photometricdistort.jl")
 include("./randomerasing.jl")
 include("./mixing.jl")
 include("./temporalsubsample.jl")
+include("./policy.jl")
+include("./autoaugment.jl")
+include("./augmix.jl")
 include("testing.jl")
 include("./visualization.jl")
 
@@ -138,6 +141,11 @@ export Item,
     RandomErasing,
     MixUp,
     CutMix,
+    RandAugment,
+    TrivialAugmentWide,
+    AutoAugment,
+    AugMix,
+    RandomOrder,
     apply!,
     Pad,
     RandomZoomOut,

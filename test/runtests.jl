@@ -29,6 +29,9 @@ include("imports.jl")
         "randomerasing.jl",
         "mixing.jl",
         "temporalsubsample.jl",
+        "policy.jl",
+        "autoaugment.jl",
+        "augmix.jl",
     ]
         @testset "$file" begin
             include(file)

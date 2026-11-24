@@ -54,6 +54,21 @@ Color transformations operate on [`Image`](@ref) items. You can apply them to an
 - [`AdjustGamma`](@ref), [`Solarize`](@ref), [`Posterize`](@ref), [`Invert`](@ref), [`Equalize`](@ref), and [`Autocontrast`](@ref) adjust channel intensities.
 - [`RandomChannelPermutation`](@ref) shuffles the RGB channels. [`RandomPhotometricDistort`](@ref) combines channel permutation with randomly selected brightness, contrast, saturation, and hue adjustments.
 
+## Policy-based augmentations
+
+Policy-based augmentations draw random operations from a fixed set, such as shearing, translating, rotating, adjusting brightness, solarizing and equalizing, each with a strength from a table. They follow `torchvision.transforms.v2`, and apply to a 2D [`Image`](@ref) together with its masks and keypoints, which the geometric operations move along with it.
+
+- [`RandAugment`](@ref)`(num_ops, magnitude)` applies `num_ops` random operations of the same strength, and [`TrivialAugmentWide`](@ref)`()` applies a single operation with a random strength, without anything to tune.
+- [`AutoAugment`](@ref)`(policy)` applies one of the pairs of operations that the AutoAugment search found for `:imagenet`, `:cifar10` or `:svhn`. You can also pass your own pairs.
+- [`AugMix`](@ref)`()` blends an image with several chains of random operations. Since the chains warp the image in different ways, it does not take masks or keypoints.
+
+```@example tsm
+item = Image(testimage("lighthouse"))
+tfm = RandAugment(2, 9)
+titems = [apply(tfm, item) for _ in 1:8]
+showgrid(titems; ncol = 4, npad = 16)
+```
+
 ## Erasing and batch mixing
 
 [`RandomErasing`](@ref) fills a random rectangle in a 2D image, or a box in a volume, with a constant or with noise. Masks and keypoints passed alongside the image are preserved.
@@ -87,8 +102,9 @@ size(itemdata(apply(UniformTemporalSubsample(8), video)))
 
 When augmenting data, it is often useful to apply a transformation only with some probability or choose from a set of transformations. Unlike in other data augmentation libraries like *albumentations*, in DataAugmentation.jl you can use wrapper transformations for this functionality.
 
-- [`Maybe`](@ref)`(tfm, p = 0.5)` applies a transformation with probability `p`; and
-- [`OneOf`](@ref)`([tfm1, tfm2])` randomly selects a transformation to apply.
+- [`Maybe`](@ref)`(tfm, p = 0.5)` applies a transformation with probability `p`;
+- [`OneOf`](@ref)`([tfm1, tfm2])` randomly selects a transformation to apply; and
+- [`RandomOrder`](@ref)`(tfm1, tfm2)` applies all of them in a random order.
 
 Let's say we have an image classification dataset. For most datasets, horizontally flipping the image does not change the label: a flipped image of a cat still shows a cat. So let's flip every image horizontally half of the time to improve the generalization of the model we might be training.
 
