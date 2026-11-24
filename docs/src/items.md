@@ -26,6 +26,8 @@ Spatial items have spatial bounds, which [projective transformations](projective
 
 - [`ArrayItem`](@ref) wraps any array. It is what the [preprocessing](preprocessing.md) transformations produce, for example [`ImageToTensor`](@ref) turns an `Image` into an `ArrayItem`.
 
+- [`ImageBatch`](@ref) wraps collated images and their classification labels for [batch mixing](transformations.md#Erasing-and-batch-mixing).
+
 - [`TabularItem`](@ref) represents one row of a table, to be used with the row transformations described under [Preprocessing](preprocessing.md#Tabular-data).
 
 ## Visualizing items

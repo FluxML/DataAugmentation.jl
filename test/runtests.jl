@@ -21,6 +21,8 @@ include("imports.jl")
         "photometricfilters.jl",
         "photometricintensity.jl",
         "photometricdistort.jl",
+        "randomerasing.jl",
+        "mixing.jl",
     ]
         @testset "$file" begin
             include(file)

@@ -2,7 +2,7 @@ module DataAugmentation
 
 using Accessors: @set
 using CoordinateTransformations
-using Distributions: Sampleable, Uniform, Categorical
+using Distributions: Beta, Sampleable, Uniform, Categorical
 using IndirectArrays: IndirectArray
 using ImageDraw
 using ImageCore
@@ -26,6 +26,7 @@ include("./sequence.jl")
 include("./items/arrayitem.jl")
 include("./projective/base.jl")
 include("./items/image.jl")
+include("./items/imagebatch.jl")
 include("./items/table.jl")
 include("./items/keypoints.jl")
 include("./items/mask.jl")
@@ -41,6 +42,8 @@ include("./colortransforms.jl")
 include("./photometricfilters.jl")
 include("./photometricintensity.jl")
 include("./photometricdistort.jl")
+include("./randomerasing.jl")
+include("./mixing.jl")
 include("testing.jl")
 include("./visualization.jl")
 
@@ -53,6 +56,7 @@ export Item,
     Sequence,
     Project,
     Image,
+    ImageBatch,
     TabularItem,
     Keypoints,
     Polygon,
@@ -111,6 +115,9 @@ export Item,
     RandomPhotometricDistort,
     RandomChannelPermutation,
     JPEG,
+    RandomErasing,
+    MixUp,
+    CutMix,
     apply!,
     PadDivisible,
     ResizePadDivisible,

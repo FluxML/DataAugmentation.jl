@@ -6,6 +6,7 @@ Names that are not exported are listed with the `DataAugmentation.` prefix and n
 
 ```@docs
 Image
+ImageBatch
 MaskBinary
 MaskMulti
 Keypoints
@@ -82,6 +83,14 @@ Autocontrast
 RandomPhotometricDistort
 RandomChannelPermutation
 JPEG
+```
+
+## Erasing and batch mixing
+
+```@docs
+RandomErasing
+MixUp
+CutMix
 ```
 
 ## Stochastic transformations
