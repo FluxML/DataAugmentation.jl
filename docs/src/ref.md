@@ -64,6 +64,24 @@ ResizePadDivisible
 ```@docs
 AdjustBrightness
 AdjustContrast
+AdjustSaturation
+AdjustHue
+ColorJitter
+Grayscale
+RandomGrayscale
+ToRGB
+GaussianBlur
+GaussianNoise
+AdjustSharpness
+AdjustGamma
+Solarize
+Posterize
+Invert
+Equalize
+Autocontrast
+RandomPhotometricDistort
+RandomChannelPermutation
+JPEG
 ```
 
 ## Stochastic transformations

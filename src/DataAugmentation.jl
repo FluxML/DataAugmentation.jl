@@ -36,7 +36,11 @@ include("./projective/warp.jl")
 include("./oneof.jl")
 include("./preprocessing.jl")
 include("./rowtransforms.jl")
+include("./photometric.jl")
 include("./colortransforms.jl")
+include("./photometricfilters.jl")
+include("./photometricintensity.jl")
+include("./photometricdistort.jl")
 include("testing.jl")
 include("./visualization.jl")
 
@@ -89,6 +93,24 @@ export Item,
     PinOrigin,
     AdjustBrightness,
     AdjustContrast,
+    AdjustSaturation,
+    AdjustHue,
+    ColorJitter,
+    Grayscale,
+    RandomGrayscale,
+    ToRGB,
+    GaussianBlur,
+    GaussianNoise,
+    AdjustSharpness,
+    AdjustGamma,
+    Solarize,
+    Posterize,
+    Invert,
+    Equalize,
+    Autocontrast,
+    RandomPhotometricDistort,
+    RandomChannelPermutation,
+    JPEG,
     apply!,
     PadDivisible,
     ResizePadDivisible,
