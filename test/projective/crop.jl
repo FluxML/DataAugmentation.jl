@@ -60,6 +60,14 @@ end
         @test CenterCrop((4, 4, 4); padding = 2).padding == (2, 2, 2)
         @test CenterCrop((4, 4); padding = (1, 3)).padding == (1, 3)
         @test_throws ArgumentError Crop((4, 4); padding = (1, 2, 3))
+        @test_throws ArgumentError RandomCrop((8, 8); padding = -2)
+        @test_throws ArgumentError RandomCrop((8, 8); padding = (1, -1))
+        @test_throws ArgumentError RandomCrop((8, 8); padding = -2, fill = 0)
+    end
+
+    @testset "integer size is a square crop" begin
+        @test CenterCrop(4).size == RandomCrop(4).size == (4, 4)
+        @test size(itemdata(apply(CenterCrop(4), Image(rand(8, 8))))) == (4, 4)
     end
 
     @testset "bounds" begin

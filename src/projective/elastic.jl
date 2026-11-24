@@ -2,12 +2,16 @@
     ElasticTransform(alpha, sigma = 5)
     ElasticTransform(; alpha = 25, sigma = 5)
 
-Apply a smooth random elastic deformation to 2D spatial data. `alpha` controls
-the maximum displacement in pixels and `sigma` controls the Gaussian smoothing
-scale; either may be a scalar or a `(row, column)` pair. The same deformation
-is used for images, masks, and keypoints. The sampled field is reduced when
-necessary to keep its displacement map contractive, which makes the backward
-map used for image sampling well-defined and numerically invertible.
+Apply a smooth random elastic deformation to 2D spatial data. `alpha` scales
+uniform noise in `[-1, 1]` that is smoothed with a Gaussian of scale `sigma`
+(in pixels); either may be a scalar or a `(row, column)` pair. The same
+deformation is used for images, masks, and keypoints.
+
+The sampled field is reduced when necessary to keep its displacement map
+contractive, which makes the backward map used for image sampling well-defined
+and numerically invertible. This caps the deformation: for small `sigma`,
+increasing `alpha` beyond some point has no effect. Increase `sigma` to allow
+larger, smoother displacements.
 """
 struct ElasticTransform <: ProjectiveTransform
     alpha::NTuple{2, Float64}

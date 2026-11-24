@@ -6,10 +6,11 @@ In 2D, a four-tuple specifies `(left, top, right, bottom)`. For arbitrary
 dimensions, pairs `(before, after)` per axis also work.
 
 Modes are `:constant`, `:edge`, `:reflect` (excluding the edge pixel), and
-`:symmetric` (including the edge pixel). Use `fill = nothing` with
-`:constant` to use the item's extrapolation setting. The input content keeps
-its coordinates while the bounds grow; use [`PinOrigin`](@ref) for one-based
-output coordinates.
+`:symmetric` (including the edge pixel). With `:constant`, [`Image`](@ref) items
+are filled with `fill`, or with their extrapolation setting if `fill = nothing`.
+Masks always use their own extrapolation setting, so `fill` never injects labels
+they cannot hold. The input content keeps its coordinates while the bounds grow;
+use [`PinOrigin`](@ref) for one-based output coordinates.
 """
 struct Pad{P, F} <: Transform
     padding::P
@@ -49,7 +50,9 @@ _padded_bounds(bounds::Bounds, padding) =
 
 _padindex(i, n, ::Val{:constant}) = 1 <= i <= n ? i : 0
 _padindex(i, n, ::Val{:edge}) = clamp(i, 1, n)
-_padindex(i, n, ::Val{:periodic}) = mod1(i, n)
+# Interpolations' `Periodic()` has period `n - 1` on `[1, n]`; match it so that
+# padding agrees with projection. In-bounds pixels are never remapped.
+_padindex(i, n, ::Val{:periodic}) = 1 <= i <= n || n == 1 ? clamp(i, 1, n) : 1 + mod(i - 1, n - 1)
 
 function _padindex(i, n, ::Val{:symmetric})
     j = mod(i - 1, 2n)
@@ -79,7 +82,7 @@ end
 
 function _pad_boundary(tfm::Pad, item)
     tfm.padding_mode !== :constant && return nothing, Val(tfm.padding_mode)
-    fill = isnothing(tfm.fill) ? item.extrapolate : tfm.fill
+    fill = isnothing(tfm.fill) || !(item isa Image) ? item.extrapolate : tfm.fill
     fill isa Flat && return nothing, Val(:edge)
     fill isa Interpolations.Reflect && return nothing, Val(:reflect)
     fill isa Periodic && return nothing, Val(:periodic)

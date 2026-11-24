@@ -9,7 +9,9 @@ vector, together with any aligned masks or keypoints. A window is accepted if
 it contains the center of a box whose intersection over union with the window
 meets the sampled threshold.
 
-Boxes with centers inside the crop are clipped to its bounds. Other boxes are
+Box corners are continuous coordinates in the pixel-center system, so a window
+of pixels `a:b` spans `a - 0.5` to `b + 0.5`. Boxes with centers inside the crop
+are clipped to these edges. Other boxes are
 collapsed to zero area so that their positions in the sample are preserved.
 A threshold of `1` keeps the full sample, as does running out of trials or
 applying the transform to a sample without boxes.
@@ -43,9 +45,12 @@ _detection_boxes(item) = ()
 _detection_boxes(box::BoundingBox{2}) = (box,)
 _detection_boxes(items::Union{Tuple, AbstractVector}) = Iterators.flatten(map(_detection_boxes, items))
 
+# Pixel `i` is centered at coordinate `i`, so a window of pixels spans half a pixel
+# beyond its first and last pixel centers. Boxes are continuous rectangles.
+_crop_edges(crop::Bounds{2}) = SVector(first.(crop.rs)) .- 0.5, SVector(last.(crop.rs)) .+ 0.5
+
 function _center_in_crop(lo, hi, crop::Bounds{2})
-    lower = SVector(first.(crop.rs)) .- 0.5
-    upper = SVector(last.(crop.rs)) .+ 0.5
+    lower, upper = _crop_edges(crop)
     center = (lo + hi) / 2
     return all(lower .<= center .< upper)
 end
@@ -53,8 +58,7 @@ end
 function _meets_iou_threshold(box, crop::Bounds{2}, threshold)
     lo, hi = box
     _center_in_crop(lo, hi, crop) || return false
-    lower = SVector(first.(crop.rs)) .- 0.5
-    upper = SVector(last.(crop.rs)) .+ 0.5
+    lower, upper = _crop_edges(crop)
     intersection = prod(max.(min.(hi, upper) - max.(lo, lower), 0))
     union_area = prod(hi - lo) + prod(length.(crop.rs)) - intersection
     return intersection > 0 && intersection >= threshold * union_area
@@ -85,7 +89,7 @@ end
 
 function _crop_detection(box::BoundingBox{2}, source::Bounds, crop::Bounds{2})
     lo, hi = itemdata(box)
-    lower, upper = SVector(first.(crop.rs)), SVector(last.(crop.rs))
+    lower, upper = _crop_edges(crop)
     clipped = clamp.(lo, lower, upper)
     endpoint = _center_in_crop(lo, hi, crop) ? clamp.(hi, lower, upper) : clipped
     return BoundingBox([clipped, endpoint], crop)

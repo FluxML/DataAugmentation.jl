@@ -14,7 +14,8 @@ that fall outside the projected content bounds. The default is linear
 interpolation and to fill new regions with zero.
 
 Set `antialias = true` to apply a box prefilter when an affine projection
-downsamples the image. This setting stays with the image through transforms.
+downsamples the image. The interpolation, extrapolation and antialiasing
+settings stay with the image through projective transforms.
 
 !!! info
     The `Interpolations` package provides numerous methods for use with
@@ -107,7 +108,7 @@ function project(P, image::Image, bounds::Bounds)
         dst = similar(Array{eltype(itp)}, bounds.rs)
         warp!(dst, filtered, inverse)
     end
-    return Image(result, bounds; antialias = image.antialias)
+    return Image(result, bounds; image.interpolate, image.extrapolate, image.antialias)
 end
 
 function project!(bufimage::Image, P, image::Image, bounds::Bounds)
@@ -121,7 +122,7 @@ function project!(bufimage::Image, P, image::Image, bounds::Bounds)
         _project_extrapolation(source, image.interpolate, image.extrapolate),
         inverse,
     )
-    return Image(res, bounds; antialias = image.antialias)
+    return Image(res, bounds; image.interpolate, image.extrapolate, image.antialias)
 end
 
 _prefilter_image(data, inverse) = data

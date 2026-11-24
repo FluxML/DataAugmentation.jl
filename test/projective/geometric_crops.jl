@@ -45,4 +45,16 @@ end
     @test itemdata.(repeated[3]) == itemdata.(new_boxes)
     @test apply(RandomIoUCrop(sampler_options = (1,)), items) === items
     @test apply(tfm, image) === image
+
+    @testset "boxes are clipped to the crop edges" begin
+        crop = Bounds((3:6, 2:5))
+        spanning = BoundingBox([SVector(0., 0.), SVector(10., 10.)], (8, 8))
+        clipped = DataAugmentation._crop_detection(spanning, Bounds((8, 8)), crop)
+        @test itemdata(clipped) == [SVector(2.5, 1.5), SVector(6.5, 5.5)]
+        inside = BoundingBox([SVector(3., 2.), SVector(6., 5.)], (8, 8))
+        @test itemdata(DataAugmentation._crop_detection(inside, Bounds((8, 8)), crop)) == itemdata(inside)
+        @test DataAugmentation._meets_iou_threshold(itemdata(spanning), crop, 0.1)
+        full = (SVector(2.5, 1.5), SVector(6.5, 5.5))
+        @test DataAugmentation._meets_iou_threshold(full, crop, 1)
+    end
 end

@@ -70,7 +70,8 @@ function project(P, mask::MaskMulti{N, T, U}, bounds::Bounds{N}) where {N, T, U}
     return MaskMulti(
         convert.(T, res),
         mask.classes,
-        bounds
+        bounds;
+        mask.interpolate, mask.extrapolate,
     )
 end
 
@@ -86,7 +87,8 @@ function project!(bufmask::MaskMulti, P, mask::MaskMulti, bounds)
     return MaskMulti(
         a,
         mask.classes,
-        bounds
+        bounds;
+        mask.interpolate, mask.extrapolate,
     )
 end
 
@@ -153,7 +155,7 @@ getbounds(mask::MaskBinary) = mask.bounds
 function project(P, mask::MaskBinary, bounds::Bounds)
     source = _project_extrapolation(itemdata(mask), mask.interpolate, mask.extrapolate)
     res = warp(source, inv(P), bounds.rs)
-    return MaskBinary(convert.(Bool, res), bounds)
+    return MaskBinary(convert.(Bool, res), bounds; mask.interpolate, mask.extrapolate)
 end
 
 
@@ -165,10 +167,7 @@ function project!(bufmask::MaskBinary, P, mask::MaskBinary, bounds)
         _project_extrapolation(itemdata(mask), mask.interpolate, mask.extrapolate),
         inv(P),
     )
-    return MaskBinary(
-        a,
-        bounds
-    )
+    return MaskBinary(a, bounds; mask.interpolate, mask.extrapolate)
 end
 
 function showitem!(img, mask::MaskBinary; opacity = 1, background = nothing)

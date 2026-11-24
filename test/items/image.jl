@@ -30,3 +30,17 @@ end
     @test all(==(first(itemdata(colored))), itemdata(apply(Resize((2, 3)), colored)))
     @test eltype(itemdata(apply(Resize((2, 3)), colored))) == RGBA{N0f8}
 end
+
+@testset "Projection keeps the interpolation settings" begin
+    constant = Interpolations.BSpline(Interpolations.Constant())
+    image = Image(rand(Float32, 8, 8); interpolate = constant, extrapolate = Interpolations.Reflect(), antialias = true)
+    tfm = Rotate(10; expand = false)
+    for out in (apply(tfm, image), apply!(makebuffer(tfm, image), tfm, image))
+        @test out.interpolate == constant
+        @test out.extrapolate isa Interpolations.Reflect
+        @test out.antialias
+    end
+    filled = apply(Rotate(10; fill = 0.5), image)
+    @test filled.extrapolate isa Interpolations.Reflect
+end
+

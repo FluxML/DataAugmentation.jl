@@ -33,6 +33,9 @@ extended on both sides before cropping. See [`Pad`](@ref) for asymmetric padding
 the available padding modes. By default, padded pixels use the item's extrapolation
 setting, including when `sz` exceeds the bounds. With `pad_if_needed = true`, each
 side of an undersized axis is padded by the shortfall before choosing the crop.
+`fill` applies to [`Image`](@ref) items only; masks use their own extrapolation.
+With `pad_if_needed`, `fill` or a non-constant `padding_mode`, the result is a
+plain transform that is not fused with neighboring projective transforms.
 
 ## Examples
 
@@ -43,13 +46,14 @@ apply(tfm, Image(rand(RGB, 32, 32)))
 """
 function Crop(sz::NTuple{N, Int}, from::CropFrom = FromOrigin(); padding = 0,
               pad_if_needed::Bool = false, fill = nothing, padding_mode::Symbol = :constant) where N
-    if !pad_if_needed && isnothing(fill) && padding_mode === :constant
-        padding isa Integer && return Crop(sz, from, ntuple(_ -> Int(padding), N))
-        padding isa NTuple{N, Integer} && return Crop(sz, from, map(Int, padding))
+    sides = _padparams(padding, N)
+    if !pad_if_needed && isnothing(fill) && padding_mode === :constant &&
+            (padding isa Integer || padding isa NTuple{N, Integer})
+        return Crop(sz, from, map(first, sides))
     end
     _validate_padding_mode(padding_mode)
     crop = Crop(sz, from, ntuple(_ -> 0, N))
-    return PaddedCrop(crop, _padparams(padding, N), pad_if_needed, fill, padding_mode)
+    return PaddedCrop(crop, sides, pad_if_needed, fill, padding_mode)
 end
 
 
@@ -87,9 +91,10 @@ end
     CenterCrop(sz; padding = 0, kwargs...)
 
 Crop a region of size `sz` from the center. Same as `Crop(sz, FromCenter(); padding)`,
-see [`Crop`](@ref).
+see [`Crop`](@ref). An integer requests a square crop.
 """
 CenterCrop(sz; kwargs...) = Crop(sz, FromCenter(); kwargs...)
+CenterCrop(sz::Integer; kwargs...) = CenterCrop((Int(sz), Int(sz)); kwargs...)
 
 """
     RandomCrop(sz; padding = 0, pad_if_needed = false, fill = nothing, padding_mode = :constant)

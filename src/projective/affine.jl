@@ -141,7 +141,9 @@ angle is selected.
 For 2D rotations, `expand = false` keeps the input bounds. Pass an absolute
 `center = (row, column)` in pixel coordinates to rotate around another point.
 By default, out-of-bounds samples use the item's extrapolation setting. An
-explicit `fill` value applies to this rotation only.
+explicit `fill` value applies to this rotation only and to [`Image`](@ref) items
+only; masks keep their own extrapolation. Rotations with a `fill` are not
+projective transforms and are not fused with neighboring ones.
 
 ## Examples
 
@@ -249,9 +251,10 @@ function apply(tfm::FilledRotation, item::Item; randstate = getrandstate(tfm))
     return apply(tfm.rotation, item; randstate)
 end
 
-function apply(tfm::FilledRotation, item::Union{Image, MaskMulti, MaskBinary}; randstate = getrandstate(tfm))
+function apply(tfm::FilledRotation, item::Image; randstate = getrandstate(tfm))
     source = @set item.extrapolate = tfm.fill
-    return apply(tfm.rotation, source; randstate)
+    result = apply(tfm.rotation, source; randstate)
+    return @set result.extrapolate = item.extrapolate
 end
 
 
