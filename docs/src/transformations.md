@@ -35,8 +35,13 @@ To get a cropped result, simply `compose` any projective transformation with a c
 
 ## Color transformations
 
-- [`AdjustBrightness`](@ref)`(δ)` multiplies the color channels of an image by a factor chosen uniformly from `[1-δ, 1+δ]`.
-- [`AdjustContrast`](@ref)`(factor)` adjusts the contrast of an image by a factor chosen uniformly from `[1-factor, 1+factor]`.
+Color transformations operate on [`Image`](@ref) items. You can apply them to an image together with its masks or keypoints in the same pipeline.
+
+- [`AdjustBrightness`](@ref), [`AdjustContrast`](@ref), [`AdjustSaturation`](@ref), and [`AdjustHue`](@ref) sample an adjustment for a single property. [`ColorJitter`](@ref) applies those adjustments in random order.
+- [`Grayscale`](@ref) and [`ToRGB`](@ref) convert between grayscale and RGB. [`RandomGrayscale`](@ref) converts to grayscale with a configurable probability.
+- [`GaussianBlur`](@ref), [`GaussianNoise`](@ref), [`AdjustSharpness`](@ref), and [`JPEG`](@ref) change the detail or quality of an image. Load `JpegTurbo` with `using JpegTurbo` before applying `JPEG`.
+- [`AdjustGamma`](@ref), [`Solarize`](@ref), [`Posterize`](@ref), [`Invert`](@ref), [`Equalize`](@ref), and [`Autocontrast`](@ref) adjust channel intensities.
+- [`RandomChannelPermutation`](@ref) shuffles the RGB channels. [`RandomPhotometricDistort`](@ref) combines channel permutation with randomly selected brightness, contrast, saturation, and hue adjustments.
 
 ## Stochastic transformations
 

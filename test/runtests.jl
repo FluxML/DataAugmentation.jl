@@ -18,6 +18,9 @@ include("imports.jl")
         "visualization.jl",
         "rowtransforms.jl",
         "colortransforms.jl",
+        "photometricfilters.jl",
+        "photometricintensity.jl",
+        "photometricdistort.jl",
     ]
         @testset "$file" begin
             include(file)
