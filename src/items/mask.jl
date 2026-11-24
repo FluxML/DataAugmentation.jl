@@ -45,14 +45,14 @@ function MaskMulti(
 end
 
 function MaskMulti(a::AbstractArray, classes = unique(a); kwargs...)
-    bounds = Bounds(size(a))
+    bounds = Bounds(axes(a))
     minimum(a) >= 1 || error("Class values must start at 1")
     return MaskMulti(a, classes, bounds; kwargs...)
 end
 
 MaskMulti(a::AbstractArray{<:Gray{T}}, args...; kwargs...) where T = MaskMulti(reinterpret(T, a), args...; kwargs...)
 MaskMulti(a::AbstractArray{<:Normed{T}}, args...; kwargs...) where T = MaskMulti(reinterpret(T, a), args...; kwargs...)
-MaskMulti(a::IndirectArray, classes = a.values, bounds = Bounds(size(a)); kwargs...) =
+MaskMulti(a::IndirectArray, classes = a.values, bounds = Bounds(axes(a)); kwargs...) =
     MaskMulti(a.index, classes, bounds; kwargs...)
 MaskMulti(a::IndirectArray{<:Integer, N}, classes::AbstractVector, bounds::Bounds{N}; kwargs...) where N =
     MaskMulti(a.index, classes, bounds; kwargs...)
@@ -80,6 +80,7 @@ end
 
 
 function project!(bufmask::MaskMulti, P, mask::MaskMulti, bounds)
+    size(itemdata(bufmask)) == length.(bounds.rs) || return project(P, mask, bounds)
     a = OffsetArray(parent(itemdata(bufmask)), bounds.rs)
     warp!(
         a,
@@ -141,7 +142,7 @@ end
 
 function MaskBinary(
     a::AbstractArray,
-    bounds = Bounds(size(a));
+    bounds = Bounds(axes(a));
     interpolate::Interpolations.InterpolationType=BSpline(Constant()),
     extrapolate::ImageTransformations.FillType=Flat(),
 )
@@ -165,6 +166,7 @@ end
 
 
 function project!(bufmask::MaskBinary, P, mask::MaskBinary, bounds)
+    size(itemdata(bufmask)) == length.(bounds.rs) || return project(P, mask, bounds)
     a = OffsetArray(parent(itemdata(bufmask)), bounds.rs)
     warp!(
         a,

@@ -11,7 +11,7 @@ using ImageTransformations: center, _center, box_extrapolation, warp!
 using Interpolations
 using MosaicViews: mosaicview
 using OffsetArrays: OffsetArray
-using LinearAlgebra: I
+using LinearAlgebra: I, det
 using Random
 using Rotations
 using StaticArrays
@@ -33,13 +33,19 @@ include("./items/mask.jl")
 include("./projective/compose.jl")
 include("./projective/crop.jl")
 include("./projective/affine.jl")
+include("./projective/resize.jl")
+include("./projective/pad.jl")
 include("./projective/warp.jl")
+include("./projective/randomwarp.jl")
+include("./projective/multicrop.jl")
+include("./projective/ioucrop.jl")
 include("./oneof.jl")
 include("./preprocessing.jl")
 include("./rowtransforms.jl")
 include("./photometric.jl")
 include("./colortransforms.jl")
 include("./photometricfilters.jl")
+include("./projective/elastic.jl")
 include("./photometricintensity.jl")
 include("./photometricdistort.jl")
 include("./randomerasing.jl")
@@ -75,11 +81,19 @@ export Item,
     CenterCrop,
     RandomCrop,
     ScaleFixed,
+    Resize,
+    ScaleJitter,
+    RandomShortestSize,
+    RandomResize,
     Rotate,
     RotateX,
     RotateY,
     RotateZ,
     RandomResizeCrop,
+    RandomResizedCrop,
+    RandomIoUCrop,
+    FiveCrop,
+    TenCrop,
     CenterResizeCrop,
     Buffered,
     BufferedThreadsafe,
@@ -90,6 +104,9 @@ export Item,
     apply,
     Reflect,
     WarpAffine,
+    RandomAffine,
+    RandomPerspective,
+    ElasticTransform,
     FlipDim,
     FlipX,
     FlipY,
@@ -119,6 +136,8 @@ export Item,
     MixUp,
     CutMix,
     apply!,
+    Pad,
+    RandomZoomOut,
     PadDivisible,
     ResizePadDivisible,
     onehot,

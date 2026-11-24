@@ -47,17 +47,17 @@ Base.show(io::IO, item::Keypoints{N, T, M}) where {N, T, M} =
 getbounds(keypoints::Keypoints) = keypoints.bounds
 
 
-function project(P, keypoints::Keypoints{N, T}, bounds::Bounds{N}) where {N, T}
-    return Keypoints(
-        collect(SVector{N, T}, map(fmap(P), keypoints.data)),
-        bounds,
-    )
+function project(P, keypoints::Keypoints{N, T, S}, bounds::Bounds{N}) where {N, T, S}
+    points = map(fmap(P), keypoints.data)
+    if T <: Integer && any(p -> !isnothing(p) && !all(isinteger, p), points)
+        point = SVector{N, float(T)}
+        storage = Nothing <: S ? Union{Nothing, point} : point
+        return Keypoints(collect(storage, points), bounds)
+    end
+    return Keypoints(collect(S, points), bounds)
 end
 function project!(buf, P, keypoints::Keypoints{N, T}, bounds::Bounds{N}) where {N, T}
-    return Keypoints(
-        collect(SVector{N, T}, map(fmap(P), keypoints.data)),
-        bounds,
-    )
+    return project(P, keypoints, bounds)
 end
 
 

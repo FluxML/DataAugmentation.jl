@@ -27,7 +27,7 @@ Sequence
 Identity
 ```
 
-## Affine transformations
+## Geometric warps
 
 ```@docs
 FlipDim
@@ -39,23 +39,41 @@ Rotate
 RotateX
 RotateY
 RotateZ
-ScaleRatio
-ScaleFixed
-ScaleKeepAspect
-Zoom
 WarpAffine
+RandomAffine
+RandomPerspective
+ElasticTransform
 Project
 PinOrigin
 ```
 
-## Crops
+## Resizing
+
+```@docs
+ScaleRatio
+ScaleFixed
+ScaleKeepAspect
+Zoom
+Resize
+ScaleJitter
+RandomShortestSize
+RandomResize
+```
+
+## Crops and padding
 
 ```@docs
 Crop
 CenterCrop
 RandomCrop
+RandomResizedCrop
 CenterResizeCrop
 RandomResizeCrop
+RandomIoUCrop
+FiveCrop
+TenCrop
+Pad
+RandomZoomOut
 PadDivisible
 ResizePadDivisible
 ```

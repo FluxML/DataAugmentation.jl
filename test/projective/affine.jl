@@ -162,6 +162,19 @@ include("../imports.jl")
         @test P.linear.mat[1] isa Float32
         timage = apply(tfm, image, randstate=180)
         @test itemdata(image) ≈ itemdata(timage)[end:-1:1, end:-1:1]
+
+        image = Image(reshape(Float32.(1:25), 5, 5))
+        points = Keypoints(Union{Nothing, SVector{2, Float64}}[SVector(2., 1.), nothing], (5, 5))
+        rotation = Rotate(90; expand = false, center = (1, 1), fill = -1)
+        turned, moved = apply(rotation, (image, points); randstate = 90)
+        @test getbounds(turned) == getbounds(moved) == getbounds(image)
+        @test itemdata(turned)[1, 2] == itemdata(image)[2, 1]
+        @test itemdata(turned)[5, 1] == -1
+        @test itemdata(moved)[1] ≈ SVector(1., 2.)
+        @test isnothing(itemdata(moved)[2])
+        expanded = apply(Rotate(90; center = (1, 1)), image; randstate = 90)
+        @test getbounds(expanded) != getbounds(image)
+        @test getbounds(apply(Maybe(Rotate(45; expand = false), 1), image; randstate = (1, 45))) == getbounds(image)
     end
 
     @testset "Rotate3D" begin

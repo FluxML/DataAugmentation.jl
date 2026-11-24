@@ -38,7 +38,7 @@ function Base.show(io::IO, bounds::Bounds{N}) where N
 end
 
 Bounds(sz::NTuple{N, <:Integer}) where N = Bounds(Tuple(1:n for n in sz))
-Bounds(axes::NTuple{N, <:Base.OneTo}) where N = Bounds(convert.(UnitRange{Int}, axes))
+Bounds(axes::NTuple{N, AbstractUnitRange}) where N = Bounds(map(r -> Int(first(r)):Int(last(r)), axes))
 Bounds(::Tuple{}) = Bounds{0}(())
 
 
@@ -109,30 +109,28 @@ function projectionbounds(tfm, P, bounds; randstate = getrandstate(tfm))
     return transformbounds(bounds, P)
 end
 
-# With the interface defined, any `ProjectiveTransform` can be `apply`ed
-# like this:
-
-function apply(tfm::ProjectiveTransform, item::Item; randstate = getrandstate(tfm))
-    bounds = getbounds(item)
-    P = getprojection(tfm, bounds; randstate = randstate)
-    bounds_ = projectionbounds(tfm, P, bounds; randstate = randstate)
-    return project(P, item, bounds_)
+function _projection_geometry(tfm::ProjectiveTransform, bounds, randstate)
+    P = getprojection(tfm, bounds; randstate)
+    return P, projectionbounds(tfm, P, bounds; randstate)
 end
 
-# For the buffered version, `project!` is used. Of course the size
-# of the data produced by `tfm` needs to be the same every time it
-# is applied for this to work.
+_sample_between(rng, lo, hi) = lo + rand(rng) * (hi - lo)
+
+function apply(tfm::ProjectiveTransform, item::Item; randstate = getrandstate(tfm))
+    P, bounds = _projection_geometry(tfm, getbounds(item), randstate)
+    return project(P, item, bounds)
+end
+
+# For the buffered version, `project!` is used. Image and mask projections
+# reuse the buffer when the projected size matches.
 
 function apply!(
         bufitem::AbstractItem,
         tfm::ProjectiveTransform,
         item::AbstractItem;
         randstate = getrandstate(tfm))
-    bounds = getbounds(item)
-    P = getprojection(tfm, bounds; randstate = randstate)
-    bounds_ = projectionbounds(tfm, P, bounds; randstate = randstate)
-    res = project!(bufitem, P, item, bounds_)
-    return res
+    P, bounds = _projection_geometry(tfm, getbounds(item), randstate)
+    return project!(bufitem, P, item, bounds)
 end
 
 

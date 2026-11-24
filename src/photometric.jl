@@ -35,7 +35,7 @@ function _photometric_image(item::Image, data, convert_pixel)
     if fill isa Union{Real, Colorant}
         fill = convert_pixel(fill)
     end
-    return Image(data, item.bounds; interpolate = item.interpolate, extrapolate = fill)
+    return Image(data, item.bounds; interpolate = item.interpolate, extrapolate = fill, antialias = item.antialias)
 end
 
 _photometric_color(p::Real) = convert(promote_type(Float32, typeof(float(p))), p)
