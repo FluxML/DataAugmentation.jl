@@ -28,6 +28,11 @@ end
 Crop a region of size `sz` from the bounds of an item. `from` is `FromOrigin()` (default),
 `FromCenter()` or `FromRandom()`; see also [`CenterCrop`](@ref) and [`RandomCrop`](@ref).
 
+`sz` is a tuple with one size per dimension. An integer `sz` is the same size along every
+dimension, so that `Crop(32, FromRandom())` crops a square from an image and a cube from a
+volume. An integer `padding` is the same for all dimensions, too; any other form of `padding`
+fixes the dimensionality.
+
 With symmetric `padding` (one integer for all axes or one per axis), the bounds are
 extended on both sides before cropping. See [`Pad`](@ref) for asymmetric padding and
 the available padding modes. By default, padded pixels use the item's extrapolation
@@ -56,8 +61,82 @@ function Crop(sz::NTuple{N, Int}, from::CropFrom = FromOrigin(); padding = 0,
     return PaddedCrop(crop, sides, pad_if_needed, fill, padding_mode)
 end
 
+# A crop given by a single size has the same size along every dimension. Its random
+# state is a seed that is expanded to one offset per dimension once the item, and with it
+# the dimensionality, is known. Items that are applied together still get the same crop.
+struct IsotropicCrop{F<:CropFrom} <: AbstractCrop
+    size::Int
+    from::F
+    padding::Int
+end
 
-function apply(crop::Crop, item::Item; randstate = getrandstate(crop))
+struct IsotropicPaddedCrop{F<:CropFrom, X} <: Transform
+    size::Int
+    from::F
+    padding::Int
+    pad_if_needed::Bool
+    fill::X
+    padding_mode::Symbol
+end
+
+function Crop(sz::Integer, from::CropFrom = FromOrigin(); padding = 0,
+              pad_if_needed::Bool = false, fill = nothing, padding_mode::Symbol = :constant)
+    n = _padding_ndims(padding)
+    if !isnothing(n)
+        return Crop(ntuple(_ -> Int(sz), n), from; padding, pad_if_needed, fill, padding_mode)
+    end
+    pad = only(_padparams(padding, 1))[1]
+    _validate_padding_mode(padding_mode)
+    if !pad_if_needed && isnothing(fill) && padding_mode === :constant
+        return IsotropicCrop(Int(sz), from, pad)
+    end
+    return IsotropicPaddedCrop(Int(sz), from, pad, pad_if_needed, fill, padding_mode)
+end
+
+# The dimensionality implied by `padding`, if any.
+_padding_ndims(::Integer) = nothing
+_padding_ndims(padding::NTuple{4, Integer}) = 2
+_padding_ndims(padding::Tuple) = length(padding)
+_padding_ndims(padding) =
+    throw(ArgumentError("padding must be an integer, one integer or pair per axis, or a 2D four-tuple"))
+
+_isotropic_randstate(::FromRandom) = rand(UInt64)
+_isotropic_randstate(::CropFrom) = nothing
+
+getrandstate(crop::IsotropicCrop) = _isotropic_randstate(crop.from)
+getrandstate(crop::IsotropicPaddedCrop) = _isotropic_randstate(crop.from)
+
+# Offsets given explicitly, as the random state of a crop with a size per dimension,
+# are used as they are.
+_cropoffsets(::FromOrigin, ::Nothing, ::Val{N}) where N = ntuple(_ -> 0., Val(N))
+_cropoffsets(::FromCenter, ::Nothing, ::Val{N}) where N = ntuple(_ -> 0.5, Val(N))
+
+function _cropoffsets(::FromRandom, seed::Integer, ::Val{N}) where N
+    rng = Xoshiro(seed)
+    return ntuple(_ -> rand(rng), Val(N))
+end
+
+function _cropoffsets(::CropFrom, offsets::Tuple, ::Val{N}) where N
+    length(offsets) == N ||
+        throw(ArgumentError("expected $N crop offsets for $N-dimensional data, got $(length(offsets))"))
+    return offsets
+end
+
+_resolve(crop::IsotropicCrop, ::Val{N}) where N =
+    Crop(ntuple(_ -> crop.size, Val(N)), crop.from, ntuple(_ -> crop.padding, Val(N)))
+
+function cropbounds(crop::IsotropicCrop, bounds::Bounds{N}; randstate = getrandstate(crop)) where N
+    offsets = _cropoffsets(crop.from, randstate, Val(N))
+    return cropbounds(_resolve(crop, Val(N)), bounds; randstate = offsets)
+end
+
+function _resolve(tfm::IsotropicPaddedCrop, ::Val{N}) where N
+    return Crop(ntuple(_ -> tfm.size, Val(N)), tfm.from; tfm.padding, tfm.pad_if_needed,
+                tfm.fill, tfm.padding_mode)
+end
+
+
+function apply(crop::Union{Crop, IsotropicCrop}, item::Item; randstate = getrandstate(crop))
     return apply(
         Project(CoordinateTransformations.IdentityTransformation()) |> crop,
         item;
@@ -65,6 +144,15 @@ function apply(crop::Crop, item::Item; randstate = getrandstate(crop))
 end
 
 getrandstate(tfm::PaddedCrop) = getrandstate(tfm.crop)
+
+function apply(tfm::IsotropicPaddedCrop, item::Item; randstate = getrandstate(tfm))
+    return _apply_padded(tfm, item, getbounds(item), randstate)
+end
+
+function _apply_padded(tfm::IsotropicPaddedCrop, item, ::Bounds{N}, randstate) where N
+    offsets = _cropoffsets(tfm.from, randstate, Val(N))
+    return apply(_resolve(tfm, Val(N)), item; randstate = offsets)
+end
 
 function apply(tfm::PaddedCrop, item::Item; randstate = getrandstate(tfm))
     bounds = getbounds(item)
@@ -91,21 +179,21 @@ end
     CenterCrop(sz; padding = 0, kwargs...)
 
 Crop a region of size `sz` from the center. Same as `Crop(sz, FromCenter(); padding)`,
-see [`Crop`](@ref). An integer requests a square crop.
+see [`Crop`](@ref). An integer `sz` is the same size along every dimension: a square
+crop of an image, a cube crop of a volume.
 """
 CenterCrop(sz; kwargs...) = Crop(sz, FromCenter(); kwargs...)
-CenterCrop(sz::Integer; kwargs...) = CenterCrop((Int(sz), Int(sz)); kwargs...)
 
 """
     RandomCrop(sz; padding = 0, pad_if_needed = false, fill = nothing, padding_mode = :constant)
 
 Crop a region of size `sz` from a random location. For example,
 `RandomCrop((32, 32); padding = 4)` pads a 32×32 image by 4 on each side and crops
-a random 32×32 window from the result. An integer requests a square crop.
+a random 32×32 window from the result. An integer `sz` is the same size along every
+dimension: `RandomCrop(32)` crops a square from an image and a cube from a volume.
 See [`Crop`](@ref) for padding behavior.
 """
 RandomCrop(sz; kwargs...) = Crop(sz, FromRandom(); kwargs...)
-RandomCrop(sz::Integer; kwargs...) = RandomCrop((Int(sz), Int(sz)); kwargs...)
 
 # The random state of a [`Crop`](@ref) consists of offsets from the origin.
 

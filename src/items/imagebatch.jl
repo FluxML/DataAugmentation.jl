@@ -5,6 +5,9 @@
 An item for collated images and their classification labels. Use one-based real
 arrays of size `(width, height, batch)` for grayscale images or
 `(width, height, channels, batch)` for tensors collated after [`ImageToTensor`](@ref).
+Volumes collated after `ImageToTensor` have size `(width, height, depth, channels, batch)`:
+from four dimensions on, the last one is the batch, the one before it the channels, and
+all the dimensions before those are spatial.
 The label matrix has size `(classes, batch)` and holds one-hot or soft labels.
 The second constructor encodes class indices in `1:num_classes` as `Float32`
 one-hot columns. [`itemdata`](@ref) returns `(images, labels)`.
@@ -13,7 +16,7 @@ struct ImageBatch{A<:AbstractArray, L<:AbstractMatrix} <: Item
     data::Tuple{A, L}
     function ImageBatch(data::Tuple{A, L}) where {A<:AbstractArray, L<:AbstractMatrix}
         images, labels = data
-        ndims(images) in (3, 4) || throw(ArgumentError("images must have 3 or 4 dimensions"))
+        ndims(images) >= 3 || throw(ArgumentError("images must have at least 3 dimensions"))
         Base.require_one_based_indexing(images, labels)
         eltype(images) <: Real || throw(ArgumentError("images must contain real numbers"))
         eltype(labels) <: Real || throw(ArgumentError("labels must contain real numbers"))
