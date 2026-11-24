@@ -94,12 +94,11 @@ function project!(bufmask::MaskMulti, P, mask::MaskMulti, bounds)
 end
 
 
-function showitem!(img, mask::MaskMulti)
+function showitem!(img, mask::MaskMulti; opacity = 1, background = nothing)
     colors = distinguishable_colors(length(mask.classes))
-    maskimg = map(itemdata(mask)) do val
-        colors[findfirst(==(val), mask.classes)]
+    showmask!(img, itemdata(mask), opacity, background) do label
+        colors[findfirst(==(label), mask.classes)]
     end
-    showimage!(img, maskimg)
 end
 
 
@@ -178,6 +177,6 @@ function project!(bufmask::MaskBinary, P, mask::MaskBinary, bounds)
     )
 end
 
-function showitem!(img, mask::MaskBinary)
-    showimage!(img, colorview(Gray, itemdata(mask)))
+function showitem!(img, mask::MaskBinary; opacity = 1, background = nothing)
+    showmask!(Gray, img, itemdata(mask), opacity, background)
 end

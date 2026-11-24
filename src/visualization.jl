@@ -1,14 +1,29 @@
 """
-    showitems(items)
+    showitems(items; C = RGBA{N0f8}, showbounds = false, maskalpha = 0.5,
+              maskbackground = nothing)
 
-Visualize `items`.
+Draw a single spatial item or a collection of items in the given order.
+Masks drawn after an [`Image`](@ref) are blended over the canvas with opacity
+`maskalpha`, a number between 0 and 1. Set `maskbackground` to a class label
+to leave the canvas visible at those pixels. For a binary mask, use `false`
+for the background. By default, all mask labels are drawn. A mask drawn on
+its own is opaque.
 """
-function showitems(items; C=RGBA{N0f8}, showbounds = false)
+function showitems(items; C = RGBA{N0f8}, showbounds = false, maskalpha::Real = 0.5,
+                   maskbackground = nothing)
+    0 <= maskalpha <= 1 || throw(ArgumentError("maskalpha must be between 0 and 1"))
+    opacity = Float64(maskalpha)
     bounds = boundsof([getbounds(item) for item in items])
     a = OffsetArray(zeros(C, length.(bounds.rs)...), bounds.rs...)
 
+    hasimage = false
     for item in items
-        showitem!(a, item)
+        if hasimage && item isa Union{MaskMulti, MaskBinary}
+            showitem!(a, item; opacity, background = maskbackground)
+        else
+            showitem!(a, item)
+        end
+        hasimage |= item isa Image
     end
 
     if showbounds
@@ -34,15 +49,43 @@ function showimage!(dst, img)
 end
 
 
+function showmask!(colorfor, dst, labels, opacity, background)
+    iszero(opacity) && return
+    for I in CartesianIndices(labels)
+        checkbounds(Bool, dst, I) || continue
+        label = labels[I]
+        isequal(label, background) && continue
+        maskpixel = colorfor(label)
+        dst[I] = isone(opacity) ? maskpixel : blendmask(maskpixel, dst[I], opacity)
+    end
+end
+
+
+function blendmask(maskpixel, pixel::Colorant, opacity)
+    background_alpha = (1 - opacity) * alpha(pixel)
+    output_alpha = opacity + background_alpha
+    foreground = RGB{Float64}(maskpixel)
+    iszero(background_alpha) && return RGBA(foreground, output_alpha)
+    rgb = weighted_color_mean(opacity / output_alpha, foreground, RGB{Float64}(color(pixel)))
+    return RGBA(rgb, output_alpha)
+end
+
+blendmask(maskpixel::AbstractGray, pixel::Real, opacity) =
+    opacity * gray(maskpixel) + (1 - opacity) * pixel
+
+
 """
-    showgrid(itemgroups; fillvalue = RGBA{N0f8}(0, 0, 0, 0), kwargs...)
+    showgrid(itemgroups; fillvalue = RGBA{N0f8}(0, 0, 0, 0), maskalpha = 0.5,
+             maskbackground = nothing, kwargs...)
 
 Visualize every element of `itemgroups` (an item or a tuple of items) with
-[`showitems`](@ref) and arrange the results in a grid using
-`MosaicViews.mosaicview`. Keyword arguments such as `ncol` and `npad` are passed on to it.
+[`showitems`](@ref), which receives `maskalpha` and `maskbackground`.
+The results are arranged in a grid with `MosaicViews.mosaicview`, which receives
+`fillvalue` and grid options such as `ncol` and `npad`.
 """
-function showgrid(items; fillvalue = RGBA{N0f8}(0.,0.,0.,0.), kwargs...)
-    imgs = [showitems(item) for item in items]
+function showgrid(items; fillvalue = RGBA{N0f8}(0, 0, 0, 0), maskalpha = 0.5,
+                  maskbackground = nothing, kwargs...)
+    imgs = [showitems(item; maskalpha, maskbackground) for item in items]
     mosaicview(imgs; fillvalue = fillvalue, kwargs...)
 end
 

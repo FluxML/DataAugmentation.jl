@@ -32,4 +32,9 @@ Spatial items have spatial bounds, which [projective transformations](projective
 
 [`showitems`](@ref) visualizes spatial items, and [`showgrid`](@ref) arranges the visualizations of many items in a grid. The [Gallery](gallery.md) uses both throughout.
 
+Use `showitems((image, mask))` to check alignment after a transformation.
+Set `maskalpha` to adjust the default opacity of `0.5` and `maskbackground`
+to skip a label such as `1` for a multiclass mask or `false` for a binary mask.
+`showgrid` accepts the same options for grids of image and mask pairs.
+
 To define your own item, see [Defining items](iteminterface.md).
