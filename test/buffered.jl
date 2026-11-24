@@ -1,7 +1,7 @@
 include("./imports.jl")
 
 
-@testset ExtendedTestSet "apply!(buf, ::Map, ...)" begin
+@testset "apply!(buf, ::Map, ...)" begin
     newitem() = ArrayItem(randn(5, 5))
     tfm = MapElem(x -> x + 1)
 
@@ -14,9 +14,9 @@ include("./imports.jl")
 end
 
 
-@testset ExtendedTestSet "copyitemdata!" begin
+@testset "copyitemdata!" begin
     newitem() = ArrayItem(randn(5, 5))
-    @testset ExtendedTestSet "" begin
+    @testset "" begin
         a = newitem()
         b = newitem()
         @test !(a.data ≈ b.data)
@@ -25,7 +25,7 @@ end
     end
 
 
-    @testset ExtendedTestSet "" begin
+    @testset "" begin
         a = newitem()
         b = newitem()
         @test !(a.data ≈ b.data)
@@ -33,7 +33,7 @@ end
         @test a.data ≈ b.data
     end
 
-    @testset ExtendedTestSet "" begin
+    @testset "" begin
         a = newitem()
         b = newitem()
         @test !(a.data ≈ b.data)
@@ -43,7 +43,7 @@ end
 end
 
 
-@testset ExtendedTestSet "`Buffered`" begin
+@testset "`Buffered`" begin
     newitem() = ArrayItem(randn(5, 5))
     T = typeof(newitem())
     # buffer should be created
@@ -64,7 +64,7 @@ end
     testapply(Buffered(MapElem(x -> x + one(typeof(x)))), ArrayItem)
 end
 
-@testset ExtendedTestSet "`BufferedThreadsafe`" begin
+@testset "`BufferedThreadsafe`" begin
     newitem() = ArrayItem(randn(5, 5))
     T = typeof(newitem())
     # buffer should be created
@@ -87,6 +87,25 @@ end
     testapply(BufferedThreadsafe(MapElem(x -> x + one(typeof(x)))), ArrayItem)
 end
 
+@testset "Buffered item wrappers" begin
+    bbox = BoundingBox([SVector(10.0, 10.0), SVector(40.0, 50.0)], (64, 64))
+    tfm = ScaleRatio((0.5, 0.5))
+    @testset "$(nameof(typeof(btfm)))" for btfm in (Buffered(tfm), BufferedThreadsafe(tfm))
+        tbbox = apply(btfm, bbox)
+        @test tbbox isa BoundingBox
+        @test itemdata(tbbox) ≈ itemdata(apply(tfm, bbox))
+    end
+end
+
+@testset "apply! with buffered transform on item collections" begin
+    items = (ArrayItem(rand(5, 5)), ArrayItem(rand(5, 5)))
+    tfm = MapElem(x -> x + 1)
+    @testset "$(nameof(typeof(btfm)))" for btfm in (Buffered(tfm), BufferedThreadsafe(tfm))
+        titems = apply!(apply(tfm, items), btfm, items)
+        @test all(itemdata(t) ≈ itemdata(i) .+ 1 for (t, i) in zip(titems, items))
+    end
+end
+
 
 struct PlusRand <: Transform
 end
@@ -99,7 +118,7 @@ function DataAugmentation.apply!(buf, tfm::PlusRand, item::DataAugmentation.Abst
     return buf
 end
 
-@testset ExtendedTestSet "" begin
+@testset "" begin
     item1 = ArrayItem(ones(10))
     item2 = ArrayItem(ones(10))
     tfm = PlusRand()

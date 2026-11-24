@@ -1,7 +1,7 @@
 include("../imports.jl")
 
 
-@testset ExtendedTestSet "`ComposedProjectiveTransform`" begin
+@testset "`ComposedProjectiveTransform`" begin
     tfms = (Project(Translation(10, 10)), Project(Translation(-10, 10)))
     tfm = ComposedProjectiveTransform(tfms[1], tfms[2])
     item = Image(rand(10, 10))

@@ -1,0 +1,19 @@
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "julia"
+    directories:
+      - "/"
+      - "/docs"
+      - "/test"
+    schedule:
+      interval: "weekly"
+    ignore:
+      # stdlibs: dependabot proposes bogus bounds such as "< 0.0.1, 1"
+      - dependency-name: "LinearAlgebra"
+      - dependency-name: "Random"
+      - dependency-name: "Statistics"
+      - dependency-name: "Test"

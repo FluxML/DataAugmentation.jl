@@ -56,6 +56,8 @@ function OneOf(tfms::Vector{<:ProjectiveTransform}, ps = ones(length(tfms)) ./ l
     return OneOfProjective(tfms, Categorical(ps))
 end
 
+OneOf(tfms::Vector{<:ProjectiveTransform}, dist::Sampleable) = OneOfProjective(tfms, dist)
+
 
 function getrandstate(oneof::OneOfProjective)
     i = rand(oneof.dist)

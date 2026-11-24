@@ -24,6 +24,14 @@ showitems(item)
 struct Keypoints{N, T, S<:Union{SVector{N, T}, Nothing}, M} <: AbstractArrayItem{M, S}
     data::AbstractArray{S, M}
     bounds::Bounds{N}
+
+    Keypoints{N, T, S, M}(data, bounds) where {N, T, S, M} = new{N, T, S, M}(data, bounds)
+end
+
+function Keypoints(data::AbstractArray{S, M}, bounds::Bounds{N}) where {N, S<:Union{Nothing, SVector{N}}, M}
+    P = typeintersect(S, SVector)
+    P === Union{} && throw(ArgumentError("Cannot infer the coordinate type of keypoints that are all `nothing`"))
+    return Keypoints{N, eltype(P), S, M}(data, bounds)
 end
 
 

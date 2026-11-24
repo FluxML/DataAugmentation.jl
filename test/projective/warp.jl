@@ -1,7 +1,7 @@
 
 include("../imports.jl")
 
-@testset ExtendedTestSet "WarpAffine" begin
+@testset "WarpAffine" begin
     tfm = WarpAffine(0.1)
     image = Image(rand(RGB, 50, 50))
 

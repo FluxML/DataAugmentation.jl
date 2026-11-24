@@ -1,6 +1,6 @@
 include("imports.jl")
 
-@testset ExtendedTestSet "`NormalizeRow`" begin
+@testset "`NormalizeRow`" begin
     cols = [:col1, :col2, :col3]
     item = TabularItem(NamedTuple(zip(cols, [1, "a", 10])), cols)
     cols_to_normalize = [:col1, :col3]
@@ -15,7 +15,7 @@ include("imports.jl")
     @test titem.data[:col3] == (item.data[:col3] - col3_mean)/col3_std
 end
 
-@testset ExtendedTestSet "`FillMissing`" begin
+@testset "`FillMissing`" begin
     cols = [:col1, :col2, :col3]
     item = TabularItem(NamedTuple(zip(cols, [1, missing, missing])), cols)
     cols_to_fill = [:col1, :col3]
@@ -38,7 +38,7 @@ end
     @test titem2.data[:col2] == coalesce(item.data[:col2], "d")
 end
 
-@testset ExtendedTestSet "`Categorify`" begin
+@testset "`Categorify`" begin
     cols = [:col1, :col2, :col3, :col4]
     item = TabularItem(NamedTuple(zip(cols, [1, "a", "A", missing])), cols)
     cols_to_categorify = [:col2, :col3, :col4]

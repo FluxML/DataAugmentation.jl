@@ -3,13 +3,13 @@ include("imports.jl")
 
 const ITEMS = (ArrayItem, Image, MaskBinary, MaskMulti, Keypoints, Polygon, BoundingBox)
 
-@testset ExtendedTestSet "testitem" begin
+@testset "testitem" begin
     for I in ITEMS
         @test testitem(I) isa I
     end
 end
 
-@testset ExtendedTestSet "$(N)D $(I) extrapolate (constant)" for N in (2, 3), I in (Image, MaskBinary, MaskMulti)
+@testset "$(N)D $(I) extrapolate (constant)" for N in (2, 3), I in (Image, MaskBinary, MaskMulti)
     item = testitem(I{N}; extrapolate=1)
     data = item |> itemdata
 
@@ -30,7 +30,7 @@ end
     end
 end
 
-@testset ExtendedTestSet "$(N)D $(I) extrapolate (flat)" for N in (2, 3), I in (Image, MaskBinary, MaskMulti)
+@testset "$(N)D $(I) extrapolate (flat)" for N in (2, 3), I in (Image, MaskBinary, MaskMulti)
     item = testitem(I{N}; extrapolate=Interpolations.Flat())
     data = item |> itemdata
 
@@ -48,7 +48,7 @@ end
     @test transformed ≈ expected
 end
 
-@testset ExtendedTestSet "$(N)D $(I) extrapolate (reflect)" for N in (2, 3), I in (Image, MaskBinary, MaskMulti)
+@testset "$(N)D $(I) extrapolate (reflect)" for N in (2, 3), I in (Image, MaskBinary, MaskMulti)
     item = testitem(I{N}; extrapolate=Interpolations.Reflect())
     data = item |> itemdata
 
@@ -62,7 +62,7 @@ end
     @test transformed[ntuple(i -> i==1 ? (2*sizes[i]-1:-1:sizes[i]) : bounds.rs[i], N)...] ≈ data
 end
 
-@testset ExtendedTestSet "$(N)D $(I) interpolate (nearest)" for N in (2, 3), I in (Image, MaskBinary, MaskMulti)
+@testset "$(N)D $(I) interpolate (nearest)" for N in (2, 3), I in (Image, MaskBinary, MaskMulti)
     item = testitem(I{N}; interpolate=Interpolations.BSpline(Interpolations.Constant()))
     data = item |> itemdata
 
@@ -77,13 +77,13 @@ end
     @test transformed ≈ expected
 end
 
-@testset ExtendedTestSet "$(N)D $(I) interpolate (linear)" for N in (2, 3), I in (MaskBinary, MaskMulti)
+@testset "$(N)D $(I) interpolate (linear)" for N in (2, 3), I in (MaskBinary, MaskMulti)
     tfm = Project(LinearMap(UniformScaling(2)))
     item = testitem(I{N}; interpolate=Interpolations.BSpline(Interpolations.Linear()))
     @test_throws InexactError apply(tfm, item)
 end
 
-@testset ExtendedTestSet "$(N)D $(I) interpolate (linear)" for N in (2,3), I in (Image,)
+@testset "$(N)D $(I) interpolate (linear)" for N in (2,3), I in (Image,)
     item = testitem(I{N}; interpolate=Interpolations.BSpline(Interpolations.Linear()))
     data = item |> itemdata
 

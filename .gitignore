@@ -1,4 +1,3 @@
 /docs/build/
 Manifest.toml
-theme
-gh-pages
+Manifest-v*.toml

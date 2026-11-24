@@ -1,6 +1,6 @@
 include("../imports.jl")
 
-@testset ExtendedTestSet "`offsetcropbounds`" begin
+@testset "`offsetcropbounds`" begin
 
     @test offsetcropbounds((50, 50), Bounds((1:100, 1:100)), (0., 0.)) == Bounds((1:50, 1:50))
     @test offsetcropbounds((50, 50), Bounds((1:100, 1:100)), (0.5, 0.5)) == Bounds((26:75, 26:75))
@@ -9,9 +9,9 @@ include("../imports.jl")
 end
 
 
-@testset ExtendedTestSet "CroppedProjectiveTransform" begin
+@testset "CroppedProjectiveTransform" begin
 
-    @testset ExtendedTestSet "apply" begin
+    @testset "apply" begin
         image = Image(rand(100, 100))
         tfm = Project(Translation(20, 20))
         crop = CenterCrop((50, 50))
@@ -21,7 +21,7 @@ end
         @test_nowarn apply(cropped, image)
     end
 
-    @testset ExtendedTestSet "multiple crops $(N)D" for N in 2:3
+    @testset "multiple crops $(N)D" for N in 2:3
         image = Image(rand(ntuple(_->100, N)...))
         tfms = [
             Project(Translation(ntuple(_->10, N)...)),
@@ -44,9 +44,16 @@ end
 
         @test composedoutput ≈ sequenceoutput
     end
+
+    @testset "compose cropped transforms" begin
+        image = Image(rand(100, 100))
+        tfm = (ScaleKeepAspect((50, 50)) |> CenterCrop((50, 50))) |> (Rotate(10) |> RandomCrop((20, 20)))
+        @test tfm isa Sequence
+        @test size(itemdata(apply(tfm, image))) == (20, 20)
+    end
 end
 
-@testset ExtendedTestSet "PadDivisible" begin
+@testset "PadDivisible" begin
     img = rand(RGB, 64, 96)
     item = Image(img)
     tfm = ResizePadDivisible((32, 32), 4)

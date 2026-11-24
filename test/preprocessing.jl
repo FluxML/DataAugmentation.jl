@@ -2,15 +2,15 @@ include("./imports.jl")
 
 
 
-@testset ExtendedTestSet "Normalize" begin
-    @testset ExtendedTestSet "normalize" begin
+@testset "Normalize" begin
+    @testset "normalize" begin
         image = rand(Float32, 10, 10, 3)
         means = SVector{3}(rand(Float32, 1, 1, 3))
         stds = SVector{3}(rand(Float32, 1, 1, 3))
         @test denormalize(normalize(copy(image), means, stds), means, stds) ≈ image
     end
 
-    @testset ExtendedTestSet "Normalize" begin
+    @testset "Normalize" begin
         item = ArrayItem(zeros(10, 10, 3))
         means =  SVector{3}(ones(1, 1, 3))
         stds =  SVector{3}(ones(1, 1, 3))
@@ -23,14 +23,14 @@ include("./imports.jl")
     end
 end
 
-@testset ExtendedTestSet "NormalizeIntensity" begin
+@testset "NormalizeIntensity" begin
     item = ArrayItem(Float32.(collect(1:5)))
     ground_truth = [-1.2649, -0.6325, 0, 0.6325, 1.2649]
     tfm = NormalizeIntensity()
     @test itemdata(apply(tfm, item)) ≈ ground_truth
 end
 
-@testset ExtendedTestSet "ToEltype" begin
+@testset "ToEltype" begin
     data = rand(RGB, 10, 10)
     imagergb = Image(data)
     imagegray = Image((Gray.(data)))
@@ -43,15 +43,15 @@ end
 end
 
 
-@testset ExtendedTestSet "ImageToTensor" begin
-    @testset ExtendedTestSet "imagetotensor,tensortoimage" begin
+@testset "ImageToTensor" begin
+    @testset "imagetotensor,tensortoimage" begin
         data = rand(RGB, 10, 10)
         @test size(imagetotensor(data)) == (10, 10, 3)
         @test data |> imagetotensor |> tensortoimage ≈ data
 
     end
 
-    @testset ExtendedTestSet "ImageToTensor" begin
+    @testset "ImageToTensor" begin
         image = Image(rand(RGB, 10, 10))
         tfm = ImageToTensor()
         @test_nowarn apply(tfm, image)
@@ -62,7 +62,7 @@ end
     end
 end
 
-@testset ExtendedTestSet "PermuteDims" begin
+@testset "PermuteDims" begin
     tfm = PermuteDims(2, 1, 4, 3)
     item1 = ArrayItem(rand(3, 4, 5, 6))
     item2 = ArrayItem(rand(3, 4, 5, 6))
@@ -74,7 +74,7 @@ end
     testapply!(tfm, item1, item2)
 end
 
-@testset ExtendedTestSet "OneHot" begin
+@testset "OneHot" begin
     tfm = OneHot()
     mask = rand(1:4, 10, 10)
     item1 = MaskMulti(mask, 1:4)
@@ -88,7 +88,7 @@ end
 
 end
 
-@testset ExtendedTestSet "Image pipeline" begin
+@testset "Image pipeline" begin
     item1 = Image(rand(RGB, 64, 64))
     item2 = Image(rand(RGB, 64, 64))
 

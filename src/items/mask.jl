@@ -54,6 +54,8 @@ MaskMulti(a::AbstractArray{<:Gray{T}}, args...; kwargs...) where T = MaskMulti(r
 MaskMulti(a::AbstractArray{<:Normed{T}}, args...; kwargs...) where T = MaskMulti(reinterpret(T, a), args...; kwargs...)
 MaskMulti(a::IndirectArray, classes = a.values, bounds = Bounds(size(a)); kwargs...) =
     MaskMulti(a.index, classes, bounds; kwargs...)
+MaskMulti(a::IndirectArray{<:Integer, N}, classes::AbstractVector, bounds::Bounds{N}; kwargs...) where N =
+    MaskMulti(a.index, classes, bounds; kwargs...)
 
 Base.show(io::IO, mask::MaskMulti{N, T}) where {N, T} =
     print(io, "MaskMulti{$N, $T}() with size $(size(itemdata(mask))) and $(length(mask.classes)) classes")

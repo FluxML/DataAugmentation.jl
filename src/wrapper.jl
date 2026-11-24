@@ -12,7 +12,7 @@ itemfield(wrapped::ItemWrapper) = :item
 getwrapped(wrapped::ItemWrapper) = getfield(wrapped, itemfield(wrapped))
 
 function setwrapped(wrapped::ItemWrapper, item)
-    wrapped = Setfield.@set wrapped.item = item
+    wrapped = @set wrapped.item = item
     return wrapped
 end
 
