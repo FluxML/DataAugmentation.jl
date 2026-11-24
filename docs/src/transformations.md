@@ -29,7 +29,7 @@ Affine transformations are a kind of [projective transformation](projective.md) 
 
 To get a cropped result, simply `compose` any projective transformation with a crop:
 
-- [`CenterCrop`](@ref)`(sz)` and [`RandomCrop`](@ref)`(sz)` crop a region of size `sz` from the center or from a random location. They are special cases of [`Crop`](@ref)`(sz, from)`.
+- [`CenterCrop`](@ref)`(sz)` and [`RandomCrop`](@ref)`(sz)` crop a region of size `sz` from the center or from a random location. They are special cases of [`Crop`](@ref)`(sz, from)`. With the `padding` keyword the item is padded on every side before cropping, as in torchvision: `RandomCrop((32, 32); padding = 4)` takes a random 32×32 window from a 32×32 image padded by 4. The padded region is filled according to the `extrapolate` option of the item.
 - [`CenterResizeCrop`](@ref)`(sz)` and [`RandomResizeCrop`](@ref)`(sz)` first scale the item with [`ScaleKeepAspect`](@ref) and then crop it from the center or from a random location, so that images of any size end up with the same size `sz`. The result is moved to the origin with [`PinOrigin`](@ref)`()`.
 - [`ResizePadDivisible`](@ref)`(sz, by)` scales the item with [`ScaleKeepAspect`](@ref) and pads it so that its side lengths are divisible by `by`.
 

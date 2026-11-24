@@ -11,13 +11,42 @@ abstract type AbstractCrop <: Transform end
 struct Crop{N, F<:CropFrom} <: AbstractCrop
     size::NTuple{N, Int}
     from::F
+    padding::NTuple{N, Int}
 end
 
 """
-Crop(sz, FromOrigin())
-"""
-Crop(sz) = Crop(sz, FromOrigin())
+    Crop(sz[, from]; padding = 0)
 
+Crop a region of size `sz` from the bounds of an item. `from` is `FromOrigin()` (default),
+`FromCenter()` or `FromRandom()`; see also [`CenterCrop`](@ref) and [`RandomCrop`](@ref).
+
+With `padding`, the bounds are first extended by `padding` on both sides of every dimension
+(`padding` is an `Int` or one `Int` per dimension) and the crop is taken from the padded
+bounds. This is the equivalent of `padding` in torchvision's `RandomCrop`.
+
+The padded region is filled according to the `extrapolate` option of the item: black for
+an [`Image`](@ref) by default, replicated edge labels for a [`MaskMulti`](@ref). Pass for
+example `extrapolate = Reflect()` or `extrapolate = 0` when constructing the item to change
+this. A `sz` larger than the bounds is padded in the same way.
+
+## Examples
+
+```julia
+tfm = Crop((32, 32), FromRandom(); padding = 4) |> PinOrigin()
+apply(tfm, Image(rand(RGB, 32, 32)))
+```
+"""
+function Crop(sz::NTuple{N, Int}, from::CropFrom = FromOrigin(); padding = 0) where N
+    return Crop(sz, from, _paddingtuple(padding, Val(N)))
+end
+
+_paddingtuple(padding::Integer, ::Val{N}) where N = ntuple(_ -> Int(padding), N)
+function _paddingtuple(padding::NTuple{N, Integer}, ::Val{N}) where N
+    return map(Int, padding)
+end
+function _paddingtuple(padding::Tuple, ::Val{N}) where N
+    throw(ArgumentError("`padding` must be an integer or a tuple of $N integers, got $padding"))
+end
 
 
 function apply(crop::Crop, item::Item; randstate = getrandstate(crop))
@@ -29,13 +58,21 @@ end
 
 
 """
-Crop(sz, FromCenter())
+    CenterCrop(sz; padding = 0)
+
+Crop a region of size `sz` from the center. Same as `Crop(sz, FromCenter(); padding)`,
+see [`Crop`](@ref).
 """
-CenterCrop(sz) = Crop(sz, FromCenter())
+CenterCrop(sz; padding = 0) = Crop(sz, FromCenter(); padding)
+
 """
-Crop(sz, FromRandom())
+    RandomCrop(sz; padding = 0)
+
+Crop a region of size `sz` from a random location. Same as `Crop(sz, FromRandom(); padding)`,
+see [`Crop`](@ref). For example, `RandomCrop((32, 32); padding = 4)` pads a 32×32 image by 4
+on each side and crops a random 32×32 window from the result.
 """
-RandomCrop(sz) = Crop(sz, FromRandom())
+RandomCrop(sz; padding = 0) = Crop(sz, FromRandom(); padding)
 
 # The random state of a [`Crop`](@ref) consists of offsets from the origin.
 
@@ -112,7 +149,11 @@ function compose(cropped::CroppedProjectiveTransform, composed::ComposedProjecti
 end
 
 
-cropbounds(crop::Crop, bounds::Bounds; randstate=getrandstate(crop)) = offsetcropbounds(crop.size, bounds, randstate)
+function cropbounds(crop::Crop, bounds::Bounds; randstate = getrandstate(crop))
+    return offsetcropbounds(crop.size, padbounds(bounds, crop.padding), randstate)
+end
+
+padbounds(bounds::Bounds, padding) = Bounds(map((r, p) -> first(r) - p : last(r) + p, bounds.rs, padding))
 
 function cropbounds(
         crop::PadDivisible,

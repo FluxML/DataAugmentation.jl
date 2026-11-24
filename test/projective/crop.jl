@@ -53,6 +53,77 @@ end
     end
 end
 
+@testset "Crop padding" begin
+    @testset "defaults" begin
+        @test Crop((4, 4)).padding == (0, 0)
+        @test RandomCrop((4, 4)).padding == (0, 0)
+        @test CenterCrop((4, 4, 4); padding = 2).padding == (2, 2, 2)
+        @test CenterCrop((4, 4); padding = (1, 3)).padding == (1, 3)
+        @test_throws ArgumentError Crop((4, 4); padding = (1, 2, 3))
+    end
+
+    @testset "bounds" begin
+        crop = RandomCrop((8, 8); padding = 4)
+        bounds = Bounds((8, 8))
+        @test DataAugmentation.cropbounds(crop, bounds; randstate = (0., 0.)) == Bounds((-3:4, -3:4))
+        @test DataAugmentation.cropbounds(crop, bounds; randstate = (1., 1.)) == Bounds((5:12, 5:12))
+
+        starts = Set(
+            first.(DataAugmentation.cropbounds(crop, bounds).rs) for _ in 1:2000)
+        @test starts == Set((i, j) for i in -3:5, j in -3:5)
+    end
+
+    @testset "identity for centered symmetric padding $(N)D" for N in 2:3
+        sz = ntuple(i -> 6 + i, N)
+        item = Image(rand(sz...))
+        out = apply(CenterCrop(sz; padding = 3), item)
+        @test itemdata(out) == itemdata(item)
+    end
+
+    @testset "output size" begin
+        item = Image(rand(8, 8))
+        out = apply(RandomCrop((8, 8); padding = (2, 5)), item)
+        @test size(itemdata(out)) == (8, 8)
+        out = apply(RandomCrop((12, 12); padding = 2), item)
+        @test size(itemdata(out)) == (12, 12)
+    end
+
+    @testset "fill follows the extrapolate option of the item" begin
+        tfm = Crop((8, 8), DataAugmentation.FromOrigin(); padding = 2)
+        out = apply(tfm, Image(ones(8, 8)))
+        @test count(==(1), itemdata(out)) == 36
+        @test count(==(0), itemdata(out)) == 28
+
+        out = apply(tfm, Image(ones(8, 8); extrapolate = Interpolations.Flat()))
+        @test all(==(1), itemdata(out))
+    end
+
+    @testset "masks" begin
+        tfm = Crop((4, 4), DataAugmentation.FromOrigin(); padding = 2)
+        out = apply(tfm, MaskMulti(fill(2, 4, 4), 1:2))
+        @test all(==(2), itemdata(out))
+
+        out = apply(tfm, MaskMulti(fill(2, 4, 4), 1:2; extrapolate = 1))
+        @test count(==(2), itemdata(out)) == 4
+    end
+
+    @testset "multiple items use the same window" begin
+        tfm = RandomCrop((8, 8); padding = 4)
+        image = Image(rand(8, 8))
+        mask = MaskMulti(rand(1:2, 8, 8), 1:2)
+        keypoints = Keypoints([SVector(4., 4.)], (8, 8))
+        out = apply(tfm, (image, mask, keypoints))
+        @test getbounds(out[1]) == getbounds(out[2]) == getbounds(out[3])
+        @test size(itemdata(out[1])) == size(itemdata(out[2])) == (8, 8)
+    end
+
+    @testset "composed with a projective transformation" begin
+        tfm = Rotate(10) |> RandomCrop((8, 8); padding = 4)
+        @test tfm isa CroppedProjectiveTransform
+        @test size(itemdata(apply(tfm, Image(rand(8, 8))))) == (8, 8)
+    end
+end
+
 @testset "PadDivisible" begin
     img = rand(RGB, 64, 96)
     item = Image(img)
