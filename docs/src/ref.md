@@ -111,6 +111,12 @@ MixUp
 CutMix
 ```
 
+## Video
+
+```@docs
+UniformTemporalSubsample
+```
+
 ## Stochastic transformations
 
 ```@docs
@@ -133,6 +139,7 @@ ImageToTensor
 PermuteDims
 Normalize
 NormalizeIntensity
+LinearTransformation
 OneHot
 onehot
 MapElem

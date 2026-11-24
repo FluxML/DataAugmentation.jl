@@ -72,6 +72,17 @@ mixed_images, mixed_labels = itemdata(apply(CutMix(), batch))
 size(mixed_images), size(mixed_labels)
 ```
 
+## Video
+
+A video is an N-dimensional [`Image`](@ref) with time as the third dimension, so the spatial transformations apply to it directly. [`UniformTemporalSubsample`](@ref)`(n)` keeps `n` evenly spaced frames, and subsamples masks passed alongside the same way.
+
+```@example video
+using DataAugmentation, Images
+
+video = Image(rand(Gray{Float32}, 32, 32, 16))
+size(itemdata(apply(UniformTemporalSubsample(8), video)))
+```
+
 ## Stochastic transformations
 
 When augmenting data, it is often useful to apply a transformation only with some probability or choose from a set of transformations. Unlike in other data augmentation libraries like *albumentations*, in DataAugmentation.jl you can use wrapper transformations for this functionality.
@@ -90,4 +101,4 @@ showgrid(titems; ncol = 4, npad = 16)
 
 ## Other transformations
 
-[Preprocessing](preprocessing.md) covers the transformations that get data ready to be put into a model, such as normalization and one-hot encoding. [`Buffered`](@ref) wraps any transformation to reuse its output buffers; see [Buffering](buffering.md).
+[Preprocessing](preprocessing.md) covers the transformations that get data ready to be put into a model, such as normalization, whitening with [`LinearTransformation`](@ref) and one-hot encoding. [`Buffered`](@ref) wraps any transformation to reuse its output buffers; see [Buffering](buffering.md).
