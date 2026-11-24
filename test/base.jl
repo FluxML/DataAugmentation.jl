@@ -31,6 +31,18 @@ compose(add1::Add, add2::Add) = Add(add1.n + add2.n)
     @test isnothing(getrandstate(tfm))
 end
 
+@testset "Callable transforms" begin
+    tfm = Add(2)
+    item = TestItem(10)
+    @test tfm(item) == apply(tfm, item)
+    @test map(tfm, [item, item]) == [TestItem(12), TestItem(12)]
+
+    brighten = AdjustBrightness()
+    image = Image(fill(0.25f0, 2, 2))
+    brightened = fill(0.5f0, 2, 2)
+    @test itemdata(brighten((image, image); randstate = 2f0)) == (brightened, brightened)
+end
+
 # And composition:
 
 @testset "`compose`" begin

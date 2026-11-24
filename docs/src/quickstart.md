@@ -9,7 +9,7 @@ using DataAugmentation
 
 Import the library:
 ```
-using DataAugmentation  # Image, CenterResizeCrop, apply, showitem
+using DataAugmentation
 using TestImages: testimage
 ```
 Load your data:
@@ -24,11 +24,15 @@ Create a transform:
 ```@example deps
 tfm = CenterResizeCrop((128, 128))
 ```
-Apply the transformation and unwrap the data:
+Call the transform on the item, then unwrap its data.
+
 ```@example deps
-titem = apply(tfm, item)
+titem = tfm(item)
 timage = itemdata(titem)
 ```
+
+`tfm(item)` is equivalent to [`apply`](@ref)`(tfm, item)`. Pass a tuple such as
+`tfm((item, mask))` to share the transform's random state across items.
 
 ## Next steps
 

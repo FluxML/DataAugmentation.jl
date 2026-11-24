@@ -34,7 +34,8 @@ function showitem! end
 """
     abstract type Transform
 
-Abstract supertype for all transformations.
+Abstract supertype for all transformations. Calling `tfm(item; kwargs...)`
+forwards to [`apply`](@ref)`(tfm, item; kwargs...)`.
 """
 abstract type Transform end
 
@@ -76,6 +77,9 @@ Apply `tfm` to an `item` or a tuple `items`.
 function apply(tfm::Transform, items; randstate = getrandstate(tfm))
     map(item -> apply(tfm, item; randstate = randstate), items)
 end
+
+
+(tfm::Transform)(item; kwargs...) = apply(tfm, item; kwargs...)
 
 
 #
