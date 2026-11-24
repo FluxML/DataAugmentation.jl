@@ -40,6 +40,9 @@ end
 apply(seq::Sequence, item::Item; randstate = getrandstate(seq)) =
     apply(seq, (item,); randstate = randstate) |> only
 
+apply(seq::Sequence, item::ItemWrapper; randstate = getrandstate(seq)) =
+    apply(seq, (item,); randstate = randstate) |> only
+
 
 function makebuffer(pipeline::Sequence, items)
     buffers = []

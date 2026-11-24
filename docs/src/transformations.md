@@ -21,16 +21,27 @@ Affine transformations are a kind of [projective transformation](projective.md) 
 
 - [`FlipX`](@ref)`()`, [`FlipY`](@ref)`()` and [`FlipZ`](@ref)`()` flip along a named axis according to the item's dimensionality. Use [`FlipDim`](@ref)`{N}(dim)` to specify the dimension directly.
 - [`Reflect`](@ref)`(γ)` reflects 2D data around its center by an angle chosen uniformly from `[-γ, γ]` degrees.
-- [`Rotate`](@ref)`(γ)` rotates 2D data around its center by an angle chosen uniformly from `[-γ, γ]` degrees; `Rotate(α, β, γ)` rotates 3D data, and [`RotateX`](@ref), [`RotateY`](@ref) and [`RotateZ`](@ref) rotate around a single axis.
-- [`ScaleRatio`](@ref)`(ratios)` scales the sides by the given ratios, [`ScaleFixed`](@ref)`(sizes)` scales them to the given sizes disregarding the aspect ratio, and [`ScaleKeepAspect`](@ref)`(minlengths)` scales so that the sides are at least `minlengths`, keeping the aspect ratio. [`Zoom`](@ref)`(scales)` zooms in by a factor chosen from the interval `scales`.
+- [`Rotate`](@ref)`(γ)` rotates 2D data around its center by an angle chosen uniformly from `[-γ, γ]` degrees. Use `expand = false` to keep the input bounds, `center` to choose a pivot, and `fill` for pixels outside the image. `Rotate(α, β, γ)` rotates 3D data, and [`RotateX`](@ref), [`RotateY`](@ref) and [`RotateZ`](@ref) rotate around a single axis.
 - [`WarpAffine`](@ref)`(σ)` randomly moves three corners of the item, which is similar to a random translation, shear and rotation.
+- [`RandomAffine`](@ref) samples rotation, translation, scale and shear together. [`RandomPerspective`](@ref) moves the four corners inward, and [`ElasticTransform`](@ref) applies a smooth displacement field. These 2D warps keep the input bounds and share the same geometry across paired items.
 
-## Crops
+## Resizing
+
+- [`ScaleRatio`](@ref)`(ratios)` scales the sides by the given ratios, [`ScaleFixed`](@ref)`(sizes)` scales them to the given sizes disregarding the aspect ratio, and [`ScaleKeepAspect`](@ref)`(minlengths)` scales so that the sides are at least `minlengths`, keeping the aspect ratio. [`Zoom`](@ref)`(scales)` zooms in by a factor chosen from the interval `scales`.
+- [`Resize`](@ref)`(size; max_size)` sets the shorter side and can cap the longer one. A size pair sets both dimensions directly. [`RandomShortestSize`](@ref) chooses a shorter side from a collection, [`RandomResize`](@ref) samples it from an interval, and [`ScaleJitter`](@ref) varies the scale around a target canvas size.
+
+Construct an image with `Image(data; antialias = true)` to prefilter it before affine downsampling. Masks still use their own interpolation settings.
+
+## Crops and padding
 
 To get a cropped result, simply `compose` any projective transformation with a crop:
 
-- [`CenterCrop`](@ref)`(sz)` and [`RandomCrop`](@ref)`(sz)` crop a region of size `sz` from the center or from a random location. They are special cases of [`Crop`](@ref)`(sz, from)`. With the `padding` keyword the item is padded on every side before cropping, as in torchvision: `RandomCrop((32, 32); padding = 4)` takes a random 32×32 window from a 32×32 image padded by 4. The padded region is filled according to the `extrapolate` option of the item.
+- [`CenterCrop`](@ref)`(sz)` and [`RandomCrop`](@ref)`(sz)` crop a region of size `sz` from the center or from a random location. They are special cases of [`Crop`](@ref)`(sz, from)`. Use `padding` to extend the input before choosing the window, and `pad_if_needed = true` to add room for randomly placing a window larger than the input.
 - [`CenterResizeCrop`](@ref)`(sz)` and [`RandomResizeCrop`](@ref)`(sz)` first scale the item with [`ScaleKeepAspect`](@ref) and then crop it from the center or from a random location, so that images of any size end up with the same size `sz`. The result is moved to the origin with [`PinOrigin`](@ref)`()`.
+- [`RandomResizedCrop`](@ref) samples a window by area and aspect ratio, then resizes the window to the target size.
+- [`RandomIoUCrop`](@ref) takes an image and its bounding boxes together and uses their overlap with candidate windows to choose a crop. It applies that window to the image and any aligned annotations.
+- [`FiveCrop`](@ref) returns the four corners and center. [`TenCrop`](@ref) adds the same views of the flipped input.
+- [`Pad`](@ref) grows the bounds using a constant value, repeating edge pixels, or reflection. [`RandomZoomOut`](@ref) randomly places the input on a larger canvas using the same padding machinery.
 - [`ResizePadDivisible`](@ref)`(sz, by)` scales the item with [`ScaleKeepAspect`](@ref) and pads it so that its side lengths are divisible by `by`.
 
 ## Color transformations

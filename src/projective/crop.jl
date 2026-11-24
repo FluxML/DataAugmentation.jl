@@ -14,20 +14,28 @@ struct Crop{N, F<:CropFrom} <: AbstractCrop
     padding::NTuple{N, Int}
 end
 
+struct PaddedCrop{C<:Crop, P, F} <: Transform
+    crop::C
+    padding::P
+    pad_if_needed::Bool
+    fill::F
+    padding_mode::Symbol
+end
+
 """
-    Crop(sz[, from]; padding = 0)
+    Crop(sz[, from]; padding = 0, pad_if_needed = false, fill = nothing, padding_mode = :constant)
 
 Crop a region of size `sz` from the bounds of an item. `from` is `FromOrigin()` (default),
 `FromCenter()` or `FromRandom()`; see also [`CenterCrop`](@ref) and [`RandomCrop`](@ref).
 
-With `padding`, the bounds are first extended by `padding` on both sides of every dimension
-(`padding` is an `Int` or one `Int` per dimension) and the crop is taken from the padded
-bounds. This is the equivalent of `padding` in torchvision's `RandomCrop`.
-
-The padded region is filled according to the `extrapolate` option of the item: black for
-an [`Image`](@ref) by default, replicated edge labels for a [`MaskMulti`](@ref). Pass for
-example `extrapolate = Reflect()` or `extrapolate = 0` when constructing the item to change
-this. A `sz` larger than the bounds is padded in the same way.
+With symmetric `padding` (one integer for all axes or one per axis), the bounds are
+extended on both sides before cropping. See [`Pad`](@ref) for asymmetric padding and
+the available padding modes. By default, padded pixels use the item's extrapolation
+setting, including when `sz` exceeds the bounds. With `pad_if_needed = true`, each
+side of an undersized axis is padded by the shortfall before choosing the crop.
+`fill` applies to [`Image`](@ref) items only; masks use their own extrapolation.
+With `pad_if_needed`, `fill` or a non-constant `padding_mode`, the result is a
+plain transform that is not fused with neighboring projective transforms.
 
 ## Examples
 
@@ -36,16 +44,16 @@ tfm = Crop((32, 32), FromRandom(); padding = 4) |> PinOrigin()
 apply(tfm, Image(rand(RGB, 32, 32)))
 ```
 """
-function Crop(sz::NTuple{N, Int}, from::CropFrom = FromOrigin(); padding = 0) where N
-    return Crop(sz, from, _paddingtuple(padding, Val(N)))
-end
-
-_paddingtuple(padding::Integer, ::Val{N}) where N = ntuple(_ -> Int(padding), N)
-function _paddingtuple(padding::NTuple{N, Integer}, ::Val{N}) where N
-    return map(Int, padding)
-end
-function _paddingtuple(padding::Tuple, ::Val{N}) where N
-    throw(ArgumentError("`padding` must be an integer or a tuple of $N integers, got $padding"))
+function Crop(sz::NTuple{N, Int}, from::CropFrom = FromOrigin(); padding = 0,
+              pad_if_needed::Bool = false, fill = nothing, padding_mode::Symbol = :constant) where N
+    sides = _padparams(padding, N)
+    if !pad_if_needed && isnothing(fill) && padding_mode === :constant &&
+            (padding isa Integer || padding isa NTuple{N, Integer})
+        return Crop(sz, from, map(first, sides))
+    end
+    _validate_padding_mode(padding_mode)
+    crop = Crop(sz, from, ntuple(_ -> 0, N))
+    return PaddedCrop(crop, sides, pad_if_needed, fill, padding_mode)
 end
 
 
@@ -56,23 +64,48 @@ function apply(crop::Crop, item::Item; randstate = getrandstate(crop))
         randstate = (nothing, (randstate,)))
 end
 
+getrandstate(tfm::PaddedCrop) = getrandstate(tfm.crop)
+
+function apply(tfm::PaddedCrop, item::Item; randstate = getrandstate(tfm))
+    bounds = getbounds(item)
+    padding = if tfm.pad_if_needed
+        map(tfm.padding, length.(bounds.rs), tfm.crop.size) do sides, n, size
+            extra = max(0, size - n - sum(sides))
+            return sides .+ extra
+        end
+    else
+        tfm.padding
+    end
+    padded = _padded_bounds(bounds, padding)
+    target = cropbounds(tfm.crop, padded; randstate)
+    materialized = map(bounds.rs, padded.rs, target.rs) do axis, padded_axis, crop_axis
+        return (first(axis) - min(first(padded_axis), first(crop_axis)),
+                max(last(padded_axis), last(crop_axis)) - last(axis))
+    end
+    source = apply(Pad(materialized; tfm.fill, tfm.padding_mode), item)
+    return project(IdentityTransformation(), source, target)
+end
+
 
 """
-    CenterCrop(sz; padding = 0)
+    CenterCrop(sz; padding = 0, kwargs...)
 
 Crop a region of size `sz` from the center. Same as `Crop(sz, FromCenter(); padding)`,
-see [`Crop`](@ref).
+see [`Crop`](@ref). An integer requests a square crop.
 """
-CenterCrop(sz; padding = 0) = Crop(sz, FromCenter(); padding)
+CenterCrop(sz; kwargs...) = Crop(sz, FromCenter(); kwargs...)
+CenterCrop(sz::Integer; kwargs...) = CenterCrop((Int(sz), Int(sz)); kwargs...)
 
 """
-    RandomCrop(sz; padding = 0)
+    RandomCrop(sz; padding = 0, pad_if_needed = false, fill = nothing, padding_mode = :constant)
 
-Crop a region of size `sz` from a random location. Same as `Crop(sz, FromRandom(); padding)`,
-see [`Crop`](@ref). For example, `RandomCrop((32, 32); padding = 4)` pads a 32×32 image by 4
-on each side and crops a random 32×32 window from the result.
+Crop a region of size `sz` from a random location. For example,
+`RandomCrop((32, 32); padding = 4)` pads a 32×32 image by 4 on each side and crops
+a random 32×32 window from the result. An integer requests a square crop.
+See [`Crop`](@ref) for padding behavior.
 """
-RandomCrop(sz; padding = 0) = Crop(sz, FromRandom(); padding)
+RandomCrop(sz; kwargs...) = Crop(sz, FromRandom(); kwargs...)
+RandomCrop(sz::Integer; kwargs...) = RandomCrop((Int(sz), Int(sz)); kwargs...)
 
 # The random state of a [`Crop`](@ref) consists of offsets from the origin.
 
@@ -118,10 +151,20 @@ function projectionbounds(
         randstate = getrandstate(cropped))
     tfmstate, cropstates = randstate
     bounds_ = projectionbounds(cropped.tfm, P, bounds; randstate = tfmstate)
-    for (crop, cropstate) in zip(cropped.crops, cropstates)
-        bounds_ = cropbounds(crop, bounds_; randstate = cropstate)
+    return _apply_crop_bounds(cropped.crops, bounds_, cropstates)
+end
+
+function _projection_geometry(cropped::CroppedProjectiveTransform, bounds, randstate)
+    tfmstate, cropstates = randstate
+    P, bounds_ = _projection_geometry(cropped.tfm, bounds, tfmstate)
+    return P, _apply_crop_bounds(cropped.crops, bounds_, cropstates)
+end
+
+function _apply_crop_bounds(crops, bounds, cropstates)
+    for (crop, cropstate) in zip(crops, cropstates)
+        bounds = cropbounds(crop, bounds; randstate = cropstate)
     end
-    return bounds_
+    return bounds
 end
 
 compose(tfm::ProjectiveTransform, crop::AbstractCrop) = CroppedProjectiveTransform(tfm, (crop,))

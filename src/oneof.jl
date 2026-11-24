@@ -75,6 +75,11 @@ function getprojection(oneof::OneOfProjective, bounds; randstate = getrandstate(
     return getprojection(oneof.tfms[i], bounds; randstate = tfmrandstate)
 end
 
+function projectionbounds(oneof::OneOfProjective, P, bounds; randstate = getrandstate(oneof))
+    i, tfmrandstate = randstate
+    return projectionbounds(oneof.tfms[i], P, bounds; randstate = tfmrandstate)
+end
+
 
 function makebuffer(oneof::OneOfProjective, items)
     return [makebuffer(tfm, items) for tfm in oneof.tfms]

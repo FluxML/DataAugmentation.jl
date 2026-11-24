@@ -86,7 +86,8 @@ function getprojection(scale::ScaleFixed, bounds::Bounds{N}; randstate = nothing
     ratios = map((s, n) -> s == n ? 1.0 : s / max(n - 1, 1), scale.sizes, lengths)
     center = SVector{N, Float32}(mean.(bounds.rs))
     newcenter = SVector{N, Float32}((scale.sizes .+ 1) ./ 2)
-    return Translation(newcenter) ∘ scaleprojection(ratios) ∘ Translation(-center)
+    P = Translation(newcenter) ∘ scaleprojection(ratios) ∘ Translation(-center)
+    return _singletonprojection(P, bounds, scale.sizes)
 end
 
 
@@ -124,8 +125,8 @@ function projectionbounds(tfm::Zoom, P, bounds::Bounds; randstate = getrandstate
 end
 
 """
-    Rotate(γ)
-    Rotate(distribution)
+    Rotate(γ; expand = true, center = nothing, fill = nothing)
+    Rotate(distribution; expand = true, center = nothing, fill = nothing)
     Rotate(α, β, γ)
     Rotate(α_distribution, β_distribution, γ_distribution)
 
@@ -136,6 +137,13 @@ Rotate(α, β, γ) is a 3D rotation by angles chosen uniformly from
 
 You can also pass any `Distributions.Sampleable` from which the
 angle is selected.
+
+For 2D rotations, `expand = false` keeps the input bounds. Pass an absolute
+`center = (row, column)` in pixel coordinates to rotate around another point.
+By default, out-of-bounds samples use the item's extrapolation setting. An
+explicit `fill` value applies to this rotation only and to [`Image`](@ref) items
+only; masks keep their own extrapolation. Rotations with a `fill` are not
+projective transforms and are not fused with neighboring ones.
 
 ## Examples
 
@@ -149,21 +157,42 @@ apply(tfm3d, Image(rand(Float32, 16, 16, 16)))
 """
 struct Rotate{N, R, S<:Sampleable} <: ProjectiveTransform
     dist::S
+    expand::Bool
+    center::Union{Nothing, SVector{N, Float32}}
 end
 
-Rotate{N, R}(s::S) where {N, R, S} = Rotate{N, R, S}(s)
+Rotate{N, R, S}(s::S) where {N, R, S} = Rotate{N, R, S}(s, true, nothing)
 
-function Rotate{N, R}(s::S) where {N, R, S<:Number}
-    if s == 0
-        return Identity()
+function Rotate{N, R}(s::S; expand::Bool = true, center = nothing) where {N, R, S<:Sampleable}
+    if center !== nothing
+        center isa Union{Tuple, AbstractVector} && length(center) == N &&
+            all(x -> x isa Real && isfinite(Float32(x)), center) ||
+            throw(ArgumentError("center must contain $N finite coordinates"))
+        center = SVector{N, Float32}(center)
     end
-    Rotate{N, R, Uniform}(Uniform(-abs(s), abs(s)))
+    return Rotate{N, R, S}(s, expand, center)
 end
 
-Rotate(s) = Rotate{2, Type{RotMatrix{2, Float64}}}(s)
+function Rotate{N, R}(s::Number; kwargs...) where {N, R}
+    iszero(s) && return Identity()
+    return Rotate{N, R}(Uniform(-abs(s), abs(s)); kwargs...)
+end
+
+struct FilledRotation{R<:Rotate, F} <: Transform
+    rotation::R
+    fill::F
+end
+
+function Rotate(s; expand::Bool = true, center = nothing, fill = nothing)
+    rotation = Rotate{2, Type{RotMatrix{2, Float64}}}(s; expand, center)
+    (isnothing(fill) || rotation isa Identity) && return rotation
+    fill isa Union{Number, Colorant} || throw(ArgumentError("fill must be a number or a color"))
+    return FilledRotation(rotation, fill)
+end
+
 Rotate(sx, sy, sz) = RotateX(sx) |> RotateY(sy) |> RotateZ(sz)
 Rotate{3}(s) = Rotate(s, s, s)
-Rotate{2}(s) = Rotate(s)
+Rotate{2}(s; kwargs...) = Rotate(s; kwargs...)
 
 """
     RotateX(γ)
@@ -202,15 +231,30 @@ angle is selected.
 RotateZ(s) = Rotate{3, Type{RotZ{Float64}}}(s)
 
 getrandstate(tfm::Rotate) = rand(tfm.dist)
+getrandstate(tfm::FilledRotation) = getrandstate(tfm.rotation)
 
 function getprojection(
         tfm::Rotate{N, Type{R}, S},
         bounds::Bounds{N};
         randstate = getrandstate(tfm)) where {N, R, S}
     γ = randstate
-    middlepoint = SVector{N, Float32}(mean.(bounds.rs))
+    middlepoint = isnothing(tfm.center) ? SVector{N, Float32}(mean.(bounds.rs)) : tfm.center
     r = γ / 360 * 2pi
     return recenter(RotMatrix{N, Float32}(R(convert(Float64, r))), middlepoint)
+end
+
+function projectionbounds(tfm::Rotate, P, bounds; randstate = nothing)
+    return tfm.expand ? transformbounds(bounds, P) : bounds
+end
+
+function apply(tfm::FilledRotation, item::Item; randstate = getrandstate(tfm))
+    return apply(tfm.rotation, item; randstate)
+end
+
+function apply(tfm::FilledRotation, item::Image; randstate = getrandstate(tfm))
+    source = @set item.extrapolate = tfm.fill
+    result = apply(tfm.rotation, source; randstate)
+    return @set result.extrapolate = item.extrapolate
 end
 
 
