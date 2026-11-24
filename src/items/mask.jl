@@ -65,12 +65,8 @@ getbounds(mask::MaskMulti) = mask.bounds
 
 
 function project(P, mask::MaskMulti{N, T, U}, bounds::Bounds{N}) where {N, T, U}
-    res = warp(
-        itemdata(mask),
-        inv(P),
-        bounds.rs;
-        method=mask.interpolate,
-        fillvalue=mask.extrapolate)
+    source = _project_extrapolation(itemdata(mask), mask.interpolate, mask.extrapolate)
+    res = warp(source, inv(P), bounds.rs)
     return MaskMulti(
         convert.(T, res),
         mask.classes,
@@ -84,7 +80,7 @@ function project!(bufmask::MaskMulti, P, mask::MaskMulti, bounds)
     a = OffsetArray(parent(itemdata(bufmask)), bounds.rs)
     warp!(
         a,
-        box_extrapolation(itemdata(mask); method=mask.interpolate, fillvalue=mask.extrapolate),
+        _project_extrapolation(itemdata(mask), mask.interpolate, mask.extrapolate),
         inv(P),
     )
     return MaskMulti(
@@ -155,12 +151,8 @@ Base.show(io::IO, mask::MaskBinary{N}) where {N} =
 getbounds(mask::MaskBinary) = mask.bounds
 
 function project(P, mask::MaskBinary, bounds::Bounds)
-    res = warp(
-        itemdata(mask),
-        inv(P),
-        bounds.rs;
-        method=mask.interpolate,
-        fillvalue=mask.extrapolate)
+    source = _project_extrapolation(itemdata(mask), mask.interpolate, mask.extrapolate)
+    res = warp(source, inv(P), bounds.rs)
     return MaskBinary(convert.(Bool, res), bounds)
 end
 
@@ -170,7 +162,7 @@ function project!(bufmask::MaskBinary, P, mask::MaskBinary, bounds)
     a = OffsetArray(parent(itemdata(bufmask)), bounds.rs)
     warp!(
         a,
-        box_extrapolation(itemdata(mask); method=mask.interpolate, fillvalue=mask.extrapolate),
+        _project_extrapolation(itemdata(mask), mask.interpolate, mask.extrapolate),
         inv(P),
     )
     return MaskBinary(

@@ -14,6 +14,7 @@ include("../imports.jl")
     @test itemdata(apply(identity, keypoints; randstate=10)) == itemdata(keypoints)
 
     tfm = ElasticTransform((3, 5), (1.5, 2.5))
+    @test getrandstate(tfm) isa UInt64
     P1 = getprojection(tfm, getbounds(image); randstate=123)
     P2 = getprojection(tfm, getbounds(image); randstate=123)
     point = SVector(5.25, 6.5)

@@ -42,9 +42,19 @@ include("../imports.jl")
     @test itemdata(cropped) == itemdata(source)[:, 2:9]
 
     # Expanding a singleton axis samples its only pixel throughout the output axis.
-    singleton = apply(Resize((5, 8)), Image(reshape(Float32.(1:4), 1, 4)))
+    resize = Resize((5, 8))
+    strip = Image(reshape(Float32.(1:4), 1, 4))
+    singleton = apply(resize, strip)
     @test all(itemdata(singleton)[i, :] == itemdata(singleton)[1, :] for i in 2:5)
     @test all(>(0), itemdata(singleton))
+    @test itemdata(apply!(makebuffer(resize, strip), resize, strip)) == itemdata(singleton)
+
+    strip_mask = MaskBinary(reshape([true, true, false, false], 1, 4))
+    @test parent(itemdata(apply(resize, strip_mask))) == repeat([true true true true false false false false], 5)
+    offset_strip = Image(OffsetArray(reshape(Float32.(1:4), 1, 4), -3:-3, 10:13);
+                         extrapolate = Interpolations.Reflect())
+    @test itemdata(apply(resize, offset_strip)) ≈ itemdata(singleton)
+
     extreme = apply(RandomResizedCrop((5, 8); scale = (1, 1), ratio = (1e12, 1e12)), Image(ones(4, 4)))
     @test all(==(1), itemdata(extreme))
 

@@ -32,7 +32,7 @@ function _elastic_pair(name, x::Tuple{<:Real,<:Real}; positive)
 end
 _elastic_pair(name, x; positive) = throw(ArgumentError("$name must be a scalar or a (row, column) pair"))
 
-getrandstate(::ElasticTransform) = rand(Int)
+getrandstate(::ElasticTransform) = rand(UInt64)
 
 struct _ElasticMap <: CoordinateTransformations.Transformation
     displacement::Array{Float64,3}
@@ -91,7 +91,7 @@ function getprojection(tfm::ElasticTransform, bounds::Bounds{2}; randstate=getra
     h, w = length.(bounds.rs)
     (iszero(tfm.alpha[1]) && iszero(tfm.alpha[2]) || h == 0 || w == 0) &&
         return IdentityTransformation()
-    rng = Random.MersenneTwister(randstate)
+    rng = Xoshiro(randstate)
     field = Array{Float64}(undef, h, w, 2)
     for component in 1:2
         noise = rand(rng, h, w) .* 2 .- 1

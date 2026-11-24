@@ -99,11 +99,11 @@ function project(P, image::Image, bounds::Bounds)
     data = itemdata(image)
     inverse = inv(P)
     source = image.antialias ? _prefilter_image(data, inverse) : data
-    itp = box_extrapolation(data; method = image.interpolate, fillvalue = image.extrapolate)
+    itp = _project_extrapolation(data, image.interpolate, image.extrapolate)
     result = if source === data
         warp(itp, inverse, bounds.rs)
     else
-        filtered = box_extrapolation(source; method = image.interpolate, fillvalue = image.extrapolate)
+        filtered = _project_extrapolation(source, image.interpolate, image.extrapolate)
         dst = similar(Array{eltype(itp)}, bounds.rs)
         warp!(dst, filtered, inverse)
     end
@@ -118,7 +118,7 @@ function project!(bufimage::Image, P, image::Image, bounds::Bounds)
     a = OffsetArray(parent(itemdata(bufimage)), bounds.rs)
     res = warp!(
         a,
-        box_extrapolation(source; method = image.interpolate, fillvalue = image.extrapolate),
+        _project_extrapolation(source, image.interpolate, image.extrapolate),
         inverse,
     )
     return Image(res, bounds; antialias = image.antialias)

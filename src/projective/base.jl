@@ -116,6 +116,20 @@ end
 
 _sample_between(rng, lo, hi) = lo + rand(rng) * (hi - lo)
 
+function _project_extrapolation(data, method, fillvalue)
+    if method isa BSpline && any(isone, size(data))
+        # A linear stencil needs at least two samples on every interpolated axis.
+        schemes = map(n -> n == 1 ? NoInterp() : method, size(data))
+        itp = interpolate(data, schemes)
+        if fillvalue isa Union{Periodic, Interpolations.Reflect}
+            boundaries = map(n -> n == 1 ? Flat() : fillvalue, size(data))
+            return extrapolate(itp, boundaries)
+        end
+        return box_extrapolation(itp; fillvalue)
+    end
+    return box_extrapolation(data; method, fillvalue)
+end
+
 function apply(tfm::ProjectiveTransform, item::Item; randstate = getrandstate(tfm))
     P, bounds = _projection_geometry(tfm, getbounds(item), randstate)
     return project(P, item, bounds)
