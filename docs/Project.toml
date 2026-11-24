@@ -13,3 +13,8 @@ DataAugmentation = {path = ".."}
 
 [compat]
 Documenter = "1"
+ImageShow = "0.3.8"
+Images = "0.26.2"
+Interpolations = "0.16.3"
+MosaicViews = "0.3.4"
+TestImages = "1.9.0"
