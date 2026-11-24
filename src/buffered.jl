@@ -42,7 +42,14 @@ end
 # ## Buffered transforms
 
 """
-Buffer to store transform results
+    Buffered(tfm)
+
+Wrapper transformation that applies `tfm` with `apply!`, reusing a buffer that is
+created the first time the wrapper is applied (one buffer per item type). The
+returned item is that buffer, so it is overwritten by the next `apply`.
+
+Only one buffer is kept, so don't share a `Buffered` between threads; use
+[`BufferedThreadsafe`](@ref) instead.
 """
 mutable struct Buffered{T<:Transform} <: Transform
     tfm::T
@@ -77,7 +84,10 @@ end
 
 
 """
-Buffer to store transform results (threadsafe)
+    BufferedThreadsafe(tfm; n = Threads.nthreads())
+
+Like [`Buffered`](@ref), but keeps a separate buffer for each of `n` threads, so it
+can be applied from multiple threads.
 """
 struct BufferedThreadsafe <: Transform
     buffereds::Vector{Buffered}

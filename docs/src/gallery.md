@@ -1,6 +1,6 @@
 # Gallery
 
-Let's visualize what these projective transformations look like.
+This page shows what the spatial ([projective](projective.md)) transformations look like. The [Transformations](transformations.md) page lists them all.
 
 You can apply them to [`Image`](@ref)s and
 the keypoint-based items [`Keypoints`](@ref), [`Polygon`](@ref), and [`BoundingBox`](@ref).

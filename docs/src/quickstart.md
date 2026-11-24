@@ -29,3 +29,9 @@ Apply the transformation and unwrap the data:
 titem = apply(tfm, item)
 timage = itemdata(titem)
 ```
+
+## Next steps
+
+- [Items](items.md) explains what can be wrapped in an item.
+- [Transformations](transformations.md) shows how to compose transformations and randomize them, and lists the available ones.
+- The [Gallery](gallery.md) shows what the spatial transformations do.
