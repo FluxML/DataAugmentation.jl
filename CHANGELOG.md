@@ -12,9 +12,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Fix `apply!` and `Buffered`/`BufferedThreadsafe` projective transforms (e.g. `ScaleRatio`)
+  throwing a `MethodError` for `BoundingBox` and `Polygon` items
 - `ScaleFixed`, `ScaleRatio`, `ScaleKeepAspect` and `Zoom` no longer produce black borders when scaling images, for any combination of input and output sizes
 
-## [0.3.6]
+## [0.3.6] - 2026-10-26
 
 ### Changed
 
@@ -130,4 +132,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Moved documentation generation to [Pollen.jl](https://github.com/lorenzoh/Pollen.jl)
 
 [0.3.7]: https://github.com/FluxML/DataAugmentation.jl/compare/v0.3.6...HEAD
-[0.3.6]: https://github.com/FluxML/DataAugmentation.jl/compare/v0.3.5...HEAD
+[0.3.6]: https://github.com/FluxML/DataAugmentation.jl/compare/v0.3.5...v0.3.6
