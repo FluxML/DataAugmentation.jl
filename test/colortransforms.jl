@@ -21,3 +21,32 @@ end
     testapply(tfm, Image)
     testapply!(tfm, Image)
 end
+
+
+@testset "Color transforms leave non-image items unchanged" begin
+    img = Image(rand(RGB{N0f8}, 16, 16))
+    mask = MaskMulti(rand(1:3, 16, 16))
+    maskbin = MaskBinary(rand(Bool, 16, 16))
+    keypoints = Keypoints([SVector(1., 1)], (16, 16))
+    bbox = BoundingBox([SVector(1., 1), SVector(8., 8)], (16, 16))
+    polygon = Polygon([SVector(1., 1), SVector(8., 1), SVector(8., 8)], (16, 16))
+    others = (mask, maskbin, keypoints, bbox, polygon)
+
+    for tfm in (AdjustBrightness(0.4), AdjustContrast(0.4))
+        for item in others
+            @test apply(tfm, item) === item
+        end
+
+        titems = apply(tfm, (img, others...))
+        @test itemdata(titems[1]) != itemdata(img)
+        @test all(titems[i + 1] === others[i] for i in eachindex(others))
+
+        pipeline = tfm |> AdjustBrightness(0.1)
+        titems = apply(pipeline, (img, mask))
+        @test titems[2] === mask
+
+        buffered = Buffered(pipeline)
+        titems = apply(buffered, (img, mask))
+        @test titems[2] === mask
+    end
+end
