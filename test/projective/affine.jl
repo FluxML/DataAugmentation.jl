@@ -82,7 +82,7 @@ include("../imports.jl")
             testprojective(tfm)
 
         end
-        
+
         @testset "ScaleRatio" begin
             tfm = ScaleRatio((1/2, 1/2))
             @test_nowarn apply(tfm, image)
@@ -120,6 +120,36 @@ include("../imports.jl")
             timg = apply(tfm, Image(img))
             @test getbounds(timg).rs == (1:32, 1:32)
             @test !any(isnan.(timg |> itemdata))
+        end
+
+        @testset "No black borders" begin
+            for n in (7, 10, 50), s in (1, 2, 5, 13, 20, 40, 101)
+                n == s && continue
+                tfm = ScaleFixed((s, s + 1))
+                image = Image(ones(Float32, n, n + 1))
+                timage = apply(tfm, image)
+                @test getbounds(timage).rs == (1:s, 1:(s + 1))
+                @test all(>(0.99), itemdata(timage))
+
+                shifted = apply(Project(Translation(10, 20)), image)
+                @test getbounds(shifted).rs == (11:(10 + n), 21:(20 + n + 1))
+                tshifted = apply(tfm, shifted)
+                @test getbounds(tshifted).rs == (1:s, 1:(s + 1))
+                @test all(>(0.99), itemdata(tshifted))
+
+                corners = Keypoints([SVector(1., 1), SVector(n + 0., n + 1.)], (n, n + 1))
+                tcorners = apply(tfm, corners)
+                @test getbounds(tcorners) == getbounds(timage)
+                @test all(p -> all(0.5 - 1e-4 .<= p .<= (s + 0.5, s + 1.5) .+ 1e-4), itemdata(tcorners))
+            end
+        end
+
+        @testset "Unchanged axes are left alone" begin
+            image = Image(rand(Float32, 20, 30))
+            timage = apply(ScaleFixed((20, 10)), image)
+            @test getbounds(timage).rs == (1:20, 1:10)
+            tkeypoints = apply(ScaleFixed((20, 10)), Keypoints([SVector(3., 4.)], (20, 30)))
+            @test itemdata(tkeypoints)[1][1] == 3
         end
     end
 

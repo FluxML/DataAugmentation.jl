@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.7]
+
+### Changed
+
+- `Zoom` is now implemented through `ScaleRatio`: its output has bounds `1:size` like the other scaling transformations
+
+### Fixed
+
+- `ScaleFixed`, `ScaleRatio`, `ScaleKeepAspect` and `Zoom` no longer produce black borders when scaling images, for any combination of input and output sizes
+
 ## [0.3.6]
 
 ### Changed
@@ -119,4 +129,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Moved documentation generation to [Pollen.jl](https://github.com/lorenzoh/Pollen.jl)
 
+[0.3.7]: https://github.com/FluxML/DataAugmentation.jl/compare/v0.3.6...HEAD
 [0.3.6]: https://github.com/FluxML/DataAugmentation.jl/compare/v0.3.5...HEAD
