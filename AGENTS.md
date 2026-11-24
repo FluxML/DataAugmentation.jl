@@ -15,7 +15,7 @@ Julia package (FluxML) for composable data augmentation of images, masks, keypoi
 - Stochastic transforms implement `getrandstate`; `apply(tfm, item)` ≡ `apply(tfm, item; randstate = getrandstate(tfm))`.
 - `apply!(buf, tfm, item)` is the buffer-reusing variant of `apply`.
 - Exported symbols need a docstring; list them in `docs/src/ref.md` for the docs.
-- User-visible changes go in `CHANGELOG.md` (the unreleased section is named after the next patch version).
+- Do not edit `CHANGELOG.md` in PRs; it is updated at release time.
 
 ## Commands
 - Test: `julia --project -e 'using Pkg; Pkg.test()'` (includes Aqua checks: no method ambiguities, no unbound type parameters, compat bounds for all deps).
