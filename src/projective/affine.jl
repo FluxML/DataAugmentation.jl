@@ -72,23 +72,27 @@ struct ScaleFixed{N} <: ProjectiveTransform
 end
 
 
+# The span between the first and last pixel center of each axis is split into `size`
+# equal cells, and the output pixels sample the cell centers. All samples then lie
+# half a cell inside the input, so there are no black borders however large the scaling
+# (an exact alignment of the corners would be at the mercy of rounding errors).
+# The output bounds are exactly `1:size`.
 function getprojection(scale::ScaleFixed, bounds::Bounds{N}; randstate = nothing) where N
+    lengths = length.(bounds.rs)
     # If no scaling needs to be done, return a noop transform
-    (scale.sizes == length.(bounds.rs)) && return IdentityTransformation()
+    (scale.sizes == lengths) && return IdentityTransformation()
 
-    ratios = (scale.sizes .+ 1) ./ length.(bounds.rs)
-    upperleft = SVector{N, Float32}(minimum.(bounds.rs)) .- 1
-    P = scaleprojection(ratios)
-    if any(upperleft .!= 0)
-        P = P  ∘ Translation(-upperleft)
-    end
-    return P
+    # Axes of unchanged size are left alone; `max` keeps axes of length one invertible
+    ratios = map((s, n) -> s == n ? 1.0 : s / max(n - 1, 1), scale.sizes, lengths)
+    center = SVector{N, Float32}(mean.(bounds.rs))
+    newcenter = SVector{N, Float32}((scale.sizes .+ 1) ./ 2)
+    return Translation(newcenter) ∘ scaleprojection(ratios) ∘ Translation(-center)
 end
 
 
 function projectionbounds(tfm::ScaleFixed{N}, P, bounds::Bounds{N}; randstate = nothing) where N
-    bounds_ = transformbounds(bounds, P)
-    return offsetcropbounds(tfm.sizes, bounds_, ntuple(_ -> 0.5, N))
+    P isa IdentityTransformation && return bounds
+    return Bounds(map(s -> 1:s, tfm.sizes))
 end
 
 """
@@ -109,9 +113,14 @@ Return random state of the transform
 """
 getrandstate(tfm::Zoom) = rand(tfm.dist)
 
-function getprojection(tfm::Zoom, bounds::Bounds{N}; randstate = getrandstate(tfm)) where N
-    ratio = randstate
-    return scaleprojection(ntuple(_ -> ratio, N))
+zoomscale(ratio, ::Bounds{N}) where N = ScaleRatio{N}(ntuple(_ -> ratio, N))
+
+function getprojection(tfm::Zoom, bounds::Bounds; randstate = getrandstate(tfm))
+    return getprojection(zoomscale(randstate, bounds), bounds)
+end
+
+function projectionbounds(tfm::Zoom, P, bounds::Bounds; randstate = getrandstate(tfm))
+    return projectionbounds(zoomscale(randstate, bounds), P, bounds)
 end
 
 """

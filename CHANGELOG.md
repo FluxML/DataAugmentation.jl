@@ -6,10 +6,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.3.7]
 
+### Changed
+
+- `Zoom` is now implemented through `ScaleRatio`: its output has bounds `1:size` like the other scaling transformations
+
 ### Fixed
 
 - Fix `apply!` and `Buffered`/`BufferedThreadsafe` projective transforms (e.g. `ScaleRatio`)
   throwing a `MethodError` for `BoundingBox` and `Polygon` items
+- `ScaleFixed`, `ScaleRatio`, `ScaleKeepAspect` and `Zoom` no longer produce black borders when scaling images, for any combination of input and output sizes
 
 ## [0.3.6] - 2026-10-26
 
