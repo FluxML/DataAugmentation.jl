@@ -34,6 +34,13 @@ function showimage!(dst, img)
 end
 
 
+"""
+    showgrid(itemgroups; fillvalue = RGBA{N0f8}(0, 0, 0, 0), kwargs...)
+
+Visualize every element of `itemgroups` (an item or a tuple of items) with
+[`showitems`](@ref) and arrange the results in a grid using
+`MosaicViews.mosaicview`. Keyword arguments such as `ncol` and `npad` are passed on to it.
+"""
 function showgrid(items; fillvalue = RGBA{N0f8}(0.,0.,0.,0.), kwargs...)
     imgs = [showitems(item) for item in items]
     mosaicview(imgs; fillvalue = fillvalue, kwargs...)

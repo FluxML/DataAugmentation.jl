@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - `Zoom` is now implemented through `ScaleRatio`: its output has bounds `1:size` like the other scaling transformations
+- Reorganize the documentation into Guide, Concepts, Extending and API reference sections (the pages under `projective/` moved), and document `Project`, `PadDivisible`, `TabularItem`, `onehot`, `showgrid`, `Bounds` and `NormalizeIntensity`
 
 ### Fixed
 

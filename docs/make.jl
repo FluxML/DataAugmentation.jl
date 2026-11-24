@@ -6,23 +6,25 @@ makedocs(;
     modules = [DataAugmentation],
     sitename="DataAugmentation.jl",
     pages = [
-        "index.md",
+        "Home" => "index.md",
         "Quickstart" => "quickstart.md",
-        "Transformations" => "transformations.md",
-        "Build your transformations" =>[
-            "Item Interface" => "iteminterface.md",
-            "Transform Interface" => "tfminterface.md", 
-            "Projective Interface" => [
-                "Intro" => "projective/intro.md",
-                "Data" => "projective/data.md",
-                "Gallery" => "projective/gallery.md",
-            ],
-        ],
-        "Misc" =>[
-            "Buffering" => "buffering.md",
+        "Guide" => [
+            "Items" => "items.md",
+            "Transformations" => "transformations.md",
+            "Gallery" => "gallery.md",
             "Preprocessing" => "preprocessing.md",
-            "References" => "ref.md"
+            "Buffering" => "buffering.md",
         ],
+        "Concepts" => [
+            "Design" => "design.md",
+            "Projective transformations" => "projective.md",
+        ],
+        "Extending" => [
+            "Defining items" => "iteminterface.md",
+            "Defining transformations" => "tfminterface.md",
+            "Defining projective transformations" => "projinterface.md",
+        ],
+        "API reference" => "ref.md",
     ],
     format = Documenter.HTML(canonical = "https://fluxml.ai/DataAugmentation.jl/stable/",
                              prettyurls = get(ENV, "CI", nothing) == "true"),

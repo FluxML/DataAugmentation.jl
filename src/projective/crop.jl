@@ -44,6 +44,11 @@ getrandstate(crop::Crop{N, FromCenter}) where N = Tuple(0.5 for _ in 1:N)
 getrandstate(crop::Crop{N, FromRandom}) where N = Tuple(rand() for _ in 1:N)
 
 
+"""
+    PadDivisible(by)
+
+Pads the bounds of a projected item so that every side length is divisible by `by`.
+"""
 struct PadDivisible <: AbstractCrop
     by::Int
 end

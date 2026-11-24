@@ -116,7 +116,6 @@ denormalize(a, means, stds) = denormalize!(copy(a), means, stds)
 
 Normalizes the pixels of an array based on calculated mean and std.
 """
-
 struct NormalizeIntensity <: Transform end
 
 function apply(tfm::NormalizeIntensity, item::ArrayItem; randstate = nothing)
@@ -289,6 +288,12 @@ function apply!(buf, tfm::OneHot{T}, item::MaskMulti; randstate = nothing) where
 end
 
 
+"""
+    onehot([T = Float32], x, n)
+
+One-hot encode the class index `x` in `1:n` as a vector of length `n` with element
+type `T`.
+"""
 function onehot(T, x::Int, n::Int)
     v = fill(zero(T), n)
     v[x] = one(T)

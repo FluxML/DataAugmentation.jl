@@ -1,85 +1,59 @@
 ```@setup tsm
-using DataAugmentation
+using DataAugmentation, TestImages, ImageShow
 ```
-# Usage
+# Transformations
 
-Using  transformations is easy. Simply `compose` them:
+Transformations are applied to [items](items.md) with [`apply`](@ref)`(tfm, item)`. This page shows how to combine and randomize them and gives an overview of the available ones; the [Gallery](gallery.md) shows what the spatial transformations look like, and the [API reference](ref.md) documents each in detail.
+
+## Composing transformations
+
+Using transformations is easy. Simply `compose` them with `|>`:
 
 ```@example tsm
 tfm = Rotate(10) |> ScaleRatio((0.7,0.1,1.2)) |> FlipX{2}() |> Crop((128, 128))
 ```
 
-# Projective transformations
-DataAugmentation.jl has great support for transforming spatial data like images and keypoints. Most of these transformations are projective transformations. For our purposes, a projection means a mapping between two coordinate spaces. In computer vision, these are frequently used for preprocessing and augmenting image data: images are randomly scaled, maybe flipped horizontally and finally cropped to the same size.
+[Projective transformations](projective.md) are fused into a single, more efficient transformation; the rest are applied one after the other.
 
-This library generalizes projective transformations for different kinds of image and keypoint data in an N-dimensional Euclidean space. It also uses composition for performance improvements like fusing affine transformations.
-
-Unlike mathematical objects, the spatial data we want to transform has spatial bounds. For an image, these bounds are akin to the array size. But keypoint data aligned with an image has the same bounds even if they are not explicitly encoded in the representation of the data. These spatial bounds can be used to dynamically create useful transformations. For example, a rotation around the center or a horizontal flip of keypoint annotations can be calculated from the bounds.
-
-Often, we also want to crop an area from the projected results. By evaluating only the parts of a projection that fall inside the cropped area, a lot of unnecessary computation can be avoided.
-
-Projective transformations include:
-1. [Affine transformations](@ref)
-2. [Crops](@ref)
 ## Affine transformations
 
-Affine transformations are a subgroup of projective transformations that can be composed very efficiently: composing two affine transformations results in another affine transformation. Affine transformations can represent translation, scaling, reflection and rotation. Available `Transform`s are:
+Affine transformations are a kind of [projective transformation](projective.md) that can be composed very efficiently. They apply to [`Image`](@ref)s and the keypoint-based items alike, in 2 and 3 dimensions.
 
-```@docs; canonical=false
-FlipDim
-FlipX
-FlipY
-FlipZ
-Reflect
-Rotate
-RotateX
-RotateY
-RotateZ
-ScaleKeepAspect
-ScaleFixed
-ScaleRatio
-WarpAffine
-Zoom
-```
-    
+- [`FlipX`](@ref), [`FlipY`](@ref) and [`FlipZ`](@ref) flip the data along an axis, for example `FlipX{2}()` for 2D data; [`FlipDim`](@ref)`{N}(dim)` flips along any dimension.
+- [`Reflect`](@ref)`(γ)` reflects 2D data around its center by an angle chosen uniformly from `[-γ, γ]` degrees.
+- [`Rotate`](@ref)`(γ)` rotates 2D data around its center by an angle chosen uniformly from `[-γ, γ]` degrees; `Rotate(α, β, γ)` rotates 3D data, and [`RotateX`](@ref), [`RotateY`](@ref) and [`RotateZ`](@ref) rotate around a single axis.
+- [`ScaleRatio`](@ref)`(ratios)` scales the sides by the given ratios, [`ScaleFixed`](@ref)`(sizes)` scales them to the given sizes disregarding the aspect ratio, and [`ScaleKeepAspect`](@ref)`(minlengths)` scales so that the sides are at least `minlengths`, keeping the aspect ratio. [`Zoom`](@ref)`(scales)` zooms in by a factor chosen from the interval `scales`.
+- [`WarpAffine`](@ref)`(σ)` randomly moves three corners of the item, which is similar to a random translation, shear and rotation.
+
 ## Crops
 
-To get a cropped result, simply `compose` any `ProjectiveTransform` with
+To get a cropped result, simply `compose` any projective transformation with a crop:
 
-```@docs; canonical=false
-CenterCrop
-RandomCrop
-```
+- [`CenterCrop`](@ref)`(sz)` and [`RandomCrop`](@ref)`(sz)` crop a region of size `sz` from the center or from a random location. They are special cases of [`Crop`](@ref)`(sz, from)`.
+- [`CenterResizeCrop`](@ref)`(sz)` and [`RandomResizeCrop`](@ref)`(sz)` first scale the item with [`ScaleKeepAspect`](@ref) and then crop it from the center or from a random location, so that images of any size end up with the same size `sz`. The result is moved to the origin with [`PinOrigin`](@ref)`()`.
+- [`ResizePadDivisible`](@ref)`(sz, by)` scales the item with [`ScaleKeepAspect`](@ref) and pads it so that its side lengths are divisible by `by`.
 
-# Color transformations
+## Color transformations
 
-DataAugmentation.jl currently supports the following color transformations for augmentation:
+- [`AdjustBrightness`](@ref)`(δ)` multiplies the color channels of an image by a factor chosen uniformly from `[1-δ, 1+δ]`.
+- [`AdjustContrast`](@ref)`(factor)` adjusts the contrast of an image by a factor chosen uniformly from `[1-factor, 1+factor]`.
 
-```@docs; canonical=false
-AdjustBrightness
-AdjustContrast
-```
+## Stochastic transformations
 
-# Stochastic transformations
 When augmenting data, it is often useful to apply a transformation only with some probability or choose from a set of transformations. Unlike in other data augmentation libraries like *albumentations*, in DataAugmentation.jl you can use wrapper transformations for this functionality.
 
 - [`Maybe`](@ref)`(tfm, p = 0.5)` applies a transformation with probability `p`; and
 - [`OneOf`](@ref)`([tfm1, tfm2])` randomly selects a transformation to apply.
-```@docs; canonical=false
-Maybe
-OneOf
-```
 
 Let's say we have an image classification dataset. For most datasets, horizontally flipping the image does not change the label: a flipped image of a cat still shows a cat. So let's flip every image horizontally half of the time to improve the generalization of the model we might be training.
 
-```@example
-using DataAugmentation, TestImages
+```@example tsm
 item = Image(testimage("lighthouse"))
 tfm = Maybe(FlipX{2}())
 titems = [apply(tfm, item) for _ in 1:8]
 showgrid(titems; ncol = 4, npad = 16)
 ```
 
-```@docs; canonical=false
-DataAugmentation.ImageToTensor
-```
+## Other transformations
+
+[Preprocessing](preprocessing.md) covers the transformations that get data ready to be put into a model, such as normalization and one-hot encoding. [`Buffered`](@ref) wraps any transformation to reuse its output buffers; see [Buffering](buffering.md).

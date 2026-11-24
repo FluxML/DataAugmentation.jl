@@ -16,6 +16,14 @@ See [CoordinateTransformations.jl](https://github.com/JuliaGeometry/CoordinateTr
 function getprojection end
 
 
+"""
+    Bounds(sz)
+    Bounds(rs)
+
+Spatial bounds of an `N`-dimensional item, stored as one index range per dimension.
+`Bounds(sz)` for a size tuple `sz` gives the ranges `1:sz[i]`; `rs` is a tuple of
+ranges.
+"""
 struct Bounds{N}
     rs::NTuple{N, UnitRange{Int}}
 end
@@ -130,6 +138,12 @@ end
 
 # The simplest `ProjectiveTransform` is the static `Project`.
 
+"""
+    Project(P)
+
+Projective transformation that applies the fixed projection `P`, a
+`CoordinateTransformations.Transformation`, regardless of the item's bounds.
+"""
 struct Project{T<:CoordinateTransformations.Transformation} <: ProjectiveTransform
     P::T
 end

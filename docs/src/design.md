@@ -1,0 +1,18 @@
+# Design
+
+Data augmentation pipelines have requirements that go beyond applying a function to an image. They are the motivation for the interface used to define [items](iteminterface.md) and [transformations](tfminterface.md).
+
+## Stochasticity
+
+A transformation is stochastic (as opposed to deterministic) if it produces different outputs based on some random state.
+This randomness can become a problem when applying a transformation to an aligned pair of input and target. If we have an image and a corresponding segmentation mask, using different scaling factors results in misalignment of the two; the segmentation no longer matches up with the image pixels.
+
+To handle this, the random state is explicitly passed to the transformations, rendering them deterministic. A generator for the random state can be defined with [`DataAugmentation.getrandstate`](@ref)`(tfm)` and passed to `apply` with the `randstate` keyword argument. Applying a transformation to a tuple of items, `apply(tfm, (image, mask))`, generates the random state once and uses it for all of them (see the [Gallery](gallery.md) for an example).
+
+## Composition
+
+Most data augmentation pipelines are made up of multiple steps: augmenting an image can mean resizing, randomly rotating, cropping and then normalizing the values. So applying transformations one after another – sequencing – is one way to compose transformations. But some operations, like affine transformations, can also be *fused*, resulting in a single transformation that is more performant and produces more accurate results. See [Projective transformations](projective.md).
+
+## Buffering
+
+Since data augmentation pipelines often run on large amounts of data, performance can often be improved by using preallocated output buffers for the transformations. This results in fewer memory allocations and less garbage collection, which both take time. See [Buffering](buffering.md).
