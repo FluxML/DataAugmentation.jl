@@ -246,9 +246,10 @@ include("../imports.jl")
     @testset "FlipX 2D correct indices" begin
         img = rand(RGB, 10, 10)
         item = Image(img)
-        for flip in (FlipX(), FlipX{2}(), FlipX{3}())
-            tfm = flip |> RandomCrop((10, 10)) |> PinOrigin()
-            @test itemdata(apply(tfm, item)) == img[:, end:-1:1]
+        for flip in (FlipX(), FlipX{2}(), FlipX{3}(), FlipDim{2}(2), Reflect(0))
+            flipped = itemdata(apply(flip, item))
+            @test axes(flipped) == axes(img)
+            @test flipped == img[:, end:-1:1]
         end
     end
 
@@ -256,8 +257,9 @@ include("../imports.jl")
         img = rand(RGB, 10, 10)
         item = Image(img)
         for flip in (FlipY(), FlipY{2}())
-            tfm = flip |> RandomCrop((10, 10)) |> PinOrigin()
-            @test itemdata(apply(tfm, item)) == img[end:-1:1, :]
+            flipped = itemdata(apply(flip, item))
+            @test axes(flipped) == axes(img)
+            @test flipped == img[end:-1:1, :]
         end
     end
 
@@ -266,8 +268,9 @@ include("../imports.jl")
         img = rand(RGB, 10, 10, 10)
         item = Image(img)
         for flip in (FlipX(), FlipX{3}())
-            tfm = flip |> RandomCrop((10, 10, 10)) |> PinOrigin()
-            @test itemdata(apply(tfm, item)) == img[end:-1:1, :, :]
+            flipped = itemdata(apply(flip, item))
+            @test axes(flipped) == axes(img)
+            @test flipped == img[end:-1:1, :, :]
         end
     end
 
@@ -275,8 +278,9 @@ include("../imports.jl")
         img = rand(RGB, 10, 10, 10)
         item = Image(img)
         for flip in (FlipY(), FlipY{3}())
-            tfm = flip |> RandomCrop((10, 10, 10)) |> PinOrigin()
-            @test itemdata(apply(tfm, item)) == img[:, end:-1:1, :]
+            flipped = itemdata(apply(flip, item))
+            @test axes(flipped) == axes(img)
+            @test flipped == img[:, end:-1:1, :]
         end
     end
 
@@ -284,9 +288,23 @@ include("../imports.jl")
         img = rand(RGB, 10, 10, 10)
         item = Image(img)
         for flip in (FlipZ(), FlipZ{3}())
-            tfm = flip |> RandomCrop((10, 10, 10)) |> PinOrigin()
-            @test itemdata(apply(tfm, item)) == img[:, :, end:-1:1]
+            flipped = itemdata(apply(flip, item))
+            @test axes(flipped) == axes(img)
+            @test flipped == img[:, :, end:-1:1]
         end
+    end
+
+    @testset "Flip with offset bounds and keypoints" begin
+        img = reshape(Float32.(1:12), 3, 4)
+        bounds = Bounds((-2:0, 41:44))
+        image = Image(OffsetArray(img, bounds.rs), bounds)
+        keypoints = Keypoints([SVector(-1f0, 41.5f0)], bounds)
+
+        timage, tkeypoints = apply(FlipX(), (image, keypoints))
+        @test axes(itemdata(timage)) == axes(itemdata(image))
+        @test itemdata(timage) == OffsetArray(img[:, end:-1:1], bounds.rs)
+        @test getbounds(tkeypoints) == bounds
+        @test itemdata(tkeypoints) == [SVector(-1f0, 43.5f0)]
     end
 
     @testset "FlipZ on 2D data" begin
@@ -308,6 +326,15 @@ end
 
 
 @testset "Big pipeline" begin
+    @testset "Batching optional flips" begin
+        image = Image(rand(RGB{N0f8}, 32, 32))
+        tensors = map((0.0, 1.0)) do p
+            tfm = RandomResizeCrop((32, 32)) |> Maybe(FlipX(), p) |> ImageToTensor()
+            itemdata(apply(tfm, image))
+        end
+        @test size(stack(tensors)) == (32, 32, 3, 2)
+    end
+
     @testset "2D" begin
         tfms = compose(
             Rotate(10),

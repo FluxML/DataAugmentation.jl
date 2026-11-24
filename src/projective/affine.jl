@@ -247,10 +247,7 @@ Transform `P` so that is applied around the center of `bounds`
 instead of the origin
 """
 function centered(P, bounds::Bounds{N}) where N
-    upperleft = minimum.(bounds.rs)
-    bottomright = maximum.(bounds.rs)
-
-    midpoint = SVector{N, Float32}((bottomright .- upperleft) ./ 2) .+ .5f0
+    midpoint = SVector{N, Float32}(mean.(bounds.rs))
     return recenter(P, midpoint)
 end
 
