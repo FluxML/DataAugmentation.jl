@@ -1,4 +1,5 @@
 
+import Random
 include("../imports.jl")
 
 @testset "WarpAffine" begin
@@ -15,13 +16,25 @@ include("../imports.jl")
 end
 
 @testset "WarpAffine is the same as before in 2D" begin
-    # Values recorded before the generalization to N dimensions.
-    P = getprojection(WarpAffine(0.1), Bounds((20, 30)); randstate = 1)
-    @test P.linear ≈ Float32[0.9825539 0.0019312337; -0.02836518 1.0595665]
-    @test P.translation ≈ Float32[-0.45383632, 1.0231587]
-    P = getprojection(WarpAffine(0.1), Bounds((20, 30)); randstate = 7)
-    @test P.linear ≈ Float32[1.0990084 -0.10806603; 0.02605944 1.0843933]
-    @test P.translation ≈ Float32[0.6833911, -2.3728514]
+    # The implementation before the generalization to N dimensions. Unlike recorded
+    # values, it does not depend on the random number stream of the Julia version.
+    function warpaffine2d(σ, bounds, seed)
+        T = Float32
+        rng = Random.seed!(Random.MersenneTwister(), seed)
+        scale = sqrt(prod(length.(bounds.rs)))
+        srcps = Random.shuffle(rng, SVector{2, T}.(DataAugmentation.corners(bounds)))[1:3]
+        offsets = rand(rng, SVector{2, T}, 3)
+        offsets = map(v -> (v .* (2one(T)) .- one(T)) .* convert(T, scale * σ), offsets)
+        return DataAugmentation.threepointwarpaffine(srcps, srcps .+ offsets)
+    end
+
+    bounds = Bounds((20, 30))
+    for seed in (1, 7)
+        P = getprojection(WarpAffine(0.1), bounds; randstate = seed)
+        Pold = warpaffine2d(0.1, bounds, seed)
+        @test P.linear ≈ Pold.linear
+        @test P.translation ≈ Pold.translation
+    end
 end
 
 @testset "WarpAffine in $N dimensions" for N in (3, 4)
