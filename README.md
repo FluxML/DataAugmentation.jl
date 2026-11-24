@@ -26,7 +26,7 @@ using DataAugmentation, TestImages
 
 image = Image(testimage("lighthouse"))
 tfm = Rotate(15) |> RandomResizeCrop((192, 256))
-pixels = itemdata(apply(tfm, image))
+pixels = itemdata(tfm(image))
 ```
 
 ## Feature showcase
