@@ -1,6 +1,6 @@
 # DataAugmentation.jl
 
-Efficient, composable data augmentation for machine and deep learning, with support for n-dimensional images, keypoints and categorical masks.
+Efficient, composable data augmentation for machine and deep learning, with support for n-dimensional images, categorical masks, keypoints, and bounding boxes.
 
 An [`Item`](@ref) wraps data, and a [`Transform`](@ref) operates on the item. To resize an [`Image`](@ref), create a [`CenterResizeCrop`](@ref) transform and call it on the item.
 
@@ -28,7 +28,7 @@ Pkg.add("DataAugmentation")
     - [Items](items.md): the containers for your data.
     - [Transformations](transformations.md): composing and randomizing transformations, and an overview of those that are available.
     - [Gallery](gallery.md): what the spatial transformations look like.
-    - [Pipelines](pipelines.md): complete pipelines for images, segmentation masks, keypoints and 3D images.
+    - [Pipelines](pipelines.md) walks through classification, segmentation, landmarks, object detection, and 3D images.
     - [Preprocessing](preprocessing.md): getting data ready to be put into a model.
     - [Using with Flux](flux.md): data loading, batching and training with augmented data.
     - [Buffering](buffering.md): reusing output buffers for speed.
@@ -36,4 +36,4 @@ Pkg.add("DataAugmentation")
     - [Design](design.md): stochasticity, composition and buffering.
     - [Projective transformations](projective.md): fusing and cropping spatial transformations.
 - **Extending**: writing your own [items](iteminterface.md), [transformations](tfminterface.md) and [projective transformations](projinterface.md).
-- [API reference](ref.md): every documented name.
+- [API reference](ref.md) with an alphabetical [symbol index](@ref reference-index).

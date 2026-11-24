@@ -78,6 +78,7 @@ itemdata(cropped_boxes), cropped_boxes.labels
 
 Use [`masks_to_boxes`](@ref) to turn binary instance masks into boxes and
 [`box_iou`](@ref) to compare two collections in the same coordinate system.
+See the [object detection pipeline](pipelines.md#Images-and-bounding-boxes) for an example with an overlap-based crop and labeled boxes.
 
 ## Color transformations
 
@@ -100,7 +101,7 @@ Policy-based augmentations draw random operations from a fixed set, such as shea
 ```@example tsm
 item = Image(testimage("lighthouse"))
 tfm = RandAugment(2, 9)
-titems = [apply(tfm, item) for _ in 1:8]
+titems = [tfm(item) for _ in 1:8]
 showgrid(titems; ncol = 4, npad = 16)
 ```
 

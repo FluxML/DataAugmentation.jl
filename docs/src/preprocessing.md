@@ -5,7 +5,7 @@ This library also implements some general transformations useful for getting dat
 ## Arrays
 
 - [`ToEltype`](@ref)`(T)` converts the element type of any [`DataAugmentation.AbstractArrayItem`](@ref) to `T`.
-- [`ImageToTensor`](@ref) converts an image to an `ArrayItem` with another dimension for the color channels, in `WHC` format, which is what Flux's convolutional layers expect (see [Using with Flux](flux.md)).
+- [`ImageToTensor`](@ref) converts a 2D image to an `ArrayItem` in `WHC` order. A data loader adds the batch dimension for Flux. See [Using with Flux](flux.md).
 - [`PermuteDims`](@ref)`(perm)` permutes the dimensions of an `ArrayItem`, for example to turn `WHC` into `HWC`.
 - [`Normalize`](@ref)`(means, stds)` normalizes image tensors along the channel dimension.
 - [`NormalizeIntensity`](@ref)`()` normalizes an array with its own mean and standard deviation.
