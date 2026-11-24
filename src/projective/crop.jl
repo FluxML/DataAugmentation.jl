@@ -46,7 +46,7 @@ plain transform that is not fused with neighboring projective transforms.
 
 ```julia
 tfm = Crop((32, 32), FromRandom(); padding = 4) |> PinOrigin()
-apply(tfm, Image(rand(RGB, 32, 32)))
+tfm(Image(rand(RGB, 32, 32)))
 ```
 """
 function Crop(sz::NTuple{N, Int}, from::CropFrom = FromOrigin(); padding = 0,

@@ -23,7 +23,7 @@ using DataAugmentation, Images
 
 video = Image(rand(RGB{N0f8}, 32, 32, 16))
 tfm = UniformTemporalSubsample(8)
-apply(tfm, video)  # Image{3, RGB{N0f8}} with 8 frames
+tfm(video)  # Image{3, RGB{N0f8}} with 8 frames
 ```
 """
 struct UniformTemporalSubsample <: Transform

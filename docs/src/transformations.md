@@ -3,7 +3,7 @@ using DataAugmentation, TestImages, ImageShow
 ```
 # Transformations
 
-Transformations are applied to [items](items.md) with [`apply`](@ref)`(tfm, item)`. This page shows how to combine and randomize them and gives an overview of the available ones; the [Gallery](gallery.md) shows what the spatial transformations look like, and the [API reference](ref.md) documents each in detail.
+Call a transform on an [item](items.md) with `tfm(item)`. Use `map(tfm, items)` for a collection of independent samples. The [Gallery](gallery.md) shows what the spatial transformations look like, and the [API reference](ref.md) documents each transform.
 
 ## Composing transformations
 
@@ -54,7 +54,7 @@ using DataAugmentation, StaticArrays
 image = Image(zeros(10, 10))
 points = Keypoints([SVector(1f0, 1f0), SVector(5f0, 5f0), SVector(10f0, 10f0)], (10, 10))
 tfm = CenterCrop((4, 4)) |> PinOrigin() |> SanitizeKeypoints()
-_, cropped_points = apply(tfm, (image, points))
+_, cropped_points = tfm((image, points))
 itemdata(cropped_points)
 ```
 
@@ -94,10 +94,11 @@ using DataAugmentation, Images
 
 samples = [Image(rand(RGB{Float32}, 24, 32)) for _ in 1:4]
 sample_tfm = RandomErasing(value = :random) |> ImageToTensor()
-images = stack(itemdata(apply(sample_tfm, image)) for image in samples)
+images = stack(itemdata(sample_tfm(image)) for image in samples)
 
 batch = ImageBatch(images, [1, 2, 3, 2]; num_classes = 3)
-mixed_images, mixed_labels = itemdata(apply(CutMix(), batch))
+mix = CutMix()
+mixed_images, mixed_labels = itemdata(mix(batch))
 size(mixed_images), size(mixed_labels)
 ```
 
@@ -109,7 +110,8 @@ A video is an N-dimensional [`Image`](@ref) with time as the third dimension, so
 using DataAugmentation, Images
 
 video = Image(rand(Gray{Float32}, 32, 32, 16))
-size(itemdata(apply(UniformTemporalSubsample(8), video)))
+tfm = UniformTemporalSubsample(8)
+size(itemdata(tfm(video)))
 ```
 
 ## Stochastic transformations
@@ -125,7 +127,7 @@ Let's say we have an image classification dataset. For most datasets, horizontal
 ```@example tsm
 item = Image(testimage("lighthouse"))
 tfm = Maybe(FlipX())
-titems = [apply(tfm, item) for _ in 1:8]
+titems = [tfm(item) for _ in 1:8]
 showgrid(titems; ncol = 4, npad = 16)
 ```
 

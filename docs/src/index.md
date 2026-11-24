@@ -2,12 +2,12 @@
 
 Efficient, composable data augmentation for machine and deep learning, with support for n-dimensional images, keypoints and categorical masks.
 
-The key abstractions are [`Item`](@ref)s, which contain the data to be transformed, and [`Transform`](@ref)s, the transformations to apply. [`apply`](@ref)`(tfm, item)`, as the name gives away, applies a transformation to an item. For example, given an [`Image`](@ref) item, we can resize it with the [`CenterResizeCrop`](@ref) transformation:
+An [`Item`](@ref) wraps data, and a [`Transform`](@ref) operates on the item. To resize an [`Image`](@ref), create a [`CenterResizeCrop`](@ref) transform and call it on the item.
 
 ```julia
 item = Image(image)
 tfm = CenterResizeCrop((128, 128))
-apply(tfm, item)
+tfm(item)
 ```
 
 For the most part, the transformations themselves are not very complex. The challenge this library tackles is to reconcile an easy-to-use, composable interface with performant execution; the [Design](design.md) page explains how.
