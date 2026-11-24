@@ -1,12 +1,13 @@
 """
     RandomErasing(; p = 0.5, scale = (0.02, 0.33), ratio = (0.3, 3.3), value = 0)
 
-With probability `p`, erase a random rectangle in a two-dimensional [`Image`](@ref).
-Sample its area fraction uniformly from `scale ⊆ (0, 1]` and its height-to-width
-ratio log-uniformly from `ratio`. If no rectangle fits after ten attempts, leave
-the image pixels unchanged.
+With probability `p`, erase a random box in an [`Image`](@ref) with any number of
+spatial dimensions, a rectangle in 2D. Sample its volume fraction uniformly from
+`scale ⊆ (0, 1]`. Sample the ratio of each side to the last one, except for the last
+one, log-uniformly and independently from `ratio`; in 2D, this is the height-to-width
+ratio. If no box fits after ten attempts, leave the image pixels unchanged.
 
-Fill the rectangle with a real number or color converted to the pixel type.
+Fill the box with a real number or color converted to the pixel type.
 With `value = :random`, draw each color channel uniformly between zero and one
 before conversion, preserving alpha. Machine integer pixels use their full
 range. Masks and keypoints passed alongside the image are unchanged.
@@ -40,14 +41,13 @@ end
 getrandstate(::RandomErasing) = (probability = rand(), seed = rand(UInt64))
 
 function photometric!(dst, tfm::RandomErasing, src, randstate)
-    ndims(src) == 2 || throw(ArgumentError("RandomErasing requires a two-dimensional image"))
     probability, seed = randstate
     copyto!(dst, src)
     probability < tfm.p || return dst
     rng = Xoshiro(seed)
-    rectangle = _erasing_rectangle(tfm, rng, axes(src))
-    isnothing(rectangle) && return dst
-    region = view(dst, rectangle...)
+    box = _erasing_box(tfm, rng, axes(src))
+    isnothing(box) && return dst
+    region = view(dst, box...)
     if tfm.value === :random
         map!(pixel -> _erasing_noise(rng, pixel), region, region)
     else
@@ -56,18 +56,18 @@ function photometric!(dst, tfm::RandomErasing, src, randstate)
     return dst
 end
 
-function _erasing_rectangle(tfm, rng, (rows, cols))
-    height, width = length(rows), length(cols)
+function _erasing_box(tfm, rng, ranges::NTuple{N, AbstractUnitRange}) where N
+    lengths = length.(ranges)
     for _ in 1:10
-        area = height * width * _sample_erasing(rng, tfm.scale)
-        aspect = exp(_sample_erasing(rng, tfm.logratio))
-        h, w = sqrt(area * aspect), sqrt(area / aspect)
-        0.5 <= h <= height + 0.5 && 0.5 <= w <= width + 0.5 || continue
-        erase_height, erase_width = round(Int, h), round(Int, w)
-        1 <= erase_height <= height && 1 <= erase_width <= width || continue
-        top = rand(rng, first(rows):(last(rows) - erase_height + 1))
-        left = rand(rng, first(cols):(last(cols) - erase_width + 1))
-        return top:(top + erase_height - 1), left:(left + erase_width - 1)
+        volume = prod(float, lengths) * _sample_erasing(rng, tfm.scale)
+        ratios = ntuple(_ -> exp(_sample_erasing(rng, tfm.logratio)), Val(N - 1))
+        last_side = (volume / prod(ratios))^(1 / N)
+        sides = (map(ratio -> ratio * last_side, ratios)..., last_side)
+        all(side -> 0.5 <= side, sides) && all(sides .<= lengths .+ 0.5) || continue
+        extent = round.(Int, sides)
+        all(1 .<= extent .<= lengths) || continue
+        starts = map((r, n) -> rand(rng, first(r):(last(r) - n + 1)), ranges, extent)
+        return map((start, n) -> start:(start + n - 1), starts, extent)
     end
     return nothing
 end

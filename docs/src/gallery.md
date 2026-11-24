@@ -98,7 +98,7 @@ apply(tfm, (image, bbox)) |> showitems
 
     We'll use a 2-dimensional [`Image`](@ref) and [`BoundingBox`](@ref) here, but you can apply most projective transformations to any spatial item (including [`Keypoints`](@ref), [`MaskBinary`](@ref) and [`MaskMulti`](@ref)) in 3 dimensions.
     
-    Of course, you have to create a 3-dimensional transformation, i.e. `CenterCrop((128, 128, 128))` instead of `CenterCrop((128, 128))`.
+    Of course, you have to create a 3-dimensional transformation, i.e. `CenterCrop((128, 128, 128))` instead of `CenterCrop((128, 128))`. Transformations that take a size accept a number for the same size along every dimension, so `CenterCrop(128)` works for both.
 
 ## [`RandomResizeCrop`](@ref)`(sz)`
 

@@ -25,7 +25,6 @@
     @test skipped !== itemdata(image)
     no_fit = RandomErasing(p = 1, scale = (0.5, 0.5), ratio = (1e100, 1e100))
     @test itemdata(apply(no_fit, image; randstate = state)) == itemdata(image)
-    @test_throws ArgumentError apply(tfm, Image(fill(1f0, 4, 5, 3)); randstate = state)
 
     fixed = RGB{N0f8}(0, 0.5, 1)
     color_image = Image(fill(RGB{N0f8}(1, 1, 1), 10, 10))
@@ -41,6 +40,57 @@
     erased_offset = itemdata(apply(tfm, offset; randstate = state))
     @test axes(erased_offset) == axes(offset_data)
     @test parent(erased_offset) == out
+end
+
+@testset "RandomErasing in 3D" begin
+    volume = Image(fill(1f0, 16, 16, 16))
+    state = (probability = 0.0, seed = UInt64(123))
+    function extent(out)
+        erased = findall(iszero, out)
+        isempty(erased) && return nothing
+        return Tuple(maximum(erased) - minimum(erased)) .+ 1
+    end
+
+    # The first two sides are twice the last one: 500 = 10 × 10 × 5 voxels, an eighth of the volume
+    tfm = RandomErasing(p = 1, scale = (0.125, 0.125), ratio = (2, 2))
+    out = itemdata(apply(tfm, volume; randstate = state))
+    @test count(iszero, out) == 500
+    @test extent(out) == (10, 10, 5)
+    @test all(==(1f0), itemdata(volume))
+
+    cube = RandomErasing(p = 1, scale = (0.125, 0.125), ratio = (1, 1))
+    out = itemdata(apply(cube, volume; randstate = state))
+    @test count(iszero, out) == 8^3
+    @test extent(out) == (8, 8, 8)
+
+    @test itemdata(apply(RandomErasing(p = 0), volume; randstate = state)) == itemdata(volume)
+    no_fit = RandomErasing(p = 1, scale = (0.5, 0.5), ratio = (1e100, 1e100))
+    @test itemdata(apply(no_fit, volume; randstate = state)) == itemdata(volume)
+
+    for _ in 1:20
+        out = itemdata(apply(RandomErasing(p = 1), volume))
+        isnothing(extent(out)) || @test count(iszero, out) == prod(extent(out))
+    end
+
+    noisy = RandomErasing(p = 1, scale = (1, 1), ratio = (1, 1), value = :random)
+    noise = itemdata(apply(noisy, Image(fill(1f0, 4, 4, 4)); randstate = state))
+    @test all(x -> 0 <= x < 1, noise)
+    @test length(unique(noise)) > 1
+
+    mask = MaskBinary(trues(16, 16, 16))
+    erased, annotation = apply(tfm, (volume, mask); randstate = state)
+    @test itemdata(erased) == itemdata(apply(tfm, volume; randstate = state))
+    @test annotation === mask
+
+    offset_data = OffsetArray(fill(1f0, 16, 16, 16), -3:12, 0:15, 5:20)
+    offset = Image(offset_data, Bounds(axes(offset_data)))
+    erased_offset = itemdata(apply(tfm, offset; randstate = state))
+    @test axes(erased_offset) == axes(offset_data)
+    @test parent(erased_offset) == itemdata(apply(tfm, volume; randstate = state))
+
+    buffer = Image(similar(itemdata(volume)))
+    @test itemdata(apply!(buffer, tfm, volume; randstate = state)) === itemdata(buffer)
+    @test itemdata(buffer) == itemdata(apply(tfm, volume; randstate = state))
 end
 
 @testset "RandomErasing noise" begin

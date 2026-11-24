@@ -13,24 +13,25 @@ end
     GaussianBlur(sigma = 1; kernel_size = 3)
     GaussianBlur(sigma, kernel_size)
 
-Apply a separable Gaussian blur to a 2D image. `sigma` is positive or a
-`(min, max)` pair of positive values to sample uniformly. `kernel_size` is
-an odd positive integer or a pair of odd positive sizes in array axis order.
+Apply a separable Gaussian blur to an image with any number of spatial dimensions.
+`sigma` is positive or a `(min, max)` pair of positive values to sample uniformly.
+`kernel_size` is an odd positive integer, the same for every dimension, or a tuple of
+odd positive sizes in array axis order, one per dimension.
 The filter reflects the image at its edges.
 """
-struct GaussianBlur{S} <: PhotometricTransform
+struct GaussianBlur{S, K<:Union{Int, Tuple{Vararg{Int}}}} <: PhotometricTransform
     sigma::S
-    kernel_size::NTuple{2, Int}
+    kernel_size::K
 
     function GaussianBlur(sigma::Union{Real, Tuple{Real, Real}},
-                          kernel_size::Union{Integer, Tuple{Integer, Integer}})
+                          kernel_size::Union{Integer, Tuple{Vararg{Integer}}})
         s = _gaussian_sigma(sigma)
         min_sigma = s isa Real ? s : minimum(s)
         min_sigma > 0 || throw(ArgumentError("GaussianBlur requires a positive sigma"))
-        sizes = kernel_size isa Integer ? (kernel_size, kernel_size) : kernel_size
+        sizes = kernel_size isa Integer ? Int(kernel_size) : map(Int, kernel_size)
         all(k -> k > 0 && isodd(k), sizes) ||
             throw(ArgumentError("kernel_size must contain positive odd sizes"))
-        return new{typeof(s)}(s, sizes)
+        return new{typeof(s), typeof(sizes)}(s, sizes)
     end
 end
 
@@ -38,13 +39,23 @@ GaussianBlur(sigma = 1; kernel_size = 3) = GaussianBlur(sigma, kernel_size)
 
 getrandstate(tfm::GaussianBlur) = _sample_photometric(tfm.sigma)
 
+_kernel_sizes(k::Int, ::Val{N}) where N = ntuple(_ -> k, Val(N))
+
+function _kernel_sizes(sizes::Tuple, ::Val{N}) where N
+    length(sizes) == N ||
+        throw(ArgumentError("kernel_size has $(length(sizes)) entries but the image has $N dimensions"))
+    return sizes
+end
+
 function photometric!(dst, tfm::GaussianBlur, src, sigma)
-    ndims(src) == 2 || throw(ArgumentError("GaussianBlur requires a two-dimensional image"))
-    (isempty(src) || tfm.kernel_size == (1, 1)) && return copyto!(dst, src)
+    sizes = _kernel_sizes(tfm.kernel_size, Val(ndims(src)))
+    (isempty(src) || all(isone, sizes)) && return copyto!(dst, src)
     colors = map(_photometric_color, src)
     temp = similar(colors)
-    _gaussian_pass!(temp, colors, 1, sigma, tfm.kernel_size[1])
-    _gaussian_pass!(colors, temp, 2, sigma, tfm.kernel_size[2])
+    for (dim, k) in enumerate(sizes)
+        _gaussian_pass!(temp, colors, dim, sigma, k)
+        colors, temp = temp, colors
+    end
     return map!(_restore_photometric_color, dst, src, colors)
 end
 
@@ -65,7 +76,7 @@ function _gaussian_pass!(dst, src, dim, sigma, kernel_size)
         value = zero(src[i] * first(weights))
         for (offset, weight) in zip(-radius:radius, weights)
             j = _reflect_index(i[dim] + offset, ax)
-            value += (dim == 1 ? src[j, i[2]] : src[i[1], j]) * weight
+            value += src[CartesianIndex(Base.setindex(Tuple(i), j, dim))] * weight
         end
         dst[i] = value
     end
@@ -108,9 +119,11 @@ end
 """
     AdjustSharpness(factor = 1)
 
-Blend a 2D image with a weighted 3×3 smoothing filter. `factor = 0` gives the
-smoothed image, `factor = 1` preserves the input, and larger values sharpen it.
-The one-pixel border is preserved.
+Blend an image with a weighted smoothing filter over the 3×3 neighborhood of each
+pixel, or over its 3×3×3 neighborhood in 3D, and so on for other numbers of spatial
+dimensions. The center has weight 5 and every other pixel of the neighborhood weight 1.
+`factor = 0` gives the smoothed image, `factor = 1` preserves the input, and larger values
+sharpen it. The one-pixel border is preserved.
 """
 struct AdjustSharpness{T<:Real} <: PhotometricTransform
     factor::T
@@ -122,18 +135,18 @@ struct AdjustSharpness{T<:Real} <: PhotometricTransform
 end
 
 function photometric!(dst, tfm::AdjustSharpness, src, randstate)
-    ndims(src) == 2 || throw(ArgumentError("AdjustSharpness requires a two-dimensional image"))
     (isone(tfm.factor) || minimum(size(src)) < 3) && return copyto!(dst, src)
     input = dst === src ? copy(src) : src
     copyto!(dst, input)
     interior = map(ax -> (first(ax) + 1):(last(ax) - 1), axes(src))
+    neighborhood = CartesianIndices(map(_ -> -1:1, interior))
     for i in CartesianIndices(interior)
         original = _photometric_color(input[i])
         smoothed = 4 * original
-        for j in CartesianIndices((-1:1, -1:1))
+        for j in neighborhood
             smoothed += _photometric_color(input[i + j])
         end
-        smoothed /= 13
+        smoothed /= length(neighborhood) + 4
         value = smoothed + tfm.factor * (original - smoothed)
         dst[i] = _restore_photometric_color(input[i], _map_channels(clamp01, value))
     end

@@ -66,7 +66,6 @@ end
     end
 
     @testset "integer size is a square crop" begin
-        @test CenterCrop(4).size == RandomCrop(4).size == (4, 4)
         @test size(itemdata(apply(CenterCrop(4), Image(rand(8, 8))))) == (4, 4)
     end
 
@@ -129,6 +128,76 @@ end
         tfm = Rotate(10) |> RandomCrop((8, 8); padding = 4)
         @test tfm isa CroppedProjectiveTransform
         @test size(itemdata(apply(tfm, Image(rand(8, 8))))) == (8, 8)
+    end
+end
+
+@testset "Crop with a single size" begin
+    square = Image(Float32.(reshape(1:64, 8, 8)))
+    cube = Image(Float32.(reshape(1:512, 8, 8, 8)))
+
+    @testset "the size applies to every dimension" begin
+        for item in (square, cube), tfm in (Crop(4), CenterCrop(4), RandomCrop(4))
+            @test size(itemdata(apply(tfm, item))) == ntuple(_ -> 4, ndims(itemdata(item)))
+        end
+        @test itemdata(apply(Crop(4), cube)) == itemdata(apply(Crop((4, 4, 4)), cube))
+        @test itemdata(apply(CenterCrop(4), cube)) == itemdata(apply(CenterCrop((4, 4, 4)), cube))
+        @test itemdata(apply(CenterCrop(4), square)) == itemdata(apply(CenterCrop((4, 4)), square))
+    end
+
+    @testset "states are seeds, shared by all items" begin
+        tfm = RandomCrop(4)
+        @test getrandstate(tfm) isa UInt64
+        @test getrandstate(CenterCrop(4)) === getrandstate(Crop(4)) === nothing
+
+        state = getrandstate(tfm)
+        @test getbounds(apply(tfm, cube; randstate = state)) == getbounds(apply(tfm, cube; randstate = state))
+        items = (cube, MaskBinary(rand(Bool, 8, 8, 8)), Keypoints([SVector(4f0, 4f0, 4f0)], (8, 8, 8)))
+        for _ in 1:10
+            out = apply(tfm, items)
+            @test allequal(getbounds.(out))
+        end
+
+        starts = Set(first.(getbounds(apply(tfm, cube)).rs) for _ in 1:200)
+        @test length(starts) > 1
+        @test all(start -> all(in(1:5), start), starts)
+    end
+
+    @testset "offsets of the dimensionality can replace the seed" begin
+        crop = Crop((4, 4), DataAugmentation.FromRandom())
+        for offsets in ((0., 0.), (0.3, 0.7), (1., 0.5))
+            @test itemdata(apply(RandomCrop(4), square; randstate = offsets)) ==
+                itemdata(apply(crop, square; randstate = offsets))
+        end
+        @test_throws ArgumentError apply(RandomCrop(4), cube; randstate = (0.5, 0.5))
+    end
+
+    @testset "padding" begin
+        for item in (square, cube)
+            n = ndims(itemdata(item))
+            @test itemdata(apply(CenterCrop(8; padding = 3), item)) == itemdata(item)
+            @test size(itemdata(apply(RandomCrop(8; padding = 2), item))) == ntuple(_ -> 8, n)
+            @test size(itemdata(apply(RandomCrop(12; pad_if_needed = true), item))) == ntuple(_ -> 12, n)
+            filled = apply(Crop(10; pad_if_needed = true, fill = -1), item)
+            @test size(itemdata(filled)) == ntuple(_ -> 10, n)
+            @test any(==(-1), itemdata(filled))
+        end
+        @test RandomCrop(4; padding = (1, 2, 3)).size == (4, 4, 4)
+        @test RandomCrop(4; padding = (1, 2, 3)).padding == (1, 2, 3)
+        @test size(itemdata(apply(RandomCrop(4; padding = (1, 2, 3, 4)), square))) == (4, 4)
+        @test size(itemdata(apply(RandomCrop(4; padding = ((1, 2), (3, 4))), square))) == (4, 4)
+        items = (cube, MaskBinary(rand(Bool, 8, 8, 8)))
+        @test allequal(getbounds.(apply(RandomCrop(12; pad_if_needed = true), items)))
+        @test_throws ArgumentError RandomCrop(4; padding = -1)
+        @test_throws ArgumentError RandomCrop(4; padding = [1, 2])
+        @test_throws ArgumentError RandomCrop(4; padding_mode = :unknown)
+    end
+
+    @testset "composed with a projective transformation" begin
+        for item in (square, cube)
+            tfm = Rotate(10) |> RandomCrop(5; padding = 1)
+            @test tfm isa CroppedProjectiveTransform
+            @test size(itemdata(apply(tfm, item))) == ntuple(_ -> 5, ndims(itemdata(item)))
+        end
     end
 end
 
