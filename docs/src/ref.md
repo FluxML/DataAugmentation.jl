@@ -1,6 +1,12 @@
+```@meta
+CollapsedDocStrings = true
+```
+
 # API reference
 
 Names that are not exported are listed with the `DataAugmentation.` prefix and need to be imported or qualified. The sections [Extending](@ref reference-extending) and [Testing](@ref) cover the names used for defining your own items and transformations.
+
+[Jump to the symbol index](@ref reference-index).
 
 ## Items
 
@@ -223,4 +229,10 @@ DataAugmentation.testapply
 DataAugmentation.testapply!
 DataAugmentation.testitem
 DataAugmentation.testprojective
+```
+
+## [Index](@id reference-index)
+
+```@index
+Pages = ["ref.md"]
 ```
