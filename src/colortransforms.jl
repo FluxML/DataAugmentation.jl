@@ -1,4 +1,7 @@
 
+# Color transforms only make sense for images: other items pass through unchanged.
+const NonColorItem = Union{MaskMulti, MaskBinary, Keypoints}
+
 """
     AdjustBrightness(δ = 0.2)
     AdjustBrightness(distribution)
@@ -10,6 +13,9 @@ You can also pass any `Distributions.Sampleable` from which the
 factor is selected.
 
 Pixels are clamped to [0,1] unless `clamp=false` is passed.
+
+Masks and keypoints (including bounding boxes and polygons) are returned unchanged,
+so the transform can be applied to a tuple of items.
 
 ## Example
 
@@ -31,6 +37,7 @@ AdjustBrightness(f::Real; clamp::Bool=true) = AdjustBrightness(Uniform(max(0, 1 
 
 getrandstate(tfm::AdjustBrightness) = rand(tfm.dist)
 
+apply(::AdjustBrightness, item::NonColorItem; randstate = nothing) = item
 
 function apply(tfm::AdjustBrightness, item::Image; randstate = getrandstate(tfm))
     factor = randstate
@@ -74,6 +81,9 @@ factor is selected.
 
 Pixels are clamped to [0,1] unless `clamp=false` is passed.
 
+Masks and keypoints (including bounding boxes and polygons) are returned unchanged,
+so the transform can be applied to a tuple of items.
+
 ## Example
 
 ```julia
@@ -94,6 +104,7 @@ AdjustContrast(f::Real; clamp::Bool=true) = AdjustContrast(Uniform(max(0, 1 - f)
 
 getrandstate(tfm::AdjustContrast) = rand(tfm.dist)
 
+apply(::AdjustContrast, item::NonColorItem; randstate = nothing) = item
 
 function apply(tfm::AdjustContrast, item::Image; randstate = getrandstate(tfm))
     factor = randstate
