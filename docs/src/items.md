@@ -12,13 +12,15 @@ Separating the representation from the data's meaning resolves those ambiguities
 
 ## Spatial items
 
-There are three kinds of spatial data currently supported: images, keypoints and segmentation masks. Both 2D and 3D data is supported (and technically, higher dimensions).
+Spatial items represent images, segmentation masks, keypoints, and bounding boxes.
 
 - [`Image`](@ref)`{N, T}` represents an `N`-dimensional image. `T` refers to the element type of the array that `Image` wraps, usually a color. When projecting images, proper interpolation methods are used to reduce artifacts like aliasing.
 
 - [`MaskBinary`](@ref)`{N}` and [`MaskMulti`](@ref)`{N, T}` likewise represent `N`-dimensional segmentation masks. Unlike images, nearest-neighbor interpolation is used for projecting masks.
 
-- Lastly, [`Keypoints`](@ref)`{N}` represent keypoint data. The data should be an array of `SVector{N}`. Since there are many interpretations of keypoint data, there are also wrapper items for convenience: [`BoundingBox`](@ref) and [`Polygon`](@ref).
+- [`Keypoints`](@ref)`{N}` represents landmarks as an array of `SVector{N}`. [`BoundingBox`](@ref) and [`Polygon`](@ref) wrap keypoints to represent a single box or polygon. These items use array dimension order, so points are `(y, x)` in 2D.
+
+- [`BoundingBoxes`](@ref) holds a collection of 2D boxes and optional labels. Each column of its coordinate matrix holds one box in `(x, y)` order. Use [`box_convert`](@ref) to switch between corner, corner-and-size, and center-and-size coordinates.
 
 Spatial items have spatial bounds, which [projective transformations](projective.md) use. The [Gallery](gallery.md) shows how to apply transformations to images and keypoints together.
 

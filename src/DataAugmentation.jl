@@ -31,6 +31,9 @@ include("./items/table.jl")
 include("./items/keypoints.jl")
 include("./keypointtransforms.jl")
 include("./items/mask.jl")
+include("./items/boundingboxes.jl")
+include("./boundingboxtransforms.jl")
+include("./boxops.jl")
 include("./projective/compose.jl")
 include("./projective/crop.jl")
 include("./projective/affine.jl")
@@ -83,6 +86,12 @@ export Item,
     MaskMulti,
     MaskBinary,
     BoundingBox,
+    BoundingBoxes,
+    box_convert,
+    ClampBoundingBoxes,
+    SanitizeBoundingBoxes,
+    masks_to_boxes,
+    box_iou,
     ScaleKeepAspect,
     ScaleRatio,
     itemdata,

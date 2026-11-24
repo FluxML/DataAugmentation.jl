@@ -119,6 +119,12 @@ function showpolygon!(img, points, C)
     draw!(img, polydraw, C)
 end
 
+function showbox!(img, lo, hi)
+    points = [lo, SVector(hi[1], lo[2]), hi, SVector(lo[1], hi[2])]
+    showpolygon!(img, points, RGBA(1, 0, 0, 1))
+    return img
+end
+
 
 """
     boundingranges(ps)
