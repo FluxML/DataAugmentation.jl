@@ -9,13 +9,38 @@ function scaleprojection(ratios::NTuple{N}, T = Float32) where N
 end
 
 
+# A single number for a scaling applies to every dimension. It is expanded to one
+# value per dimension once the item, and with it the dimensionality, is known.
+struct IsotropicScale{F, T<:Real} <: ProjectiveTransform
+    value::T
+end
+
+IsotropicScale{F}(value::T) where {F, T<:Real} = IsotropicScale{F, T}(value)
+
+_expand(tfm::IsotropicScale{F}, ::Bounds{N}) where {F, N} = F(ntuple(_ -> tfm.value, Val(N)))
+
+function getprojection(tfm::IsotropicScale, bounds::Bounds; randstate = nothing)
+    return getprojection(_expand(tfm, bounds), bounds; randstate)
+end
+
+function projectionbounds(tfm::IsotropicScale, P, bounds::Bounds; randstate = nothing)
+    return projectionbounds(_expand(tfm, bounds), P, bounds; randstate)
+end
+
 """
     ScaleRatio(ratios) <: ProjectiveTransform
+    ScaleRatio(ratio)
 
-Scales the aspect ratio
+Scales the sides by `ratios`, one per dimension. A number `ratio` scales every
+dimension by the same factor, whatever the dimensionality of the item.
 """
 struct ScaleRatio{N} <: ProjectiveTransform
     ratios::NTuple{N}
+end
+
+function ScaleRatio(ratio::Real)
+    isfinite(ratio) && ratio > 0 || throw(ArgumentError("ratio must be positive and finite"))
+    return IsotropicScale{ScaleRatio}(ratio)
 end
 
 # This allows for roundtrip through ScaleFixed and avoids code duplication
@@ -31,9 +56,12 @@ end
 
 """
     ScaleKeepAspect(minlengths) <: ProjectiveTransform
+    ScaleKeepAspect(minlength)
 
 Scales the sides of `item` to be as least as large as `minlengths`,
-keeping the original aspect ratio.
+keeping the original aspect ratio. A number `minlength` is the same minimum
+for every dimension, whatever the dimensionality of the item: the shortest
+side becomes `minlength`.
 
 ## Examples
 
@@ -41,11 +69,16 @@ keeping the original aspect ratio.
 using DataAugmentation, TestImages
 image = testimage("lighthouse")
 tfm = ScaleKeepAspect((200, 200))
-apply(tfm, Image(image))
+tfm(Image(image))
 ```
 """
 struct ScaleKeepAspect{N} <: ProjectiveTransform
     minlengths::NTuple{N, Int}
+end
+
+function ScaleKeepAspect(minlength::Integer)
+    minlength > 0 || throw(ArgumentError("size must be positive"))
+    return IsotropicScale{ScaleKeepAspect}(Int(minlength))
 end
 
 # This allows for roundtrip through ScaleFixed and avoids code duplication
@@ -61,14 +94,21 @@ end
 
 """
     ScaleFixed(sizes)
+    ScaleFixed(size)
 
 Projective transformation that scales sides to `sizes`, disregarding
-aspect ratio.
+aspect ratio. A number `size` is the same size for every dimension, whatever
+the dimensionality of the item.
 
 See also [`ScaleKeepAspect`](@ref).
 """
 struct ScaleFixed{N} <: ProjectiveTransform
     sizes::NTuple{N, Int}
+end
+
+function ScaleFixed(size::Integer)
+    size > 0 || throw(ArgumentError("size must be positive"))
+    return IsotropicScale{ScaleFixed}(Int(size))
 end
 
 
@@ -86,7 +126,8 @@ function getprojection(scale::ScaleFixed, bounds::Bounds{N}; randstate = nothing
     ratios = map((s, n) -> s == n ? 1.0 : s / max(n - 1, 1), scale.sizes, lengths)
     center = SVector{N, Float32}(mean.(bounds.rs))
     newcenter = SVector{N, Float32}((scale.sizes .+ 1) ./ 2)
-    return Translation(newcenter) ∘ scaleprojection(ratios) ∘ Translation(-center)
+    P = Translation(newcenter) ∘ scaleprojection(ratios) ∘ Translation(-center)
+    return _singletonprojection(P, bounds, scale.sizes)
 end
 
 
@@ -124,46 +165,107 @@ function projectionbounds(tfm::Zoom, P, bounds::Bounds; randstate = getrandstate
 end
 
 """
-    Rotate(γ)
-    Rotate(distribution)
+    Rotate(γ; expand = true, center = nothing, fill = nothing)
+    Rotate(distribution; expand = true, center = nothing, fill = nothing)
     Rotate(α, β, γ)
     Rotate(α_distribution, β_distribution, γ_distribution)
 
-Rotate spatial data around its center. Rotate(γ) is a 2D rotation
-by an angle chosen uniformly from [-γ, γ], an angle given in degrees.
-Rotate(α, β, γ) is a 3D rotation by angles chosen uniformly from
+Rotate spatial data around its center, by angles given in degrees. `Rotate(γ)`
+takes the dimensionality from the item. In 2D, it rotates by an angle chosen
+uniformly from [-γ, γ]. In 3D, it is the same as `Rotate(γ, γ, γ)`: a rotation
+around each of the three axes, by angles chosen independently from [-γ, γ].
+Use `Rotate{2}(γ)` or `Rotate{3}(γ)` to accept only 2D or 3D data.
+
+`Rotate(α, β, γ)` is a 3D rotation by angles chosen uniformly from
 [-α, α], [-β, β], and [-γ, γ], for X, Y, and Z rotations.
 
 You can also pass any `Distributions.Sampleable` from which the
 angle is selected.
 
+`expand = false` keeps the input bounds. Pass an absolute `center = (row, column)`
+(or one coordinate per dimension in 3D) in pixel coordinates to rotate around another
+point. By default, out-of-bounds samples use the item's extrapolation setting. An
+explicit `fill` value applies to this rotation only and to [`Image`](@ref) items
+only; masks keep their own extrapolation. Rotations with a `fill` are not
+projective transforms and are not fused with neighboring ones.
+
 ## Examples
 
 ```julia
-tfm2d = Rotate(10)
-apply(tfm2d, Image(rand(Float32, 16, 16)))
+tfm = Rotate(10)
+tfm(Image(rand(Float32, 16, 16)))
+tfm(Image(rand(Float32, 16, 16, 16)))
 
 tfm3d = Rotate(10, 20, 30)
-apply(tfm3d, Image(rand(Float32, 16, 16, 16)))
+tfm3d(Image(rand(Float32, 16, 16, 16)))
 ```
 """
 struct Rotate{N, R, S<:Sampleable} <: ProjectiveTransform
     dist::S
+    expand::Bool
+    center::Union{Nothing, SVector{N, Float32}}
 end
 
-Rotate{N, R}(s::S) where {N, R, S} = Rotate{N, R, S}(s)
+Rotate{N, R, S}(s::S) where {N, R, S} = Rotate{N, R, S}(s, true, nothing)
 
-function Rotate{N, R}(s::S) where {N, R, S<:Number}
-    if s == 0
-        return Identity()
+function Rotate{N, R}(s::S; expand::Bool = true, center = nothing) where {N, R, S<:Sampleable}
+    if center !== nothing
+        center isa Union{Tuple, AbstractVector} && length(center) == N &&
+            all(x -> x isa Real && isfinite(Float32(x)), center) ||
+            throw(ArgumentError("center must contain $N finite coordinates"))
+        center = SVector{N, Float32}(center)
     end
-    Rotate{N, R, Uniform}(Uniform(-abs(s), abs(s)))
+    return Rotate{N, R, S}(s, expand, center)
 end
 
-Rotate(s) = Rotate{2, Type{RotMatrix{2, Float64}}}(s)
+function Rotate{N, R}(s::Number; kwargs...) where {N, R}
+    iszero(s) && return Identity()
+    return Rotate{N, R}(Uniform(-abs(s), abs(s)); kwargs...)
+end
+
+struct FilledRotation{R<:ProjectiveTransform, F} <: Transform
+    rotation::R
+    fill::F
+end
+
+# `Rotate(γ)` draws three angles before the item is seen, as a 3D rotation needs them.
+# A 2D rotation uses the first one.
+struct RotateND{S<:Sampleable} <: ProjectiveTransform
+    dist::S
+    expand::Bool
+    center::Union{Nothing, Tuple{Vararg{Float32}}}
+end
+
+function RotateND(s::Union{Real, Sampleable}; expand::Bool = true, center = nothing)
+    if center !== nothing
+        center isa Union{Tuple, AbstractVector} && length(center) in (2, 3) &&
+            all(x -> x isa Real && isfinite(Float32(x)), center) ||
+            throw(ArgumentError("center must contain 2 or 3 finite coordinates"))
+        center = Tuple(Float32.(center))
+    end
+    s isa Real && iszero(s) && return Identity()
+    dist = s isa Real ? Uniform(-abs(s), abs(s)) : s
+    return RotateND(dist, expand, center)
+end
+
+function _rotate2d(s; expand::Bool = true, center = nothing, fill = nothing)
+    rotation = Rotate{2, Type{RotMatrix{2, Float64}}}(s; expand, center)
+    return _filled(rotation, fill)
+end
+
+function _filled(rotation, fill)
+    (isnothing(fill) || rotation isa Identity) && return rotation
+    fill isa Union{Number, Colorant} || throw(ArgumentError("fill must be a number or a color"))
+    return FilledRotation(rotation, fill)
+end
+
+function Rotate(s; expand::Bool = true, center = nothing, fill = nothing)
+    return _filled(RotateND(s; expand, center), fill)
+end
+
 Rotate(sx, sy, sz) = RotateX(sx) |> RotateY(sy) |> RotateZ(sz)
 Rotate{3}(s) = Rotate(s, s, s)
-Rotate{2}(s) = Rotate(s)
+Rotate{2}(s; kwargs...) = _rotate2d(s; kwargs...)
 
 """
     RotateX(γ)
@@ -202,15 +304,64 @@ angle is selected.
 RotateZ(s) = Rotate{3, Type{RotZ{Float64}}}(s)
 
 getrandstate(tfm::Rotate) = rand(tfm.dist)
+getrandstate(tfm::RotateND) = (rand(tfm.dist), rand(tfm.dist), rand(tfm.dist))
+getrandstate(tfm::FilledRotation) = getrandstate(tfm.rotation)
+
+function _rotation(tfm::RotateND, ::Bounds{2})
+    return Rotate{2, Type{RotMatrix{2, Float64}}}(tfm.dist; tfm.expand, tfm.center)
+end
+
+function _rotation(tfm::RotateND, ::Bounds{3})
+    rotations = (RotX{Float64}, RotY{Float64}, RotZ{Float64})
+    return ComposedProjectiveTransform(
+        map(R -> Rotate{3, Type{R}}(tfm.dist; tfm.expand, tfm.center), rotations)...)
+end
+
+function _rotation(::RotateND, ::Bounds{N}) where N
+    throw(ArgumentError("cannot rotate $N-dimensional data, use 2D or 3D data"))
+end
+
+# A single angle, as for a 2D rotation, is the angle around the first axis.
+_rotation_state(angle::Real, ::Bounds{2}) = angle
+_rotation_state(angles, ::Bounds{2}) = first(angles)
+_rotation_state(angle::Real, ::Bounds{3}) = (angle, zero(angle), zero(angle))
+_rotation_state(angles, ::Bounds{3}) = Tuple(angles)
+
+function _projection_geometry(tfm::RotateND, bounds::Bounds, randstate)
+    rotation = _rotation(tfm, bounds)
+    return _projection_geometry(rotation, bounds, _rotation_state(randstate, bounds))
+end
+
+function getprojection(tfm::RotateND, bounds::Bounds; randstate = getrandstate(tfm))
+    return first(_projection_geometry(tfm, bounds, randstate))
+end
+
+function projectionbounds(tfm::RotateND, P, bounds::Bounds; randstate = getrandstate(tfm))
+    return last(_projection_geometry(tfm, bounds, randstate))
+end
 
 function getprojection(
         tfm::Rotate{N, Type{R}, S},
         bounds::Bounds{N};
         randstate = getrandstate(tfm)) where {N, R, S}
     γ = randstate
-    middlepoint = SVector{N, Float32}(mean.(bounds.rs))
+    middlepoint = isnothing(tfm.center) ? SVector{N, Float32}(mean.(bounds.rs)) : tfm.center
     r = γ / 360 * 2pi
     return recenter(RotMatrix{N, Float32}(R(convert(Float64, r))), middlepoint)
+end
+
+function projectionbounds(tfm::Rotate, P, bounds; randstate = nothing)
+    return tfm.expand ? transformbounds(bounds, P) : bounds
+end
+
+function apply(tfm::FilledRotation, item::Item; randstate = getrandstate(tfm))
+    return apply(tfm.rotation, item; randstate)
+end
+
+function apply(tfm::FilledRotation, item::Image; randstate = getrandstate(tfm))
+    source = @set item.extrapolate = tfm.fill
+    result = apply(tfm.rotation, source; randstate)
+    return @set result.extrapolate = item.extrapolate
 end
 
 
@@ -247,10 +398,7 @@ Transform `P` so that is applied around the center of `bounds`
 instead of the origin
 """
 function centered(P, bounds::Bounds{N}) where N
-    upperleft = minimum.(bounds.rs)
-    bottomright = maximum.(bounds.rs)
-
-    midpoint = SVector{N, Float32}((bottomright .- upperleft) ./ 2) .+ .5f0
+    midpoint = SVector{N, Float32}(mean.(bounds.rs))
     return recenter(P, midpoint)
 end
 
@@ -262,30 +410,48 @@ end
 
 
 """
+    FlipDim(dim)
     FlipDim{N}(dim)
 
-Reflect `N` dimensional data along the axis of dimension `dim`. Must satisfy 1 <= `dim` <= `N`.
+Reflect spatial data along the axis of dimension `dim`. `FlipDim(dim)` takes the
+dimensionality from the item and requires it to be at least `dim`. `FlipDim{N}(dim)`
+also checks that `1 <= dim <= N` right away.
 
 ## Examples
 
 ```julia
-tfm = FlipDim{2}(1)
+tfm = FlipDim(1)
 ```
 """
-struct FlipDim{N} <: ProjectiveTransform
-    dim::Int
-    FlipDim{N}(dim) where N = 1 <= dim <= N ? new{N}(dim) : error("invalid dimension")
+struct FlipDim{N}
+    function FlipDim{N}(dim) where N
+        1 <= dim <= N || error("invalid dimension")
+        return FlipDim(dim)
+    end
 end
 
+# `axis` is the name of an axis (`:x`, `:y` or `:z`) or a dimension.
 struct FlipAxis <: ProjectiveTransform
-    axis::Symbol
+    axis::Union{Symbol, Int}
 end
+
+function FlipDim(dim::Integer)
+    dim >= 1 || throw(ArgumentError("dimension must be positive"))
+    return FlipAxis(Int(dim))
+end
+
+_flipdim(dim::Int, N) = dim
+_flipdim(axis::Symbol, N) = (N == 2 ? (x = 2, y = 1, z = 3) : (x = 1, y = 2, z = 3))[axis]
+_flipname(dim::Int) = "dimension $dim"
+_flipname(axis::Symbol) = "the $axis-axis"
 
 function getprojection(tfm::FlipAxis, bounds::Bounds{N}; randstate = nothing) where N
-    dims = N == 2 ? (x = 2, y = 1, z = 3) : (x = 1, y = 2, z = 3)
-    dim = dims[tfm.axis]
-    dim <= N || throw(ArgumentError("cannot flip the $(tfm.axis)-axis of $N-dimensional data"))
-    return getprojection(FlipDim{N}(dim), bounds; randstate)
+    dim = _flipdim(tfm.axis, N)
+    dim <= N || throw(ArgumentError("cannot flip $(_flipname(tfm.axis)) of $N-dimensional data"))
+    arr = 1I(N)
+    arr[dim, dim] = -1
+    M = SMatrix{N, N, Float32}(arr)
+    return DataAugmentation.centered(LinearMap(M), bounds)
 end
 
 """
@@ -328,14 +494,6 @@ struct FlipZ{N}
 end
 
 FlipZ() = FlipAxis(:z)
-
-function getprojection(tfm::FlipDim{N}, bounds::Bounds{N}; randstate = nothing) where N
-    arr = 1I(N)
-    arr[tfm.dim, tfm.dim] = -1
-    M = SMatrix{N, N, Float32}(arr)
-    return DataAugmentation.centered(LinearMap(M), bounds)
-end
-
 
 """
     PinOrigin()

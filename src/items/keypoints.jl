@@ -47,22 +47,24 @@ Base.show(io::IO, item::Keypoints{N, T, M}) where {N, T, M} =
 getbounds(keypoints::Keypoints) = keypoints.bounds
 
 
-function project(P, keypoints::Keypoints{N, T}, bounds::Bounds{N}) where {N, T}
-    return Keypoints(
-        collect(SVector{N, T}, map(fmap(P), keypoints.data)),
-        bounds,
-    )
+function project(P, keypoints::Keypoints{N, T, S}, bounds::Bounds{N}) where {N, T, S}
+    points = map(fmap(P), keypoints.data)
+    if T <: Integer && any(p -> !isnothing(p) && !all(isinteger, p), points)
+        point = SVector{N, float(T)}
+        storage = Nothing <: S ? Union{Nothing, point} : point
+        return Keypoints(collect(storage, points), bounds)
+    end
+    return Keypoints(collect(S, points), bounds)
 end
 function project!(buf, P, keypoints::Keypoints{N, T}, bounds::Bounds{N}) where {N, T}
-    return Keypoints(
-        collect(SVector{N, T}, map(fmap(P), keypoints.data)),
-        bounds,
-    )
+    return project(P, keypoints, bounds)
 end
 
 
 function showitem!(img, keypoints::Keypoints{N}) where N
-    for point in filter(!isnothing, keypoints.data)
+    for point in keypoints.data
+        isnothing(point) && continue
+        any(isnan, point) && continue
         showkeypoint!(img, point, RGBA(1, 0, 0, 1))
     end
     return img

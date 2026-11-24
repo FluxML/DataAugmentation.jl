@@ -162,6 +162,19 @@ include("../imports.jl")
         @test P.linear.mat[1] isa Float32
         timage = apply(tfm, image, randstate=180)
         @test itemdata(image) ≈ itemdata(timage)[end:-1:1, end:-1:1]
+
+        image = Image(reshape(Float32.(1:25), 5, 5))
+        points = Keypoints(Union{Nothing, SVector{2, Float64}}[SVector(2., 1.), nothing], (5, 5))
+        rotation = Rotate(90; expand = false, center = (1, 1), fill = -1)
+        turned, moved = apply(rotation, (image, points); randstate = 90)
+        @test getbounds(turned) == getbounds(moved) == getbounds(image)
+        @test itemdata(turned)[1, 2] == itemdata(image)[2, 1]
+        @test itemdata(turned)[5, 1] == -1
+        @test itemdata(moved)[1] ≈ SVector(1., 2.)
+        @test isnothing(itemdata(moved)[2])
+        expanded = apply(Rotate(90; center = (1, 1)), image; randstate = 90)
+        @test getbounds(expanded) != getbounds(image)
+        @test getbounds(apply(Maybe(Rotate(45; expand = false), 1), image; randstate = (1, 45))) == getbounds(image)
     end
 
     @testset "Rotate3D" begin
@@ -246,9 +259,10 @@ include("../imports.jl")
     @testset "FlipX 2D correct indices" begin
         img = rand(RGB, 10, 10)
         item = Image(img)
-        for flip in (FlipX(), FlipX{2}(), FlipX{3}())
-            tfm = flip |> RandomCrop((10, 10)) |> PinOrigin()
-            @test itemdata(apply(tfm, item)) == img[:, end:-1:1]
+        for flip in (FlipX(), FlipX{2}(), FlipX{3}(), FlipDim{2}(2), Reflect(0))
+            flipped = itemdata(apply(flip, item))
+            @test axes(flipped) == axes(img)
+            @test flipped == img[:, end:-1:1]
         end
     end
 
@@ -256,8 +270,9 @@ include("../imports.jl")
         img = rand(RGB, 10, 10)
         item = Image(img)
         for flip in (FlipY(), FlipY{2}())
-            tfm = flip |> RandomCrop((10, 10)) |> PinOrigin()
-            @test itemdata(apply(tfm, item)) == img[end:-1:1, :]
+            flipped = itemdata(apply(flip, item))
+            @test axes(flipped) == axes(img)
+            @test flipped == img[end:-1:1, :]
         end
     end
 
@@ -266,8 +281,9 @@ include("../imports.jl")
         img = rand(RGB, 10, 10, 10)
         item = Image(img)
         for flip in (FlipX(), FlipX{3}())
-            tfm = flip |> RandomCrop((10, 10, 10)) |> PinOrigin()
-            @test itemdata(apply(tfm, item)) == img[end:-1:1, :, :]
+            flipped = itemdata(apply(flip, item))
+            @test axes(flipped) == axes(img)
+            @test flipped == img[end:-1:1, :, :]
         end
     end
 
@@ -275,8 +291,9 @@ include("../imports.jl")
         img = rand(RGB, 10, 10, 10)
         item = Image(img)
         for flip in (FlipY(), FlipY{3}())
-            tfm = flip |> RandomCrop((10, 10, 10)) |> PinOrigin()
-            @test itemdata(apply(tfm, item)) == img[:, end:-1:1, :]
+            flipped = itemdata(apply(flip, item))
+            @test axes(flipped) == axes(img)
+            @test flipped == img[:, end:-1:1, :]
         end
     end
 
@@ -284,9 +301,23 @@ include("../imports.jl")
         img = rand(RGB, 10, 10, 10)
         item = Image(img)
         for flip in (FlipZ(), FlipZ{3}())
-            tfm = flip |> RandomCrop((10, 10, 10)) |> PinOrigin()
-            @test itemdata(apply(tfm, item)) == img[:, :, end:-1:1]
+            flipped = itemdata(apply(flip, item))
+            @test axes(flipped) == axes(img)
+            @test flipped == img[:, :, end:-1:1]
         end
+    end
+
+    @testset "Flip with offset bounds and keypoints" begin
+        img = reshape(Float32.(1:12), 3, 4)
+        bounds = Bounds((-2:0, 41:44))
+        image = Image(OffsetArray(img, bounds.rs), bounds)
+        keypoints = Keypoints([SVector(-1f0, 41.5f0)], bounds)
+
+        timage, tkeypoints = apply(FlipX(), (image, keypoints))
+        @test axes(itemdata(timage)) == axes(itemdata(image))
+        @test itemdata(timage) == OffsetArray(img[:, end:-1:1], bounds.rs)
+        @test getbounds(tkeypoints) == bounds
+        @test itemdata(tkeypoints) == [SVector(-1f0, 43.5f0)]
     end
 
     @testset "FlipZ on 2D data" begin
@@ -307,7 +338,140 @@ include("../imports.jl")
 end
 
 
+@testset "FlipDim takes the dimensionality from the item" begin
+    img = rand(Float32, 4, 5)
+    vol = rand(Float32, 4, 5, 6)
+    @test itemdata(apply(FlipDim(2), Image(img))) == img[:, end:-1:1]
+    @test itemdata(apply(FlipDim(1), Image(vol))) == vol[end:-1:1, :, :]
+    @test itemdata(apply(FlipDim(3), Image(vol))) == vol[:, :, end:-1:1]
+    @test itemdata(apply(FlipDim{3}(2), Image(vol))) == itemdata(apply(FlipDim(2), Image(vol)))
+    @test itemdata(apply(FlipDim{2}(1), Image(img))) == img[end:-1:1, :]
+    @test_throws ArgumentError("cannot flip dimension 3 of 2-dimensional data") apply(FlipDim(3), Image(img))
+    @test_throws ArgumentError FlipDim(0)
+    @test_throws ErrorException FlipDim{2}(3)
+end
+
+@testset "Rotate takes the dimensionality from the item" begin
+    img = Image(rand(Float32, 9, 7))
+    vol = Image(rand(Float32, 9, 7, 5))
+    tfm = Rotate(10)
+
+    @testset "states" begin
+        states = [getrandstate(tfm) for _ in 1:50]
+        @test all(state -> length(state) == 3 && all(a -> abs(a) <= 10, state), states)
+        @test length(unique(first.(states))) > 1
+        @test length(unique(last.(states))) > 1
+    end
+
+    @testset "2D uses the first angle" begin
+        expected = itemdata(apply(Rotate{2}(10), img; randstate = 30))
+        @test itemdata(apply(tfm, img; randstate = (30, 99, 99))) == expected
+        @test itemdata(apply(tfm, img; randstate = 30)) == expected
+        @test getbounds(apply(tfm, img; randstate = 30)) == getbounds(apply(Rotate{2}(10), img; randstate = 30))
+    end
+
+    @testset "3D is Rotate{3}" begin
+        angles = (12., -7., 25.)
+        timage = apply(tfm, vol; randstate = angles)
+        expected = apply(Rotate{3}(10), vol; randstate = angles)
+        @test itemdata(timage) == itemdata(expected)
+        @test getbounds(timage) == getbounds(expected)
+        @test itemdata(apply(tfm, vol; randstate = collect(angles))) == itemdata(expected)
+    end
+
+    @testset "keywords" begin
+        for item in (img, vol)
+            @test getbounds(apply(Rotate(10; expand = false), item; randstate = (20, 30, 40))) == getbounds(item)
+            @test getbounds(apply(Rotate(10), item; randstate = (20, 30, 40))) != getbounds(item)
+        end
+        center = (2, 3)
+        @test itemdata(apply(Rotate(10; center), img; randstate = 30)) ==
+            itemdata(apply(Rotate{2}(10; center), img; randstate = 30))
+        @test_throws ArgumentError("center must contain 3 finite coordinates") apply(Rotate(10; center), vol)
+        @test_throws ArgumentError Rotate(10; center = (1, 2, 3, 4))
+        filled = apply(Rotate(90; expand = false, fill = -1), vol; randstate = (0, 0, 90))
+        @test any(==(-1), itemdata(filled))
+        @test itemdata(apply(Rotate(90; expand = false, fill = -1), img; randstate = 90)) ==
+            itemdata(apply(Rotate{2}(90; expand = false, fill = -1), img; randstate = 90))
+    end
+
+    @testset "other forms" begin
+        @test Rotate(0) isa DataAugmentation.Identity
+        @test_throws ArgumentError apply(tfm, Image(rand(Float32, 4, 4, 4, 4)))
+        @test itemdata(apply(Rotate(Uniform(-10, 10)), img; randstate = 30)) ==
+            itemdata(apply(tfm, img; randstate = 30))
+        @test itemdata(apply(Rotate(5, 6, 7), vol; randstate = (1, 2, 3))) ==
+            itemdata(apply(RotateX(5) |> RotateY(6) |> RotateZ(7), vol; randstate = (1, 2, 3)))
+    end
+
+    @testset "composition" begin
+        for item in (img, vol)
+            composed = Rotate(10) |> FlipX() |> CenterCrop(4)
+            @test composed isa CroppedProjectiveTransform
+            @test size(itemdata(apply(composed, item))) == ntuple(_ -> 4, ndims(itemdata(item)))
+        end
+    end
+end
+
+@testset "A number for sizes and ratios" begin
+    img = Image(rand(Float32, 12, 20))
+    vol = Image(rand(Float32, 12, 20, 16))
+
+    @testset "scaling $(name)" for (name, number, tuple) in (
+            ("ScaleFixed", ScaleFixed(8), n -> ScaleFixed(ntuple(_ -> 8, n))),
+            ("ScaleRatio", ScaleRatio(0.5), n -> ScaleRatio(ntuple(_ -> 0.5, n))),
+            ("ScaleKeepAspect", ScaleKeepAspect(6), n -> ScaleKeepAspect(ntuple(_ -> 6, n))))
+        for item in (img, vol)
+            n = ndims(itemdata(item))
+            titem = apply(number, item)
+            @test itemdata(titem) == itemdata(apply(tuple(n), item))
+            @test getbounds(titem) == getbounds(apply(tuple(n), item))
+        end
+    end
+
+    @test getbounds(apply(ScaleFixed(8), vol)).rs == (1:8, 1:8, 1:8)
+    @test getbounds(apply(ScaleRatio(0.5), vol)).rs == (1:6, 1:10, 1:8)
+    @test getbounds(apply(ScaleKeepAspect(6), vol)).rs == (1:6, 1:10, 1:8)
+    @test getbounds(apply(ScaleRatio(2), img)).rs == (1:24, 1:40)
+    @test_throws ArgumentError ScaleFixed(0)
+    @test_throws ArgumentError ScaleKeepAspect(-1)
+    @test_throws ArgumentError ScaleRatio(0)
+    @test_throws ArgumentError ScaleRatio(Inf)
+
+    @testset "keypoints and masks follow the image" begin
+        items = (
+            Image(rand(Float32, 8, 8, 8)),
+            Keypoints([SVector(2f0, 3f0, 4f0)], (8, 8, 8)),
+            MaskBinary(rand(Bool, 8, 8, 8)),
+        )
+        for tfm in (ScaleFixed(4), ScaleRatio(0.5), ScaleKeepAspect(4))
+            testprojective(tfm, items)
+        end
+    end
+
+    @testset "resize crops" begin
+        for item in (img, vol)
+            n = ndims(itemdata(item))
+            @test size(itemdata(apply(CenterResizeCrop(6), item))) == ntuple(_ -> 6, n)
+            @test size(itemdata(apply(RandomResizeCrop(6), item))) == ntuple(_ -> 6, n)
+        end
+        @test size(itemdata(apply(ResizePadDivisible(6, 4), img))) == (8, 12)
+        @test size(itemdata(apply(ResizePadDivisible(6, 4), vol))) == (8, 12, 8)
+        @test itemdata(apply(CenterResizeCrop(6), img)) == itemdata(apply(CenterResizeCrop((6, 6)), img))
+    end
+end
+
+
 @testset "Big pipeline" begin
+    @testset "Batching optional flips" begin
+        image = Image(rand(RGB{N0f8}, 32, 32))
+        tensors = map((0.0, 1.0)) do p
+            tfm = RandomResizeCrop((32, 32)) |> Maybe(FlipX(), p) |> ImageToTensor()
+            itemdata(apply(tfm, image))
+        end
+        @test size(stack(tensors)) == (32, 32, 3, 2)
+    end
+
     @testset "2D" begin
         tfms = compose(
             Rotate(10),
@@ -318,6 +482,11 @@ end
             Zoom((1., 1.2)),
             RandomCrop((10, 10)),
         )
+        testprojective(tfms)
+    end
+
+    @testset "2D, dimension-free" begin
+        tfms = compose(Rotate(10), FlipDim(1), ScaleRatio(.8), WarpAffine(0.1), ScaleKeepAspect(12), RandomCrop(10))
         testprojective(tfms)
     end
 
@@ -341,6 +510,12 @@ end
             Zoom((1., 1.2)),
             RandomCrop((10, 10, 10))
         )
+        testprojective(tfms, items)
+
+        buf = makebuffer(tfms, items)
+        @test_nowarn apply!(buf, tfms, items)
+
+        tfms = compose(Rotate(10), FlipDim(3), ScaleRatio(.8), WarpAffine(0.1), ScaleKeepAspect(12), RandomCrop(10))
         testprojective(tfms, items)
 
         buf = makebuffer(tfms, items)

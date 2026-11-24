@@ -45,14 +45,14 @@ function MaskMulti(
 end
 
 function MaskMulti(a::AbstractArray, classes = unique(a); kwargs...)
-    bounds = Bounds(size(a))
+    bounds = Bounds(axes(a))
     minimum(a) >= 1 || error("Class values must start at 1")
     return MaskMulti(a, classes, bounds; kwargs...)
 end
 
 MaskMulti(a::AbstractArray{<:Gray{T}}, args...; kwargs...) where T = MaskMulti(reinterpret(T, a), args...; kwargs...)
 MaskMulti(a::AbstractArray{<:Normed{T}}, args...; kwargs...) where T = MaskMulti(reinterpret(T, a), args...; kwargs...)
-MaskMulti(a::IndirectArray, classes = a.values, bounds = Bounds(size(a)); kwargs...) =
+MaskMulti(a::IndirectArray, classes = a.values, bounds = Bounds(axes(a)); kwargs...) =
     MaskMulti(a.index, classes, bounds; kwargs...)
 MaskMulti(a::IndirectArray{<:Integer, N}, classes::AbstractVector, bounds::Bounds{N}; kwargs...) where N =
     MaskMulti(a.index, classes, bounds; kwargs...)
@@ -65,31 +65,30 @@ getbounds(mask::MaskMulti) = mask.bounds
 
 
 function project(P, mask::MaskMulti{N, T, U}, bounds::Bounds{N}) where {N, T, U}
-    res = warp(
-        itemdata(mask),
-        inv(P),
-        bounds.rs;
-        method=mask.interpolate,
-        fillvalue=mask.extrapolate)
+    source = _project_extrapolation(itemdata(mask), mask.interpolate, mask.extrapolate)
+    res = warp(source, inv(P), bounds.rs)
     return MaskMulti(
         convert.(T, res),
         mask.classes,
-        bounds
+        bounds;
+        mask.interpolate, mask.extrapolate,
     )
 end
 
 
 function project!(bufmask::MaskMulti, P, mask::MaskMulti, bounds)
+    size(itemdata(bufmask)) == length.(bounds.rs) || return project(P, mask, bounds)
     a = OffsetArray(parent(itemdata(bufmask)), bounds.rs)
     warp!(
         a,
-        box_extrapolation(itemdata(mask); method=mask.interpolate, fillvalue=mask.extrapolate),
+        _project_extrapolation(itemdata(mask), mask.interpolate, mask.extrapolate),
         inv(P),
     )
     return MaskMulti(
         a,
         mask.classes,
-        bounds
+        bounds;
+        mask.interpolate, mask.extrapolate,
     )
 end
 
@@ -141,7 +140,7 @@ end
 
 function MaskBinary(
     a::AbstractArray,
-    bounds = Bounds(size(a));
+    bounds = Bounds(axes(a));
     interpolate::Interpolations.InterpolationType=BSpline(Constant()),
     extrapolate::ImageTransformations.FillType=Flat(),
 )
@@ -154,27 +153,21 @@ Base.show(io::IO, mask::MaskBinary{N}) where {N} =
 getbounds(mask::MaskBinary) = mask.bounds
 
 function project(P, mask::MaskBinary, bounds::Bounds)
-    res = warp(
-        itemdata(mask),
-        inv(P),
-        bounds.rs;
-        method=mask.interpolate,
-        fillvalue=mask.extrapolate)
-    return MaskBinary(convert.(Bool, res), bounds)
+    source = _project_extrapolation(itemdata(mask), mask.interpolate, mask.extrapolate)
+    res = warp(source, inv(P), bounds.rs)
+    return MaskBinary(convert.(Bool, res), bounds; mask.interpolate, mask.extrapolate)
 end
 
 
 function project!(bufmask::MaskBinary, P, mask::MaskBinary, bounds)
+    size(itemdata(bufmask)) == length.(bounds.rs) || return project(P, mask, bounds)
     a = OffsetArray(parent(itemdata(bufmask)), bounds.rs)
     warp!(
         a,
-        box_extrapolation(itemdata(mask); method=mask.interpolate, fillvalue=mask.extrapolate),
+        _project_extrapolation(itemdata(mask), mask.interpolate, mask.extrapolate),
         inv(P),
     )
-    return MaskBinary(
-        a,
-        bounds
-    )
+    return MaskBinary(a, bounds; mask.interpolate, mask.extrapolate)
 end
 
 function showitem!(img, mask::MaskBinary; opacity = 1, background = nothing)

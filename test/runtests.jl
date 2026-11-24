@@ -10,8 +10,14 @@ include("imports.jl")
         "projective/crop.jl",
         "projective/affine.jl",
         "projective/warp.jl",
+        "projective/randomwarp.jl",
+        "projective/resize.jl",
+        "projective/pad.jl",
+        "projective/elastic.jl",
+        "projective/geometric_crops.jl",
         "items/image.jl",
         "items/keypoints.jl",
+        "keypointtransforms.jl",
         "items/mask.jl",
         "preprocessing.jl",
         "oneof.jl",
@@ -23,6 +29,10 @@ include("imports.jl")
         "photometricdistort.jl",
         "randomerasing.jl",
         "mixing.jl",
+        "temporalsubsample.jl",
+        "policy.jl",
+        "autoaugment.jl",
+        "augmix.jl",
     ]
         @testset "$file" begin
             include(file)

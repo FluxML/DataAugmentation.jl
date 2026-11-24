@@ -31,7 +31,7 @@ using DataAugmentation, TestImages
 
 item = Image(testimage("lighthouse"))
 tfm = AdjustBrightness(0.2)
-titems = [apply(tfm, item) for _ in 1:8]
+titems = [tfm(item) for _ in 1:8]
 showgrid(titems; ncol = 4, npad = 16)
 ```
 """
@@ -77,7 +77,7 @@ using DataAugmentation, TestImages
 
 item = Image(testimage("lighthouse"))
 tfm = AdjustContrast(0.2)
-titems = [apply(tfm, item) for _ in 1:8]
+titems = [tfm(item) for _ in 1:8]
 showgrid(titems; ncol = 4, npad = 16)
 ```
 """

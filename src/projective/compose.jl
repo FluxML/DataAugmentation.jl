@@ -43,23 +43,19 @@ function getprojection(
         composed::ComposedProjectiveTransform,
         bounds;
         randstate = getrandstate(composed))
-    @assert length(composed.tfms) == length(randstate)
-    P = CoordinateTransformations.IdentityTransformation()
-    for (tfm, r) in zip(composed.tfms, randstate)
-        P_tfm = getprojection(tfm, bounds; randstate = r)
-        bounds = projectionbounds(tfm, P_tfm, bounds; randstate = r)
-        P = P_tfm ∘ P
-    end
-    return P
+    return first(_projection_geometry(composed, bounds, randstate))
 end
 
 function projectionbounds(composed::ComposedProjectiveTransform, P, bounds; randstate = getrandstate(composed))
+    return last(_projection_geometry(composed, bounds, randstate))
+end
+
+function _projection_geometry(composed::ComposedProjectiveTransform, bounds, randstate)
     @assert length(composed.tfms) == length(randstate)
     P = CoordinateTransformations.IdentityTransformation()
     for (tfm, r) in zip(composed.tfms, randstate)
-        P_tfm = getprojection(tfm, bounds; randstate = r)
-        bounds = projectionbounds(tfm, P_tfm, bounds; randstate = r)
+        P_tfm, bounds = _projection_geometry(tfm, bounds, r)
         P = P_tfm ∘ P
     end
-    return bounds
+    return P, bounds
 end

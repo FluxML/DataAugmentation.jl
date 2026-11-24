@@ -1,6 +1,12 @@
+```@meta
+CollapsedDocStrings = true
+```
+
 # API reference
 
 Names that are not exported are listed with the `DataAugmentation.` prefix and need to be imported or qualified. The sections [Extending](@ref reference-extending) and [Testing](@ref) cover the names used for defining your own items and transformations.
+
+[Jump to the symbol index](@ref reference-index).
 
 ## Items
 
@@ -27,7 +33,7 @@ Sequence
 Identity
 ```
 
-## Affine transformations
+## Geometric warps
 
 ```@docs
 FlipDim
@@ -39,25 +45,50 @@ Rotate
 RotateX
 RotateY
 RotateZ
-ScaleRatio
-ScaleFixed
-ScaleKeepAspect
-Zoom
 WarpAffine
+RandomAffine
+RandomPerspective
+ElasticTransform
 Project
 PinOrigin
 ```
 
-## Crops
+## Resizing
+
+```@docs
+ScaleRatio
+ScaleFixed
+ScaleKeepAspect
+Zoom
+Resize
+ScaleJitter
+RandomShortestSize
+RandomResize
+```
+
+## Crops and padding
 
 ```@docs
 Crop
 CenterCrop
 RandomCrop
+RandomResizedCrop
 CenterResizeCrop
 RandomResizeCrop
+RandomIoUCrop
+FiveCrop
+TenCrop
+Pad
+RandomZoomOut
 PadDivisible
 ResizePadDivisible
+```
+
+## Keypoint bounds
+
+```@docs
+ClampKeypoints
+SanitizeKeypoints
 ```
 
 ## Color transformations
@@ -85,6 +116,15 @@ RandomChannelPermutation
 JPEG
 ```
 
+## Policy-based augmentations
+
+```@docs
+RandAugment
+TrivialAugmentWide
+AutoAugment
+AugMix
+```
+
 ## Erasing and batch mixing
 
 ```@docs
@@ -93,11 +133,18 @@ MixUp
 CutMix
 ```
 
+## Video
+
+```@docs
+UniformTemporalSubsample
+```
+
 ## Stochastic transformations
 
 ```@docs
 Maybe
 OneOf
+RandomOrder
 ```
 
 ## Buffering
@@ -115,6 +162,7 @@ ImageToTensor
 PermuteDims
 Normalize
 NormalizeIntensity
+LinearTransformation
 OneHot
 onehot
 MapElem
@@ -181,4 +229,10 @@ DataAugmentation.testapply
 DataAugmentation.testapply!
 DataAugmentation.testitem
 DataAugmentation.testprojective
+```
+
+## [Index](@id reference-index)
+
+```@index
+Pages = ["ref.md"]
 ```

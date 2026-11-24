@@ -30,6 +30,65 @@ end
     @test itemdata(apply(tfm, item)) ≈ ground_truth
 end
 
+@testset "LinearTransformation" begin
+    matrix = Float32[1 2 0 0; 0 1 0 1; 3 0 1 0; 0 0 0 2]
+    mean = Float32[1, 0, -1, 2]
+    data = rand(Float32, 2, 2)
+    item = ArrayItem(data)
+
+    @testset "values" begin
+        res = itemdata(apply(LinearTransformation(matrix; mean), item))
+        @test size(res) == (2, 2)
+        @test eltype(res) == Float32
+        @test vec(res) ≈ matrix * (vec(data) - mean)
+        @test vec(itemdata(apply(LinearTransformation(matrix), item))) ≈ matrix * vec(data)
+    end
+
+    @testset "element type" begin
+        @test eltype(itemdata(apply(LinearTransformation(Float64.(matrix)), item))) == Float64
+        @test eltype(itemdata(apply(LinearTransformation(matrix), ArrayItem(rand(UInt8, 2, 2))))) == Float32
+    end
+
+    @testset "whitening" begin
+        samples = randn(Float64, 4, 2000)
+        samples = [1 0.5 0 0; 0 2 0 0; 0 0 3 0; 0.2 0 0 1] * samples .+ [1, 2, 3, 4]
+        μ = vec(Statistics.mean(samples; dims = 2))
+        eig = eigen(Symmetric(cov(samples; dims = 2)))
+        W = eig.vectors * Diagonal(1 ./ sqrt.(eig.values)) * eig.vectors'
+        tfm = LinearTransformation(W; mean = μ)
+        white = reduce(hcat, vec(itemdata(apply(tfm, ArrayItem(reshape(c, 2, 2))))) for c in eachcol(samples))
+        @test cov(white; dims = 2) ≈ I atol = 1e-8
+    end
+
+    @testset "apply!" begin
+        tfm = LinearTransformation(matrix; mean)
+        item2 = ArrayItem(data .+ 1)
+        testapply(tfm, item)
+        testapply!(tfm, item, item2)
+        buf = makebuffer(tfm, item)
+        res = apply!(buf, tfm, item2)
+        @test res === buf
+        @test itemdata(res) ≈ itemdata(apply(tfm, item2))
+        # an aliased buffer must not be overwritten while it is read
+        aliased = ArrayItem(copy(data))
+        res = apply!(aliased, tfm, aliased)
+        @test vec(itemdata(res)) ≈ matrix * (vec(data) - mean)
+        @test itemdata(aliased) == data
+    end
+
+    @testset "pipeline" begin
+        tfm = ImageToTensor() |> LinearTransformation(Matrix{Float32}(I, 12, 12) * 2)
+        res = apply(tfm, Image(rand(RGB{Float32}, 2, 2)))
+        @test size(itemdata(res)) == (2, 2, 3)
+    end
+
+    @testset "errors" begin
+        @test_throws DimensionMismatch LinearTransformation(rand(3, 4))
+        @test_throws DimensionMismatch LinearTransformation(rand(3, 3); mean = zeros(2))
+        @test_throws DimensionMismatch apply(LinearTransformation(rand(3, 3)), item)
+    end
+end
+
 @testset "ToEltype" begin
     data = rand(RGB, 10, 10)
     imagergb = Image(data)

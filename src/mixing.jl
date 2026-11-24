@@ -22,11 +22,12 @@ MixUp(; alpha = 1) = MixUp(alpha)
     CutMix(alpha)
     CutMix(; alpha = 1)
 
-Copy a shared random rectangle into each image in an [`ImageBatch`](@ref) from
-its partner in a random permutation of the batch. The target area fraction is
-drawn from `Beta(alpha, alpha)` with positive finite `alpha`. The label weight
-uses the fraction of pixels actually replaced after rounding and clipping the
-rectangle. Images keep their element type and labels are returned as floats.
+Copy a shared random box into each image in an [`ImageBatch`](@ref) from
+its partner in a random permutation of the batch. The box spans the spatial
+dimensions of the images: a rectangle for images, a cuboid for volumes. The target
+volume fraction is drawn from `Beta(alpha, alpha)` with positive finite `alpha`. The
+label weight uses the fraction of pixels actually replaced after rounding and clipping
+the box. Images keep their element type and labels are returned as floats.
 """
 struct CutMix <: Transform
     alpha::Float64
@@ -96,22 +97,32 @@ function _mix_images!(dst, ::MixUp, src, partners, weight, rng)
     return weight
 end
 
+# Three dimensions are a grayscale batch with two spatial dimensions, from four dimensions
+# on the last two are the channels and the batch.
+_spatial_dims(n) = n == 3 ? 2 : n - 2
+
+_cutmix_ratio(weight, ::Val{2}) = sqrt(1 - weight)
+_cutmix_ratio(weight, ::Val{N}) where N = (1 - weight)^(1 / N)
+
 function _mix_images!(dst, ::CutMix, src, partners, weight, rng)
     copyto!(dst, src)
-    ratio = sqrt(1 - weight)
-    width, height = size(src, 1), size(src, 2)
-    x = _cutmix_range(rng, width, ratio)
-    y = _cutmix_range(rng, height, ratio)
-    if isempty(x) || isempty(y)
+    return _cutmix_box!(dst, src, partners, weight, rng, Val(_spatial_dims(ndims(src))))
+end
+
+function _cutmix_box!(dst, src, partners, weight, rng, ::Val{N}) where N
+    ratio = _cutmix_ratio(weight, Val(N))
+    sizes = ntuple(d -> size(src, d), Val(N))
+    box = map(n -> _cutmix_range(rng, n, ratio), sizes)
+    if any(isempty, box)
         return 1.0
     end
-    trailing_axes = ntuple(_ -> Colon(), ndims(src) - 2)
-    dst_patch = view(dst, x, y, trailing_axes...)
-    src_patch = view(src, x, y, trailing_axes...)
+    trailing_axes = ntuple(_ -> Colon(), ndims(src) - N)
+    dst_patch = view(dst, box..., trailing_axes...)
+    src_patch = view(src, box..., trailing_axes...)
     for (i, j) in enumerate(partners)
         copyto!(selectdim(dst_patch, ndims(dst_patch), i), selectdim(src_patch, ndims(src_patch), j))
     end
-    return 1 - length(x) * length(y) / (width * height)
+    return 1 - prod(length, box) / prod(sizes)
 end
 
 function _cutmix_range(rng, axis_size, ratio)

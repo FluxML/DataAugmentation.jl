@@ -6,7 +6,7 @@ A transformation is a type that subtypes [`Transform`](@ref). The only *required
 
 - [`apply`](@ref)`(tfm::T, item::I; randstate)`
 
-    Applies the transformation `tfm` to item `item`. Implemented methods can of course dispatch on the type of `item`. `randstate` encapsulates the random state needed for stochastic transformations. The `apply` method implementation itself should be deterministic.
+    Calling `tfm(item)` forwards to this method. `randstate` encapsulates the random state needed for stochastic transformations. The method should be deterministic for a given `randstate`.
 
     You may dispatch on a specific item type `I` or use the abstract `Item` if one implementation works for all item types.
 
@@ -14,8 +14,7 @@ You may additionally also implement:
 
 - [`DataAugmentation.getrandstate`](@ref)`(tfm)` for *stochastic* transformations
 
-    Generates random state to be used inside `apply`. Calling `apply(tfm, item)` is equivalent to
-    `apply(tfm, item; randstate = getrandstate(tfm))`. It defaults to `nothing`, so we need not implement it for deterministic transformations.
+    Generates the default random state for `tfm(item)`. The fallback returns `nothing`.
 
 - [`apply!`](@ref)`(bufitem, tfm::T, item; randstate)` to support *buffering*
 
@@ -69,7 +68,7 @@ compose(tfm1::MapElem, tfm2::MapElem) = MapElem(tfm2.f ∘ tfm1.f)
 
 ## Supporting buffering
 
-Usually, the result of a regular `apply` can be used as a buffer: `buffer = apply(tfm, item)` followed by `apply!(buffer, tfm, item)`.
+Usually, `buffer = tfm(item)` gives you an item that you can reuse with `apply!(buffer, tfm, item)`.
 
 However, for some transformations, a different buffer is needed. [`Sequence`](@ref), for example, needs to reuse all intermediate results. That is why the buffer creation can be customized:
 

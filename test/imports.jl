@@ -4,7 +4,7 @@ using Test
 using Aqua
 using CoordinateTransformations
 using Colors
-using Distributions: Categorical
+using Distributions: Categorical, Uniform
 using FixedPointNumbers: N0f8
 using IndirectArrays: IndirectArray
 using LinearAlgebra

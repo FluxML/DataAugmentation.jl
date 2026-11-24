@@ -34,7 +34,8 @@ function showitem! end
 """
     abstract type Transform
 
-Abstract supertype for all transformations.
+Abstract supertype for all transformations. Calling `tfm(item; kwargs...)`
+forwards to [`apply`](@ref)`(tfm, item; kwargs...)`.
 """
 abstract type Transform end
 
@@ -53,11 +54,9 @@ itemdata(items::Tuple) = itemdata.(items)
 """
     getrandstate(transform)
 
-Generates random state for stochastic transformations.
-Calling `apply(tfm, item)` is equivalent to
-`apply(tfm, item; randstate = getrandstate(tfm))`. It
-defaults to `nothing`, so you it only needs to be implemented
-for stochastic `Transform`s.
+Generate random state for stochastic transformations. Calling `tfm(item)` is
+equivalent to `tfm(item; randstate = getrandstate(tfm))`. The default state is
+`nothing`.
 """
 getrandstate(::Transform) = nothing
 
@@ -76,6 +75,9 @@ Apply `tfm` to an `item` or a tuple `items`.
 function apply(tfm::Transform, items; randstate = getrandstate(tfm))
     map(item -> apply(tfm, item; randstate = randstate), items)
 end
+
+
+(tfm::Transform)(item; kwargs...) = apply(tfm, item; kwargs...)
 
 
 #

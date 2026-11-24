@@ -9,6 +9,7 @@ This library also implements some general transformations useful for getting dat
 - [`PermuteDims`](@ref)`(perm)` permutes the dimensions of an `ArrayItem`, for example to turn `WHC` into `HWC`.
 - [`Normalize`](@ref)`(means, stds)` normalizes image tensors along the channel dimension.
 - [`NormalizeIntensity`](@ref)`()` normalizes an array with its own mean and standard deviation.
+- [`LinearTransformation`](@ref)`(matrix; mean)` subtracts `mean` from a flattened array and multiplies it by a square `matrix`, for example to whiten it.
 - [`OneHot`](@ref) to one-hot encode multi-class masks ([`MaskMulti`](@ref)s); [`onehot`](@ref)`(x, n)` one-hot encodes a single class index.
 - [`MapElem`](@ref)`(f)` applies a function to every element of an array item.
 
@@ -19,14 +20,15 @@ using DataAugmentation, Images
 
 image = Image(rand(RGB{Float32}, 40, 50))
 tfm = ImageToTensor() |> Normalize((0.5, 0.5, 0.5), (0.2, 0.2, 0.2))
-size(itemdata(apply(tfm, image)))
+size(itemdata(tfm(image)))
 ```
 
 One-hot encoding a mask with 4 classes adds a dimension for the classes:
 
 ```@example prep
 mask = MaskMulti(rand(1:4, 8, 8), 1:4)
-size(itemdata(apply(OneHot(), mask)))
+tfm = OneHot()
+size(itemdata(tfm(mask)))
 ```
 
 ## Tabular data
@@ -46,5 +48,5 @@ item = TabularItem((; zip(cols, [missing, "rome", 52_000.0])...), cols)
 tfm = FillMissing(Dict(:age => 40), [:age]) |>
     Categorify(Dict(:city => ["milan", "rome"]), [:city]) |>
     NormalizeRow(Dict(:income => (50_000.0, 10_000.0)), [:income])
-itemdata(apply(tfm, item))
+itemdata(tfm(item))
 ```

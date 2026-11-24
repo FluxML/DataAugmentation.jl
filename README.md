@@ -22,7 +22,7 @@ using DataAugmentation, TestImages
 
 item = Image(testimage("lighthouse"))
 tfm = Maybe(FlipX()) |> RandomResizeCrop((128, 128))
-timage = itemdata(apply(tfm, item))
+timage = itemdata(tfm(item))
 ```
 
 See the [documentation](https://fluxml.ai/DataAugmentation.jl/stable/) for the available transformations and how to define your own.

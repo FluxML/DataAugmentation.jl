@@ -1,6 +1,6 @@
 # Items
 
-Items are containers for data: an [`Image`](@ref) represents an image, and [`Keypoints`](@ref) some keypoints. Transformations are applied to items with [`apply`](@ref), and [`itemdata`](@ref) unwraps the data of the result.
+Items are containers for data. An [`Image`](@ref) holds an image, and [`Keypoints`](@ref) holds point coordinates. Call a transform with `tfm(item)` and use [`itemdata`](@ref) to unwrap the result.
 
 ## Why wrap data in an item?
 

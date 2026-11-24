@@ -15,7 +15,7 @@ using DataAugmentation
 
 tfm = ToEltype(Float32)
 item = ArrayItem(rand(Int, 10))
-apply(tfm, item)
+tfm(item)
 ```
 """
 struct ToEltype{T} <: Transform end
@@ -52,7 +52,7 @@ Preprocessing a 3D image with 3 color channels.
 using DataAugmentation, Images
 image = Image(rand(RGB, 20, 20, 20))
 tfms = ImageToTensor() |> Normalize((0.1, -0.2, -0.1), (1,1,1.))
-apply(tfms, image)
+tfms(image)
 ```
 
 """
@@ -127,6 +127,79 @@ function apply(tfm::NormalizeIntensity, item::ArrayItem; randstate = nothing)
     return ArrayItem(array)
 end
 
+# ### [`LinearTransformation`](@ref)
+
+"""
+    LinearTransformation(matrix; mean = zeros(eltype(matrix), size(matrix, 1)))
+
+Flattens an [`ArrayItem`](@ref) of length `D`, subtracts `mean`, multiplies the result by
+the `D × D` `matrix` and restores the original size, i.e. `matrix * (vec(x) - mean)`.
+Use it for whitening with a matrix computed offline from a dataset.
+
+The result has the promoted element type of the data, `matrix` and `mean`. This is the
+transformation of torchvision's `LinearTransformation` for a symmetric `matrix`, such as
+the ZCA whitening matrix; torchvision multiplies the row vector from the right, so pass
+the transpose of a non-symmetric torchvision matrix.
+
+Supports `apply!`.
+
+## Examples
+
+ZCA whitening of 4×4 single-channel samples:
+
+```julia
+using DataAugmentation, LinearAlgebra, Statistics
+
+samples = randn(Float32, 16, 1000)
+μ = vec(mean(samples; dims = 2))
+eig = eigen(Symmetric(cov(samples; dims = 2)))
+W = eig.vectors * Diagonal(1 ./ sqrt.(eig.values .+ 1f-5)) * eig.vectors'
+
+tfm = LinearTransformation(W; mean = μ)
+tfm(ArrayItem(randn(Float32, 4, 4)))
+```
+"""
+struct LinearTransformation{M<:AbstractMatrix, V<:AbstractVector} <: Transform
+    matrix::M
+    mean::V
+    function LinearTransformation(matrix::AbstractMatrix, mean::AbstractVector)
+        n = size(matrix, 1)
+        n == size(matrix, 2) ||
+            throw(DimensionMismatch("matrix must be square, got size $(size(matrix))"))
+        length(mean) == n ||
+            throw(DimensionMismatch("mean must have length $n, got length $(length(mean))"))
+        return new{typeof(matrix), typeof(mean)}(matrix, mean)
+    end
+end
+
+LinearTransformation(matrix::AbstractMatrix; mean::AbstractVector = zeros(eltype(matrix), size(matrix, 1))) =
+    LinearTransformation(matrix, mean)
+
+_lineartype(tfm::LinearTransformation, data) =
+    promote_type(eltype(tfm.matrix), eltype(tfm.mean), eltype(data))
+
+function _linear!(dst, tfm::LinearTransformation, src)
+    length(src) == size(tfm.matrix, 1) || throw(DimensionMismatch(
+        "item has $(length(src)) elements but the transformation matrix has size $(size(tfm.matrix))"))
+    mul!(vec(dst), tfm.matrix, vec(src) .- tfm.mean)
+    return dst
+end
+
+function apply(tfm::LinearTransformation, item::ArrayItem; randstate = nothing)
+    src = itemdata(item)
+    return ArrayItem(_linear!(Array{_lineartype(tfm, src)}(undef, size(src)), tfm, src))
+end
+
+function apply!(buf::ArrayItem, tfm::LinearTransformation, item::ArrayItem; randstate = nothing)
+    src = itemdata(item)
+    dst = itemdata(buf)
+    if size(dst) != size(src) || eltype(dst) != _lineartype(tfm, src) || Base.mightalias(dst, src)
+        return apply(tfm, item)
+    end
+    _linear!(dst, tfm, src)
+    return buf
+end
+
 # ### [`ImageToTensor`]
 
 """
@@ -146,7 +219,7 @@ using DataAugmentation, Images
 h, w = 40, 50
 image = Image(rand(RGB, h, w))
 tfm = ImageToTensor()
-apply(tfm, image) # ArrayItem in WHC format of size (50, 40, 3)
+tfm(image) # ArrayItem in WHC format of size (50, 40, 3)
 ```
 
 """
@@ -229,7 +302,7 @@ image = Image(rand(RGB, 20, 20))
 # Turn image to a WHC (width, height, channel) tensor and permute dimensions 2 and 1
 # to convert it to an HWC (height, width, channel) array
 tfms = ImageToTensor() |> PermuteDims(2, 1, 3)
-apply(tfms, image)
+tfms(image)
 ```
 
 """
@@ -258,7 +331,8 @@ an array item of size `(sz..., n)` with element type `T`. Supports [`apply!`](@r
 
 ```julia
 item = MaskMulti(rand(1:4, 100, 100), 1:4)
-apply(OneHot(), item)
+tfm = OneHot()
+tfm(item)
 ```
 """
 struct OneHot{T} <: Transform end
