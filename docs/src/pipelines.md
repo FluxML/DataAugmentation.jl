@@ -21,7 +21,7 @@ image = imresize(image, ratio = 196 / size(image, 1))
 For image classification only the image is transformed, since the label does not change. Training uses random transformations; validation uses deterministic ones, so that results are comparable between epochs.
 
 ```@example pipe
-train_tfm = Maybe(FlipX{2}()) |> RandomResizeCrop((128, 128)) |> AdjustBrightness(0.2)
+train_tfm = Maybe(FlipX()) |> RandomResizeCrop((128, 128)) |> AdjustBrightness(0.2)
 val_tfm = CenterResizeCrop((128, 128))
 
 showgrid([apply(train_tfm, Image(image)) for _ in 1:6]; ncol = 6, npad = 8)
@@ -48,20 +48,18 @@ labels[28:118, 122:146] .= 2
 labels[72:112, 14:95] .= 3
 
 mask = MaskMulti(labels, 1:3)
-mosaicview([showitems(Image(image)), showitems(mask)]; nrow = 1, npad = 8)
+showitems((Image(image), mask); maskbackground = 1)
 ```
 
-[`showitems`](@ref) draws a mask as a map of its classes, so we show the image and the mask next to each other. Applying a transformation to the tuple `(image, mask)` uses one random state for both. The mask is projected with nearest-neighbor interpolation, so the class labels are never blended. Color transformations like [`AdjustBrightness`](@ref) leave masks unchanged, so they can be part of the same pipeline:
+[`showitems`](@ref) blends the classes of the mask over the image, here leaving out the background class `1`. Applying a transformation to the tuple `(image, mask)` uses one random state for both. The mask is projected with nearest-neighbor interpolation, so the class labels are never blended. Color transformations like [`AdjustBrightness`](@ref) leave masks unchanged, so they can be part of the same pipeline:
 
 ```@example pipe
-tfm = Maybe(FlipX{2}()) |> Rotate(10) |> RandomResizeCrop((128, 128)) |> AdjustBrightness(0.2)
+tfm = Maybe(FlipX()) |> Rotate(10) |> RandomResizeCrop((128, 128)) |> AdjustBrightness(0.2)
 
-pairs = [apply(tfm, (Image(image), mask)) for _ in 1:4]
-mosaicview(vcat([showitems(i) for (i, _) in pairs], [showitems(m) for (_, m) in pairs]);
-           ncol = 4, rowmajor = true, npad = 8)
+showgrid([apply(tfm, (Image(image), mask)) for _ in 1:4]; ncol = 4, npad = 8, maskbackground = 1)
 ```
 
-The top row shows the transformed images, and the bottom row their masks, which were transformed in the same way.
+The masks still cover the lighthouse and the house, because they were transformed in the same way as the images.
 
 Preprocessing differs between the two items: [`ImageToTensor`](@ref) only works on images, and [`OneHot`](@ref) only on masks. So apply the tuple pipeline first, and prepare each item on its own:
 
@@ -90,7 +88,7 @@ showitems((Image(image), keypoints))
 Again, pass the image and the keypoints to `apply` together:
 
 ```@example pipe
-tfm = Maybe(FlipX{2}()) |> Rotate(10) |> RandomResizeCrop((128, 128))
+tfm = Maybe(FlipX()) |> Rotate(10) |> RandomResizeCrop((128, 128))
 
 showgrid([apply(tfm, (Image(image), keypoints)) for _ in 1:4]; ncol = 4, npad = 8)
 ```
@@ -105,7 +103,7 @@ inside = [all(1 .<= p .<= sz) for p in itemdata(tkeypoints)]
 
 ## 3D images
 
-Transformations that are defined for any number of dimensions work on volumes, too. The transformation has to match the dimensionality: use `FlipX{3}()` and a 3-dimensional crop size instead of `FlipX{2}()` and `(128, 128)`, and `Rotate(α, β, γ)` to rotate around all three axes. A volume is an array of colors like `Gray`, the same as for 2D images, and its segmentation is a [`MaskMulti`](@ref) of the same size.
+Transformations that are defined for any number of dimensions work on volumes, too. Flips like `FlipX()` adapt to the dimensionality of the item, while sizes have to match it: use a 3-dimensional crop size instead of `(128, 128)`, and `Rotate(α, β, γ)` to rotate around all three axes. A volume is an array of colors like `Gray`, the same as for 2D images, and its segmentation is a [`MaskMulti`](@ref) of the same size.
 
 Let's make a volume with a blob in it, and a mask that marks the blob:
 
@@ -119,7 +117,7 @@ mask3d = MaskMulti(segmentation, 1:2)
 The volume is interpolated linearly and the mask with nearest-neighbor interpolation, as in two dimensions. We can look at the middle slice of the results (with the offset axes of the cropped arrays removed by [`parent`](https://docs.julialang.org/en/v1/base/arrays/#Base.parent)):
 
 ```@example pipe
-tfm = Maybe(FlipX{3}()) |> Rotate(30, 30, 30) |> CenterCrop((32, 32, 32))
+tfm = Maybe(FlipX()) |> Rotate(30, 30, 30) |> CenterCrop((32, 32, 32))
 
 middleslice(item) = parent(itemdata(item))[:, :, 16]
 samples = [apply(tfm, (Image(volume), mask3d)) for _ in 1:4]

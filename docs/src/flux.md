@@ -10,14 +10,14 @@ Flux's convolutional layers, as well as the pretrained models of Metalhead.jl, e
 
 ## A transformation for each sample
 
-The usual augmentation of CIFAR10 images is to flip them horizontally, pad them by four pixels and crop a random region of the original size. We build it from a [`CenterCrop`](@ref) to the padded size, which pads images with black pixels, followed by a [`RandomCrop`](@ref):
+The usual augmentation of CIFAR10 images is to flip them horizontally, pad them by four pixels and crop a random region of the original size. The `padding` keyword of [`RandomCrop`](@ref) does the last two steps, and pads images with black pixels:
 
 ```@example flux
 using DataAugmentation, Images, MLUtils
 
 means, stds = (0.5, 0.5, 0.5), (0.25, 0.25, 0.25)
 
-train_tfm = Maybe(FlipX{2}()) |> CenterCrop((40, 40)) |> RandomCrop((32, 32)) |> PinOrigin() |>
+train_tfm = Maybe(FlipX()) |> RandomCrop((32, 32); padding = 4) |> PinOrigin() |>
     ImageToTensor() |> Normalize(means, stds)
 test_tfm = ImageToTensor() |> Normalize(means, stds)
 
@@ -64,13 +64,27 @@ test_loader = DataLoader(test_data; batchsize = 16, collate = true, parallel = t
 
 Without MLUtils, a comprehension and `stack` do the same for a single batch: `stack([augment(train_tfm, image) for image in images[1:16]])`.
 
-!!! warning "Do not use buffered transformations here"
+!!! warning "Buffered transformations in a data loader"
 
-    The result of a [`Buffered`](@ref) transformation is its buffer, which the next call overwrites (see [Buffering](buffering.md)). A loader stacks the observations of a batch only after all of them have been loaded, so every sample of the batch would be the last one. Use ordinary transformations with a data loader, which allocate the array of each sample anew.
+    The result of a [`Buffered`](@ref) transformation is its buffer, which the next call overwrites. A loader stacks the observations of a batch only after all of them have been loaded, so every sample of the batch would be the last one, and worker tasks would share the buffer. To reuse buffers in a loader, wrap the transformation in [`BufferedThreadsafe`](@ref) instead, which gives every task its own buffers and returns a copy. See [Buffering](buffering.md), also on when buffering pays off.
+
+## Mixing samples of a batch
+
+[`MixUp`](@ref) and [`CutMix`](@ref) combine pairs of samples and their labels, so they work on whole batches instead of single samples. Wrap a batch from the loader in an [`ImageBatch`](@ref) with the number of classes, which encodes the labels as one-hot columns. Here we choose one of the two for every batch, as is common:
+
+```@example flux
+mix = OneOf([MixUp(), CutMix()])
+
+x, y = first(train_loader)
+xmix, ymix = itemdata(apply(mix, ImageBatch(x, y; num_classes = 10)))
+size(xmix), size(ymix)
+```
+
+The labels are now soft: each column holds the weights of the two classes mixed in the sample.
 
 ## Training
 
-The batches are ordinary arrays of `Float32`, so the training loop is the same as without augmentation. This is a small example with Flux (not run here). Define the device once, move the model to it, and move every batch to it inside the loop. Without a GPU, `gpu_device()` is the CPU:
+The batches are ordinary arrays of `Float32`, so the training loop is the same as without augmentation. This is a small example with Flux (not run here). Define the device once, move the model to it, and move every batch to it inside the loop, after mixing it on the CPU. Without a GPU, `gpu_device()` is the CPU:
 
 ```julia
 using Flux
@@ -86,7 +100,8 @@ opt_state = Flux.setup(Adam(1e-3), model)
 
 for epoch in 1:10
     for (x, y) in train_loader
-        x, y = device(x), device(Flux.onehotbatch(y, 1:10))
+        x, y = itemdata(apply(mix, ImageBatch(x, y; num_classes = 10)))
+        x, y = device(x), device(y)
         loss, grads = Flux.withgradient(model) do m
             Flux.logitcrossentropy(m(x), y)
         end
@@ -99,12 +114,12 @@ accuracy = sum(sum(Flux.onecold(cpu(model(device(x)))) .== y) for (x, y) in test
 
 ## Segmentation
 
-For tasks with a target that needs to be transformed together with the input, the function of a sample returns both. As described in [Pipelines](pipelines.md), the image and the mask go through the same transformation, and are then prepared separately:
+For tasks with a target that needs to be transformed together with the input, the function of a sample returns both. As described in [Pipelines](pipelines.md), the image and the mask go through the same transformation, and are then prepared separately. The padding of a mask repeats the labels at its edges:
 
 ```@example flux
 masks = [rand(1:3, 32, 32) for _ in 1:64]
 
-seg_tfm = Maybe(FlipX{2}()) |> CenterCrop((40, 40)) |> RandomCrop((32, 32)) |> PinOrigin()
+seg_tfm = Maybe(FlipX()) |> RandomCrop((32, 32); padding = 4) |> PinOrigin()
 mask_prep = OneHot() |> PermuteDims(2, 1, 3)
 
 function augment_pair(image, labels)
