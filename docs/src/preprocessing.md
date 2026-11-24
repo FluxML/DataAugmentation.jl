@@ -9,6 +9,7 @@ This library also implements some general transformations useful for getting dat
 - [`PermuteDims`](@ref)`(perm)` permutes the dimensions of an `ArrayItem`, for example to turn `WHC` into `HWC`.
 - [`Normalize`](@ref)`(means, stds)` normalizes image tensors along the channel dimension.
 - [`NormalizeIntensity`](@ref)`()` normalizes an array with its own mean and standard deviation.
+- [`LinearTransformation`](@ref)`(matrix; mean)` subtracts `mean` from a flattened array and multiplies it by a square `matrix`, for example to whiten it.
 - [`OneHot`](@ref) to one-hot encode multi-class masks ([`MaskMulti`](@ref)s); [`onehot`](@ref)`(x, n)` one-hot encodes a single class index.
 - [`MapElem`](@ref)`(f)` applies a function to every element of an array item.
 

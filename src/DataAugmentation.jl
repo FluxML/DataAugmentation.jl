@@ -11,7 +11,7 @@ using ImageTransformations: center, _center, box_extrapolation, warp!
 using Interpolations
 using MosaicViews: mosaicview
 using OffsetArrays: OffsetArray
-using LinearAlgebra: I, det
+using LinearAlgebra: I, det, mul!
 using Random
 using Rotations
 using StaticArrays
@@ -50,6 +50,7 @@ include("./photometricintensity.jl")
 include("./photometricdistort.jl")
 include("./randomerasing.jl")
 include("./mixing.jl")
+include("./temporalsubsample.jl")
 include("testing.jl")
 include("./visualization.jl")
 
@@ -71,6 +72,8 @@ export Item,
     PermuteDims,
     Normalize,
     NormalizeIntensity,
+    LinearTransformation,
+    UniformTemporalSubsample,
     MaskMulti,
     MaskBinary,
     BoundingBox,
