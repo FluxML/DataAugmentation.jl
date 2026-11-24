@@ -39,3 +39,5 @@ across aligned items.
 - [Items](items.md) explains what can be wrapped in an item.
 - [Transformations](transformations.md) shows how to compose transformations and randomize them, and lists the available ones.
 - The [Gallery](gallery.md) shows what the spatial transformations do.
+- [Pipelines](pipelines.md) puts them together for images, segmentation masks, keypoints, bounding boxes, and volumes.
+- [Using with Flux](flux.md) feeds augmented batches to a model.
