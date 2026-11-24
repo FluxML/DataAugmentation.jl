@@ -10,7 +10,7 @@ Transformations are applied to [items](items.md) with [`apply`](@ref)`(tfm, item
 Using transformations is easy. Simply `compose` them with `|>`:
 
 ```@example tsm
-tfm = Rotate(10) |> ScaleRatio((0.7,0.1,1.2)) |> FlipX{2}() |> Crop((128, 128))
+tfm = Rotate(10) |> ScaleRatio((0.7,0.1,1.2)) |> FlipX() |> Crop((128, 128))
 ```
 
 [Projective transformations](projective.md) are fused into a single, more efficient transformation; the rest are applied one after the other.
@@ -19,7 +19,7 @@ tfm = Rotate(10) |> ScaleRatio((0.7,0.1,1.2)) |> FlipX{2}() |> Crop((128, 128))
 
 Affine transformations are a kind of [projective transformation](projective.md) that can be composed very efficiently. They apply to [`Image`](@ref)s and the keypoint-based items alike, in 2 and 3 dimensions.
 
-- [`FlipX`](@ref), [`FlipY`](@ref) and [`FlipZ`](@ref) flip the data along an axis, for example `FlipX{2}()` for 2D data; [`FlipDim`](@ref)`{N}(dim)` flips along any dimension.
+- [`FlipX`](@ref)`()`, [`FlipY`](@ref)`()` and [`FlipZ`](@ref)`()` flip along a named axis according to the item's dimensionality. Use [`FlipDim`](@ref)`{N}(dim)` to specify the dimension directly.
 - [`Reflect`](@ref)`(γ)` reflects 2D data around its center by an angle chosen uniformly from `[-γ, γ]` degrees.
 - [`Rotate`](@ref)`(γ)` rotates 2D data around its center by an angle chosen uniformly from `[-γ, γ]` degrees; `Rotate(α, β, γ)` rotates 3D data, and [`RotateX`](@ref), [`RotateY`](@ref) and [`RotateZ`](@ref) rotate around a single axis.
 - [`ScaleRatio`](@ref)`(ratios)` scales the sides by the given ratios, [`ScaleFixed`](@ref)`(sizes)` scales them to the given sizes disregarding the aspect ratio, and [`ScaleKeepAspect`](@ref)`(minlengths)` scales so that the sides are at least `minlengths`, keeping the aspect ratio. [`Zoom`](@ref)`(scales)` zooms in by a factor chosen from the interval `scales`.
@@ -49,7 +49,7 @@ Let's say we have an image classification dataset. For most datasets, horizontal
 
 ```@example tsm
 item = Image(testimage("lighthouse"))
-tfm = Maybe(FlipX{2}())
+tfm = Maybe(FlipX())
 titems = [apply(tfm, item) for _ in 1:8]
 showgrid(titems; ncol = 4, npad = 16)
 ```

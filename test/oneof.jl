@@ -28,7 +28,19 @@ end
     @test apply(oneof, item; randstate = (1, getrandstate(tfm))) isa Image
     @test apply(oneof, item; randstate = (2, nothing)) isa Image
 
-    @test OneOf([FlipX{2}(), FlipY{2}()], Categorical([0.2, 0.8])) isa DataAugmentation.OneOfProjective
+    flipx, flipy = FlipX(), FlipY()
+    horizontal = itemdata(apply(flipx, item))
+    vertical = itemdata(apply(flipy, item))
+
+    maybe = Maybe(flipx)
+    @test maybe isa DataAugmentation.OneOfProjective
+    @test itemdata(apply(maybe, item; randstate = (1, nothing))) == horizontal
+    @test itemdata(apply(maybe, item; randstate = (2, nothing))) == itemdata(item)
+
+    oneof = OneOf([flipx, flipy], Categorical([0.2, 0.8]))
+    @test oneof isa DataAugmentation.OneOfProjective
+    @test itemdata(apply(oneof, item; randstate = (1, nothing))) == horizontal
+    @test itemdata(apply(oneof, item; randstate = (2, nothing))) == vertical
 end
 
 
