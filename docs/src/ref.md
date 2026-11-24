@@ -110,6 +110,15 @@ RandomChannelPermutation
 JPEG
 ```
 
+## Policy-based augmentations
+
+```@docs
+RandAugment
+TrivialAugmentWide
+AutoAugment
+AugMix
+```
+
 ## Erasing and batch mixing
 
 ```@docs
@@ -129,6 +138,7 @@ UniformTemporalSubsample
 ```@docs
 Maybe
 OneOf
+RandomOrder
 ```
 
 ## Buffering
