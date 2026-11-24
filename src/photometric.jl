@@ -1,6 +1,6 @@
 abstract type PhotometricTransform <: Transform end
 
-const NonColorItem = Union{MaskMulti, MaskBinary, Keypoints}
+const NonColorItem = Union{MaskMulti, MaskBinary, Keypoints, BoundingBoxes}
 
 _photometric_uniform(lo, hi) = lo == hi ? float(lo) : Uniform(float(lo), float(hi))
 _sample_photometric(value::Real) = value

@@ -17,6 +17,7 @@ MaskBinary
 MaskMulti
 Keypoints
 BoundingBox
+BoundingBoxes
 Polygon
 ArrayItem
 TabularItem
@@ -89,6 +90,16 @@ ResizePadDivisible
 ```@docs
 ClampKeypoints
 SanitizeKeypoints
+```
+
+## Bounding boxes
+
+```@docs
+box_convert
+ClampBoundingBoxes
+SanitizeBoundingBoxes
+masks_to_boxes
+box_iou
 ```
 
 ## Color transformations

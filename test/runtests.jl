@@ -18,6 +18,7 @@ include("imports.jl")
         "items/image.jl",
         "items/keypoints.jl",
         "keypointtransforms.jl",
+        "boundingboxes.jl",
         "items/mask.jl",
         "preprocessing.jl",
         "oneof.jl",

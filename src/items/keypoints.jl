@@ -151,14 +151,7 @@ Base.show(io::IO, item::BoundingBox{N, T}) where {N, T} =
 
 function showitem!(img, bbox::BoundingBox{2})
     ul, br = itemdata(bbox)
-    points = [
-        ul,
-        SVector(br[1], ul[2]),
-        br,
-        SVector(ul[1], br[2]),
-    ]
-    showpolygon!(img, points, RGBA(1, 0, 0, 1))
-    return img
+    return showbox!(img, ul, br)
 end
 
 
