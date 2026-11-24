@@ -15,8 +15,21 @@ titem = apply(btfm, item)  # creates the buffer
 titem = apply(btfm, item)  # reuses it, using apply! internally
 ```
 
-Note that for transformations that support `apply!` the result is the buffer itself, so it is overwritten by the next call to `apply`. Copy it if you need to keep it.
-
-Since `Buffered` only stores one buffer, you may run into problems when using it in a multi-threading context where different threads invalidate the buffer before it can be used. In that case, you can use [`BufferedThreadsafe`](@ref), a version of `Buffered` that keeps a separate buffer for every thread.
-
 To support `apply!` in your own transformations, see [Defining transformations](tfminterface.md#Supporting-buffering).
+
+## Who owns the result
+
+For transformations that support `apply!`, the item returned by `apply(btfm, item)` is the buffer itself, so it is overwritten by the next call. Copy it if you need to keep it, or create the wrapper with `copy = true`:
+
+```julia
+btfm = Buffered(tfm; copy = true)
+titem = apply(btfm, item)  # the buffers of all steps are reused, titem is a fresh copy
+```
+
+With `copy = true` the intermediate steps of a [`Sequence`](@ref) still reuse their buffers; only the final result is copied. This matters whenever several results are alive at the same time. A data loader that stacks the samples of a batch after loading all of them, such as `DataLoader(...; collate = true)` from MLUtils.jl, would otherwise receive the same array for every sample and silently build a batch that contains the last sample repeated.
+
+## Multi-threading
+
+Since `Buffered` only stores one set of buffers, don't share it between threads or tasks. Use [`BufferedThreadsafe`](@ref) instead: every concurrent call checks out its own buffers from a pool that grows on demand, and the result is always a copy that the caller owns. It is therefore safe in parallel loaders and with `collate = true`.
+
+Buffering mainly saves allocations (and so garbage collection), not necessarily time: for a single transformation on one thread, it can cost as much in copies as it saves in allocations. Measure with your pipeline before relying on it.

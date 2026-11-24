@@ -42,42 +42,43 @@ end
 # ## Buffered transforms
 
 """
-    Buffered(tfm)
+    Buffered(tfm; copy = false)
 
-Wrapper transformation that applies `tfm` with `apply!`, reusing a buffer that is
-created the first time the wrapper is applied (one buffer per item type). The
-returned item is that buffer, so it is overwritten by the next `apply`.
+Wrapper transformation that applies `tfm` with `apply!`, reusing buffers that are
+created the first time the wrapper is applied (one set of buffers per item type).
 
-Only one buffer is kept, so don't share a `Buffered` between threads; use
+By default the returned item is the final buffer itself, so the next `apply`
+overwrites it. This is a problem for code that keeps several results alive at the
+same time, like a data loader that collates a batch after loading all its samples
+(e.g. `DataLoader(...; collate = true)` from MLUtils.jl). With `copy = true` the
+buffers are still reused internally, but the returned item is a fresh copy that
+the caller owns.
+
+Only one set of buffers is kept, so don't share a `Buffered` between threads; use
 [`BufferedThreadsafe`](@ref) instead.
 """
 mutable struct Buffered{T<:Transform} <: Transform
     tfm::T
     buffers::Dict
-    Buffered(tfm::T, buffer = nothing) where T = new{T}(tfm, Dict())
+    copy::Bool
+    Buffered(tfm::T; copy::Bool = false) where T = new{T}(tfm, Dict(), copy)
 end
 
 getrandstate(buffered::Buffered) = getrandstate(buffered.tfm)
 
-function apply(buffered::Buffered, items::T; randstate = getrandstate(buffered)) where T
-    buf = get(buffered.buffers, T, nothing)
-    if isnothing(buf)
-        buf = makebuffer(buffered.tfm, items)
-        buffered.buffers[T] = buf
-    end
+function getbuffer!(buffered::Buffered, items::T) where T
+    return get!(() -> makebuffer(buffered.tfm, items), buffered.buffers, T)
+end
 
-    titems = apply!(buf, buffered.tfm, items, randstate = randstate)
-    return titems
+function apply(buffered::Buffered, items; randstate = getrandstate(buffered))
+    buf = getbuffer!(buffered, items)
+    res = apply!(buf, buffered.tfm, items; randstate = randstate)
+    return buffered.copy ? copyitem(res) : res
 end
 
 
-function apply!(buf, buffered::Buffered, items::T; randstate = getrandstate(buffered)) where T
-    buf = get(buffered.buffers, T, nothing)
-    if isnothing(buf)
-        buf = makebuffer(buffered.tfm, items)
-        buffered.buffers[T] = buf
-    end
-    res = apply!(buf, buffered.tfm, items; randstate = randstate)
+function apply!(buf, buffered::Buffered, items; randstate = getrandstate(buffered))
+    res = apply!(getbuffer!(buffered, items), buffered.tfm, items; randstate = randstate)
     copyitemdata!(buf, res)
     return buf
 end
@@ -86,30 +87,46 @@ end
 """
     BufferedThreadsafe(tfm; n = Threads.nthreads())
 
-Like [`Buffered`](@ref), but keeps a separate buffer for each of `n` threads, so it
-can be applied from multiple threads.
+Like [`Buffered`](@ref), but can be applied from multiple threads and tasks at the
+same time. Each concurrent call checks out its own buffers from a pool that grows on
+demand (`n` is the number of buffer sets created upfront) and returns them when done.
+
+Since the buffers go back to the pool, the item returned by `apply` is always a copy
+that the caller owns, and it is safe to keep several results alive at once.
+`apply!(buf, btfm, item)` writes the result into `buf` instead.
 """
-struct BufferedThreadsafe <: Transform
-    buffereds::Vector{Buffered}
-    function BufferedThreadsafe(tfm; n = Threads.nthreads())
-        @assert n >= 1
-        return new([Buffered(tfm) for _ in 1:n])
+struct BufferedThreadsafe{T<:Transform} <: Transform
+    tfm::T
+    pool::Vector{Buffered{T}}
+    lock::ReentrantLock
+    function BufferedThreadsafe(tfm::T; n = Threads.nthreads()) where T<:Transform
+        @assert n >= 0
+        return new{T}(tfm, [Buffered(tfm) for _ in 1:n], ReentrantLock())
     end
 end
 
-getrandstate(btfm::BufferedThreadsafe) = getrandstate(btfm.buffereds[1])
-Base.show(io::IO, bt::BufferedThreadsafe) = print(io, "BufferedThreadsafe($(bt.buffereds[1].tfm))")
+getrandstate(btfm::BufferedThreadsafe) = getrandstate(btfm.tfm)
+Base.show(io::IO, bt::BufferedThreadsafe) = print(io, "BufferedThreadsafe($(bt.tfm))")
 
-
-function apply(bufferedt::BufferedThreadsafe, items; kwargs...)
-    bufferedthread = bufferedt.buffereds[Threads.threadid()]
-    return apply(bufferedthread, items; kwargs...)
+function withbuffered(f, bt::BufferedThreadsafe)
+    buffered = @lock bt.lock isempty(bt.pool) ? Buffered(bt.tfm) : pop!(bt.pool)
+    try
+        return f(buffered)
+    finally
+        @lock bt.lock push!(bt.pool, buffered)
+    end
 end
 
+function apply(bt::BufferedThreadsafe, items; randstate = getrandstate(bt))
+    return withbuffered(bt) do buffered
+        copyitem(apply(buffered, items; randstate = randstate))
+    end
+end
 
-function apply!(buf, bufferedt::BufferedThreadsafe, items; kwargs...)
-    bufferedthread = bufferedt.buffereds[Threads.threadid()]
-    return apply!(buf, bufferedthread, items; kwargs...)
+function apply!(buf, bt::BufferedThreadsafe, items; randstate = getrandstate(bt))
+    return withbuffered(bt) do buffered
+        apply!(buf, buffered, items; randstate = randstate)
+    end
 end
 
 # Resolve ambiguities with the generic methods for wrapped items and collections of items.
@@ -133,3 +150,10 @@ copyitemdata!(buf::I, item::I) where I<:Item = (copy!(itemdata(buf), itemdata(it
 copyitemdata!(bufw::I, itemw::I) where I<:ItemWrapper = (copyitemdata!(getwrapped(bufw), getwrapped(itemw)); return bufw)
 copyitemdata!(bufs::T, items::T) where T<:Tuple = ((copyitemdata!.(bufs, items); bufs); return bufs)
 copyitemdata!(bufs::T, items::T) where T<:AbstractVector = ((copyitemdata!.(bufs, items); bufs); return bufs)
+
+copyitem(item::Item) = setdata(item, copydata(itemdata(item)))
+copyitem(itemw::ItemWrapper) = setwrapped(itemw, copyitem(getwrapped(itemw)))
+copyitem(items::Union{Tuple, AbstractVector}) = map(copyitem, items)
+
+copydata(data::AbstractArray) = copy(data)
+copydata(data) = data
