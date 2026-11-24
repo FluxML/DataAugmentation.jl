@@ -66,25 +66,69 @@ end
 
 @testset "`BufferedThreadsafe`" begin
     newitem() = ArrayItem(randn(5, 5))
-    T = typeof(newitem())
-    # buffer should be created
-    tbt = BufferedThreadsafe(MapElem(x -> x + 1))
-    tb = tbt.buffereds[1]
-    @test !haskey(tb.buffers, T)
-    @test_nowarn apply(tb, newitem())
-    @test haskey(tb.buffers, T)
+    tfm = MapElem(x -> x + 1)
+    tbt = BufferedThreadsafe(tfm; n = 2)
+    @test length(tbt.pool) == 2
 
-    # buffer should change
-    buf = deepcopy(tb.buffers[T])
-    @test_nowarn apply(tb, newitem())
-    @test !(buf.data ≈ tb.buffers[T].data)
+    # the result is a copy, not the buffer
+    item1, item2 = newitem(), newitem()
+    res1 = apply(tbt, item1)
+    res1_copy = deepcopy(res1)
+    res2 = apply(tbt, item2)
+    @test res1 !== res2
+    @test itemdata(res1) == itemdata(res1_copy)
+    @test itemdata(res2) ≈ itemdata(item2) .+ 1
+    @test length(tbt.pool) == 2  # buffers are returned to the pool
 
-    # inplace version
-    buf2 = deepcopy(buf)
-    @test_nowarn apply!(buf, tb, newitem())
-    @test !(buf2.data ≈ tb.buffers[T].data)
+    # inplace version writes into the given buffer
+    buf = apply(tfm, newitem())
+    @test apply!(buf, tbt, item1) === buf
+    @test itemdata(buf) ≈ itemdata(item1) .+ 1
 
     testapply(BufferedThreadsafe(MapElem(x -> x + one(typeof(x)))), ArrayItem)
+end
+
+@testset "Ownership of buffered results" begin
+    tfm = MapElem(x -> x + 1) |> MapElem(x -> 2x)
+    items = [ArrayItem(fill(Float64(i), 4, 4)) for i in 1:8]
+    expected = [2 * (i + 1) for i in 1:8]
+
+    @testset "Buffered without copy returns the buffer" begin
+        btfm = Buffered(tfm)
+        res = [apply(btfm, item) for item in items]
+        @test all(r -> r === res[1], res)
+    end
+
+    @testset "$name" for (name, btfm) in (
+            "Buffered(copy = true)" => Buffered(tfm; copy = true),
+            "BufferedThreadsafe" => BufferedThreadsafe(tfm),
+        )
+        res = [apply(btfm, item) for item in items]
+        @test [itemdata(r)[1] for r in res] == expected
+        @test allunique(objectid(itemdata(r)) for r in res)
+
+        # tuples of items and item wrappers
+        bbox = BoundingBox([SVector(10.0, 10.0), SVector(40.0, 50.0)], (64, 64))
+        ttfm = ScaleRatio((0.5, 0.5))
+        tbtfm = btfm isa Buffered ? Buffered(ttfm; copy = true) : BufferedThreadsafe(ttfm)
+        bboxes = [BoundingBox([SVector(10.0 * i, 10.0), SVector(40.0, 50.0)], (64, 64)) for i in 1:4]
+        tres = [apply(tbtfm, b) for b in bboxes]
+        @test all(itemdata(t) ≈ itemdata(apply(ttfm, b)) for (t, b) in zip(tres, bboxes))
+        pair = [apply(tbtfm, (bboxes[i], bboxes[i + 1])) for i in 1:3]
+        @test all(itemdata(p[1]) ≈ itemdata(apply(ttfm, bboxes[i])) for (i, p) in enumerate(pair))
+    end
+end
+
+@testset "`BufferedThreadsafe` from many tasks" begin
+    tfm = MapElem(x -> x + 1)
+    btfm = BufferedThreadsafe(tfm; n = 1)
+    items = [ArrayItem(fill(Float64(i), 8, 8)) for i in 1:64]
+    res = Vector{Any}(undef, length(items))
+    @sync for i in eachindex(items)
+        Threads.@spawn res[i] = apply(btfm, items[i])
+    end
+    @test all(itemdata(res[i]) == fill(Float64(i + 1), 8, 8) for i in eachindex(items))
+    @test length(btfm.pool) >= 1
 end
 
 @testset "Buffered item wrappers" begin
