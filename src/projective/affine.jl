@@ -277,36 +277,57 @@ struct FlipDim{N} <: ProjectiveTransform
     FlipDim{N}(dim) where N = 1 <= dim <= N ? new{N}(dim) : error("invalid dimension")
 end
 
-"""
-    FlipX{N}()
+struct FlipAxis <: ProjectiveTransform
+    axis::Symbol
+end
 
-Flip `N` dimensional data along the x-axis. 2D images use (r, c) = (y, x)
-convention such that x-axis flips occur along the second dimension. For N >= 3,
-x-axis flips occur along the first dimension.
+function getprojection(tfm::FlipAxis, bounds::Bounds{N}; randstate = nothing) where N
+    dims = N == 2 ? (x = 2, y = 1, z = 3) : (x = 1, y = 2, z = 3)
+    dim = dims[tfm.axis]
+    dim <= N || throw(ArgumentError("cannot flip the $(tfm.axis)-axis of $N-dimensional data"))
+    return getprojection(FlipDim{N}(dim), bounds; randstate)
+end
+
+"""
+    FlipX()
+
+Flip data along the x-axis. In 2D, the layout is `(row, col) = (y, x)`,
+so this flips dimension 2. For other dimensionalities, it flips dimension 1.
+
+The `FlipX{N}()` form is kept for compatibility and also uses the item's dimensionality.
 """
 struct FlipX{N}
-    FlipX{N}() where N = FlipDim{N}(N==2 ? 2 : 1)
+    FlipX{N}() where N = FlipX()
 end
 
-"""
-    FlipY{N}()
+FlipX() = FlipAxis(:x)
 
-Flip `N` dimensional data along the y-axis. 2D images use (r, c) = (y, x)
-convention such that y-axis flips occur along the first dimension. For N >= 3,
-y-axis flips occur along the second dimension.
+"""
+    FlipY()
+
+Flip data along the y-axis. In 2D, the layout is `(row, col) = (y, x)`,
+so this flips dimension 1. For three or more dimensions, it flips dimension 2.
+
+The `FlipY{N}()` form is kept for compatibility and also uses the item's dimensionality.
 """
 struct FlipY{N}
-    FlipY{N}() where N = FlipDim{N}(N==2 ? 1 : 2)
+    FlipY{N}() where N = FlipY()
 end
 
-"""
-    FlipZ{N}()
+FlipY() = FlipAxis(:y)
 
-Flip `N` dimensional data along the z-axis.
+"""
+    FlipZ()
+
+Flip data along the z-axis (dimension 3). The item must have at least three dimensions.
+
+The `FlipZ{N}()` form is kept for compatibility and also uses the item's dimensionality.
 """
 struct FlipZ{N}
-    FlipZ{N}() where N = FlipDim{N}(3)
+    FlipZ{N}() where N = FlipZ()
 end
+
+FlipZ() = FlipAxis(:z)
 
 function getprojection(tfm::FlipDim{N}, bounds::Bounds{N}; randstate = nothing) where N
     arr = 1I(N)

@@ -141,8 +141,8 @@ Flip the data on the horizontally and vertically, respectively. More generally, 
 
 ```@example deps
 tfms = [
-    FlipX{2}(),
-    FlipY{2}(),
+    FlipX(),
+    FlipY(),
     Reflect(30),
 ]
 showgrid([apply(tfm, (image, bbox)) for tfm in tfms]; ncol=6, npad=8)

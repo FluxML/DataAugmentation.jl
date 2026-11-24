@@ -244,53 +244,60 @@ include("../imports.jl")
 
 
     @testset "FlipX 2D correct indices" begin
-        tfm = FlipX{2}() |> RandomCrop((10,10)) |> PinOrigin()
         img = rand(RGB, 10, 10)
         item = Image(img)
-        @test_nowarn titem = apply(tfm, item)
-        titem = apply(tfm, item)
-        @test itemdata(titem) == img[:, end:-1:1]
+        for flip in (FlipX(), FlipX{2}(), FlipX{3}())
+            tfm = flip |> RandomCrop((10, 10)) |> PinOrigin()
+            @test itemdata(apply(tfm, item)) == img[:, end:-1:1]
+        end
     end
 
     @testset "FlipY 2D correct indices" begin
-        tfm = FlipY{2}() |> RandomCrop((10,10)) |> PinOrigin()
         img = rand(RGB, 10, 10)
         item = Image(img)
-        @test_nowarn titem = apply(tfm, item)
-        titem = apply(tfm, item)
-        @test itemdata(titem) == img[end:-1:1, :]
+        for flip in (FlipY(), FlipY{2}())
+            tfm = flip |> RandomCrop((10, 10)) |> PinOrigin()
+            @test itemdata(apply(tfm, item)) == img[end:-1:1, :]
+        end
     end
 
 
     @testset "FlipX 3D correct indices" begin
-        tfm = FlipX{3}() |> RandomCrop((10,10,10)) |> PinOrigin()
         img = rand(RGB, 10, 10, 10)
         item = Image(img)
-        @test_nowarn titem = apply(tfm, item)
-        titem = apply(tfm, item)
-        @test itemdata(titem) == img[end:-1:1, :, :]
+        for flip in (FlipX(), FlipX{3}())
+            tfm = flip |> RandomCrop((10, 10, 10)) |> PinOrigin()
+            @test itemdata(apply(tfm, item)) == img[end:-1:1, :, :]
+        end
     end
 
     @testset "FlipY 3D correct indices" begin
-        tfm = FlipY{3}() |> RandomCrop((10,10,10)) |> PinOrigin()
         img = rand(RGB, 10, 10, 10)
         item = Image(img)
-        @test_nowarn titem = apply(tfm, item)
-        titem = apply(tfm, item)
-        @test itemdata(titem) == img[:, end:-1:1, :]
+        for flip in (FlipY(), FlipY{3}())
+            tfm = flip |> RandomCrop((10, 10, 10)) |> PinOrigin()
+            @test itemdata(apply(tfm, item)) == img[:, end:-1:1, :]
+        end
     end
 
     @testset "FlipZ 3D correct indices" begin
-        tfm = FlipZ{3}() |> RandomCrop((10,10,10)) |> PinOrigin()
         img = rand(RGB, 10, 10, 10)
         item = Image(img)
-        @test_nowarn titem = apply(tfm, item)
-        titem = apply(tfm, item)
-        @test itemdata(titem) == img[:, :, end:-1:1]
+        for flip in (FlipZ(), FlipZ{3}())
+            tfm = flip |> RandomCrop((10, 10, 10)) |> PinOrigin()
+            @test itemdata(apply(tfm, item)) == img[:, :, end:-1:1]
+        end
+    end
+
+    @testset "FlipZ on 2D data" begin
+        item = Image(rand(RGB, 10, 10))
+        for flip in (FlipZ(), FlipZ{2}())
+            @test_throws ArgumentError("cannot flip the z-axis of 2-dimensional data") apply(flip, item)
+        end
     end
 
     @testset "Double flip is identity" begin
-        tfm = FlipZ{3}() |> FlipZ{3}() |> RandomCrop((10,10,10)) |> PinOrigin()
+        tfm = FlipZ() |> FlipZ() |> RandomCrop((10, 10, 10)) |> PinOrigin()
         img = rand(RGB, 10, 10, 10)
         item = Image(img)
         @test_nowarn titem = apply(tfm, item)
@@ -304,8 +311,8 @@ end
     @testset "2D" begin
         tfms = compose(
             Rotate(10),
-            FlipX{2}(),
-            FlipY{2}(),
+            FlipX(),
+            FlipY(),
             ScaleRatio((.8, .8)),
             WarpAffine(0.1),
             Zoom((1., 1.2)),
@@ -324,9 +331,9 @@ end
         )
 
         tfms = compose(
-            FlipX{3}(),
-            FlipY{3}(),
-            FlipZ{3}(),
+            FlipX(),
+            FlipY(),
+            FlipZ(),
             ScaleFixed((30, 40, 50)),
             Rotate(10, 20, 30),
             ScaleRatio((.8, .8, .8)),
