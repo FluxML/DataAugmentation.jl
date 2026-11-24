@@ -226,8 +226,8 @@ Preprocessing an image with 3 color channels.
 using DataAugmentation, Images
 image = Image(rand(RGB, 20, 20))
 
-# Turn image to tensor and permute dimensions 2 and 1
-# to convert HWC (height, width, channel) array to WHC (width, height, channel)
+# Turn image to a WHC (width, height, channel) tensor and permute dimensions 2 and 1
+# to convert it to an HWC (height, width, channel) array
 tfms = ImageToTensor() |> PermuteDims(2, 1, 3)
 apply(tfms, image)
 ```

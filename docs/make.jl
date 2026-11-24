@@ -12,7 +12,9 @@ makedocs(;
             "Items" => "items.md",
             "Transformations" => "transformations.md",
             "Gallery" => "gallery.md",
+            "Pipelines" => "pipelines.md",
             "Preprocessing" => "preprocessing.md",
+            "Using with Flux" => "flux.md",
             "Buffering" => "buffering.md",
         ],
         "Concepts" => [

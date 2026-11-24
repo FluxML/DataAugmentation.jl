@@ -28,7 +28,9 @@ Pkg.add("DataAugmentation")
     - [Items](items.md): the containers for your data.
     - [Transformations](transformations.md): composing and randomizing transformations, and an overview of those that are available.
     - [Gallery](gallery.md): what the spatial transformations look like.
+    - [Pipelines](pipelines.md): complete pipelines for images, segmentation masks, keypoints and 3D images.
     - [Preprocessing](preprocessing.md): getting data ready to be put into a model.
+    - [Using with Flux](flux.md): data loading, batching and training with augmented data.
     - [Buffering](buffering.md): reusing output buffers for speed.
 - **Concepts**: why the library looks the way it does.
     - [Design](design.md): stochasticity, composition and buffering.
