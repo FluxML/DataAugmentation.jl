@@ -4,15 +4,16 @@
                     trials = 40)
 
 Crop a detection sample to a randomly selected 2D window. Apply to a tuple
-containing the image and its [`BoundingBox`](@ref) items, individually or in a
-vector, together with any aligned masks or keypoints. A window is accepted if
-it contains the center of a box whose intersection over union with the window
-meets the sampled threshold.
+containing the image, its [`BoundingBoxes`](@ref) collection or individual
+[`BoundingBox`](@ref) items, and any aligned masks or keypoints. Individual boxes
+can also be grouped in a vector. A window is accepted if it contains the center
+of a box whose intersection over union with the window meets the sampled threshold.
 
 Box corners are continuous coordinates in the pixel-center system, so a window
 of pixels `a:b` spans `a - 0.5` to `b + 0.5`. Boxes with centers inside the crop
-are clipped to these edges. Other boxes are
-collapsed to zero area so that their positions in the sample are preserved.
+are clipped to these edges. Other boxes are collapsed to zero area so that
+their positions and labels are preserved. Use [`SanitizeBoundingBoxes`](@ref)
+to remove collapsed boxes and their labels from a `BoundingBoxes` collection.
 A threshold of `1` keeps the full sample, as does running out of trials or
 applying the transform to a sample without boxes.
 """
@@ -43,29 +44,28 @@ getrandstate(::RandomIoUCrop) = rand(UInt64)
 
 _detection_boxes(item) = ()
 _detection_boxes(box::BoundingBox{2}) = (box,)
+_detection_boxes(boxes::BoundingBoxes) = (boxes,)
 _detection_boxes(items::Union{Tuple, AbstractVector}) = Iterators.flatten(map(_detection_boxes, items))
 
-# Pixel `i` is centered at coordinate `i`, so a window of pixels spans half a pixel
-# beyond its first and last pixel centers. Boxes are continuous rectangles.
-_crop_edges(crop::Bounds{2}) = SVector(first.(crop.rs)) .- 0.5, SVector(last.(crop.rs)) .+ 0.5
+_detection_corners(box::BoundingBox{2}) = (itemdata(box),)
+_detection_corners(boxes::BoundingBoxes) = (_box_corners(boxes, i) for i in 1:length(boxes))
 
-function _center_in_crop(lo, hi, crop::Bounds{2})
-    lower, upper = _crop_edges(crop)
-    center = (lo + hi) / 2
+function _center_in_crop(lo, hi, lower, upper)
+    center = lo / 2 + hi / 2
     return all(lower .<= center .< upper)
 end
 
 function _meets_iou_threshold(box, crop::Bounds{2}, threshold)
     lo, hi = box
-    _center_in_crop(lo, hi, crop) || return false
-    lower, upper = _crop_edges(crop)
-    intersection = prod(max.(min.(hi, upper) - max.(lo, lower), 0))
-    union_area = prod(hi - lo) + prod(length.(crop.rs)) - intersection
-    return intersection > 0 && intersection >= threshold * union_area
+    lower, upper = _box_edges(crop)
+    _center_in_crop(lo, hi, lower, upper) || return false
+    iou = _box_iou(lo, hi, lower, upper)
+    return iou > 0 && iou >= threshold
 end
 
 function _iou_crop_bounds(tfm::RandomIoUCrop, bounds::Bounds{2}, boxes, rng)
     h, w = length.(bounds.rs)
+    (iszero(h) || iszero(w)) && return nothing
     lo, hi = tfm.scale
     for threshold in shuffle(rng, collect(tfm.sampler_options))
         threshold == 1 && return nothing
@@ -87,12 +87,22 @@ function _crop_detection(item::AbstractItem, source::Bounds, crop::Bounds)
     return project(IdentityTransformation(), item, crop)
 end
 
+function _clip_detection_box(lo, hi, lower, upper)
+    first_corner = clamp.(lo, lower, upper)
+    last_corner = _center_in_crop(lo, hi, lower, upper) ? clamp.(hi, lower, upper) : first_corner
+    return first_corner, last_corner
+end
+
 function _crop_detection(box::BoundingBox{2}, source::Bounds, crop::Bounds{2})
-    lo, hi = itemdata(box)
-    lower, upper = _crop_edges(crop)
-    clipped = clamp.(lo, lower, upper)
-    endpoint = _center_in_crop(lo, hi, crop) ? clamp.(hi, lower, upper) : clipped
-    return BoundingBox([clipped, endpoint], crop)
+    lo, hi = _clip_detection_box(itemdata(box)..., _box_edges(crop)...)
+    return BoundingBox([lo, hi], crop)
+end
+
+function _crop_detection(boxes::BoundingBoxes, source::Bounds, crop::Bounds{2})
+    getbounds(boxes) == source || throw(DimensionMismatch("detection items must share the same spatial bounds"))
+    lower, upper = _box_edges(crop)
+    return _map_boxes((lo, hi) -> _clip_detection_box(lo, hi, lower, upper), boxes;
+                      bounds = crop, encode = _format_clipped_box)
 end
 
 _crop_detection(items::Union{Tuple, AbstractVector}, source, crop) =
@@ -104,13 +114,17 @@ function apply(tfm::RandomIoUCrop, items::Union{Tuple, AbstractVector}; randstat
     bounds = getbounds(first(boxes))
     all(box -> getbounds(box) == bounds, boxes) ||
         throw(DimensionMismatch("detection boxes must share the same spatial bounds"))
-    crop = _iou_crop_bounds(tfm, bounds, map(itemdata, boxes), Xoshiro(randstate))
+    corners = collect(Iterators.flatten(map(_detection_corners, boxes)))
+    isempty(corners) && return items
+    crop = _iou_crop_bounds(tfm, bounds, corners, Xoshiro(randstate))
     (isnothing(crop) || crop == bounds) && return items
     return _crop_detection(items, bounds, crop)
 end
 
 apply(tfm::RandomIoUCrop, box::BoundingBox{2}; randstate = getrandstate(tfm)) =
     only(apply(tfm, (box,); randstate))
+apply(tfm::RandomIoUCrop, boxes::BoundingBoxes; randstate = getrandstate(tfm)) =
+    only(apply(tfm, (boxes,); randstate))
 apply(::RandomIoUCrop, item::Item; randstate = nothing) = item
 
 function apply!(bufs::Union{Tuple, AbstractVector}, tfm::RandomIoUCrop,

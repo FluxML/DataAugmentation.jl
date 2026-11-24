@@ -58,6 +58,27 @@ _, cropped_points = tfm((image, points))
 itemdata(cropped_points)
 ```
 
+## Bounding boxes
+
+Pass the image and its [`BoundingBoxes`](@ref) collection together. After
+cropping, [`ClampBoundingBoxes`](@ref) clips partial boxes to the pixel edges of
+the resulting canvas. [`SanitizeBoundingBoxes`](@ref) removes boxes with no
+area and their labels. Sanitizing alone also removes partially out-of-bounds
+boxes.
+
+```@example box-bounds
+using DataAugmentation
+
+image = Image(zeros(8, 10))
+boxes = BoundingBoxes([1 9; 2 7; 5 10; 5 8], (8, 10); labels = [:cat, :dog])
+tfm = CenterCrop((4, 6)) |> PinOrigin() |> ClampBoundingBoxes() |> SanitizeBoundingBoxes()
+_, cropped_boxes = tfm((image, boxes))
+itemdata(cropped_boxes), cropped_boxes.labels
+```
+
+Use [`masks_to_boxes`](@ref) to turn binary instance masks into boxes and
+[`box_iou`](@ref) to compare two collections in the same coordinate system.
+
 ## Color transformations
 
 Color transformations operate on [`Image`](@ref) items. You can apply them to an image together with its masks or keypoints in the same pipeline.
