@@ -21,4 +21,5 @@ DataAugmentation = {path = ".."}
 
 [compat]
 Aqua = "0.8"
+CoordinateTransformations = "0.6.4"
 Interpolations = "0.16.3"
