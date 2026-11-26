@@ -21,4 +21,5 @@ DataAugmentation = {path = ".."}
 
 [compat]
 Aqua = "0.8"
+FixedPointNumbers = "0.9.3"
 Interpolations = "0.16.3"
